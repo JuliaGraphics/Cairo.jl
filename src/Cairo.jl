@@ -13,8 +13,15 @@ export CairoSurface, finish, destroy, status,
     CAIRO_CONTENT_COLOR,
     CAIRO_CONTENT_ALPHA,
     CAIRO_CONTENT_COLOR_ALPHA,
+    CAIRO_FILTER_FAST,
+    CAIRO_FILTER_GOOD,
+    CAIRO_FILTER_BEST,
+    CAIRO_FILTER_NEAREST,
+    CAIRO_FILTER_BILINEAR,
+    CAIRO_FILTER_GAUSSIAN,
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
     CairoARGBSurface, CairoSVGSurface, surface_create_similar,
+    CairoPattern, get_source, pattern_set_filter,
     write_to_png, CairoContext, save, restore, show_page, clip, clip_preserve,
     fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
     stroke_preserve, set_fill_type, set_line_width, rotate, set_source_rgb,
@@ -331,6 +338,29 @@ end
 function show_layout(ctx::CairoContext)
     ccall(dlsym(_jl_libpangocairo,:pango_cairo_show_layout), Void,
         (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
+end
+
+# -----------------------------------------------------------------------------
+
+const CAIRO_FILTER_FAST = 0
+const CAIRO_FILTER_GOOD = 1
+const CAIRO_FILTER_BEST = 2
+const CAIRO_FILTER_NEAREST = 3
+const CAIRO_FILTER_BILINEAR = 4
+const CAIRO_FILTER_GAUSSIAN = 5
+
+type CairoPattern
+    ptr::Ptr{Void}
+end
+
+function get_source(ctx::CairoContext)
+    CairoPattern(ccall(dlsym(_jl_libcairo,:cairo_get_source),
+                       Ptr{Void}, (Ptr{Void},), ctx.ptr))
+end
+
+function pattern_set_filter(p::CairoPattern, f)
+    ccall(dlsym(_jl_libcairo,:cairo_pattern_set_filter), Void,
+          (Ptr{Void},Int32), p.ptr, f)
 end
 
 # -----------------------------------------------------------------------------
@@ -692,6 +722,13 @@ function image(r::CairoRenderer, s::CairoSurface, x, y, w, h)
     _translate(r.ctx, x, y+h)
     scale(r.ctx, w/s.width, h/s.height)
     set_source_surface(r.ctx, s, 0, 0)
+    if w > s.width && h > s.height
+        # use NEAREST filter when stretching an image
+        # it's usually better to see pixels than a blurry mess when viewing
+        # a small image
+        p = get_source(r.ctx)
+        pattern_set_filter(p, CAIRO_FILTER_NEAREST)
+    end
     fill(r.ctx)
     restore(r.ctx)
 end
