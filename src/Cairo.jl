@@ -1,10 +1,8 @@
 require("Color")
-require("OpenLib")
 
 module Cairo
 using Base
 using Color
-using Openlib
 
 export CairoSurface, finish, destroy, status,
     CAIRO_FORMAT_ARGB32,
@@ -35,9 +33,9 @@ import Base.get
 global fill, open, close, symbol
 
 try
-    global _jl_libcairo = openlib("libcairo")
-    global _jl_libpangocairo = openlib("libpangocairo-1.0")
-    global _jl_libgobject = openlib("libgobject-2.0")
+    global _jl_libcairo = dlopen("libcairo")
+    global _jl_libpangocairo = dlopen("libpangocairo-1.0")
+    global _jl_libgobject = dlopen("libgobject-2.0")
 catch err
     println("Oops, could not load cairo or pango libraries. Are they installed?")
     if OS_NAME == :Darwin
