@@ -454,6 +454,7 @@ abstract Renderer
 type CairoRenderer <: Renderer
     ctx::CairoContext
     state::RendererState
+    on_open::Function
     on_close::Function
     lowerleft
     upperright
@@ -462,6 +463,7 @@ type CairoRenderer <: Renderer
     function CairoRenderer(surface)
         ctx = CairoContext(surface)
         self = new(ctx)
+        self.on_open = () -> nothing
         self.on_close = () -> nothing
         self.lowerleft = (0,0)
         self.bbox = nothing
@@ -522,6 +524,7 @@ end
 
 function open( self::CairoRenderer )
     self.state = RendererState()
+    self.on_open()
 end
 
 function close( self::CairoRenderer )
