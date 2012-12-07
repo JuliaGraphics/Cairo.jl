@@ -35,10 +35,6 @@ export CairoSurface, finish, destroy, status,
     open, close, curve, polygon, layout_text, text, textwidth, textheight,
     TeXLexer, tex2pango, SVGRenderer
 
-import Base.get
-
-global fill, open, close, symbol
-
 try
     global _jl_libcairo = dlopen("libcairo")
     global _jl_libpangocairo = dlopen("libpangocairo-1.0")
@@ -58,12 +54,15 @@ catch err
     throw(err)
 end
 
+abstract GraphicsDevice
+abstract GraphicsContext
+
 function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
     ret::Int32 = (n == len) ? 0 : 11
 end
 
-type CairoSurface
+type CairoSurface <: GraphicsDevice
     ptr::Ptr{Void}
     width::Float64
     height::Float64
@@ -186,10 +185,22 @@ end
 
 # -----------------------------------------------------------------------------
 
-type CairoContext
+type CairoContext <: GraphicsContext
     ptr::Ptr{Void}
     surface::CairoSurface
     layout::Ptr{Void} # cache PangoLayout
+
+    # coordinate system
+    left::Float64
+    right::Float64
+    top::Float64
+    bottom::Float64
+
+    # extent in target device
+    x::Int32
+    y::Int32
+    width::Int32
+    height::Int32
 
     function CairoContext(surface::CairoSurface)
         ptr = ccall(dlsym(_jl_libcairo,:cairo_create),
@@ -365,22 +376,10 @@ end
 
 # -----------------------------------------------------------------------------
 
-_circle(ctx::CairoContext, x::Real, y::Real, r::Real) =
-    arc(ctx, x, ctx.surface.height-y, r, 0., 2pi)
-_move_to(ctx::CairoContext, x, y) = move_to(ctx, x, ctx.surface.height-y)
-_line_to(ctx::CairoContext, x, y) = line_to(ctx, x, ctx.surface.height-y)
-_rectangle(ctx::CairoContext, x::Real, y::Real, w::Real, h::Real) =
-    rectangle(ctx, x, ctx.surface.height-y-h, w, h)
-_rel_line_to(ctx::CairoContext, x, y) = rel_line_to(ctx, x, -y)
-_rel_move_to(ctx::CairoContext, x, y) = rel_move_to(ctx, x, -y)
-_translate(ctx::CairoContext, x, y) = translate(ctx, x, ctx.surface.height-y)
-
-function set_clip_rect(ctx::CairoContext, cr)
-    x = cr[1]
-    y = cr[3]
-    width = cr[2] - cr[1]
-    height = cr[4] - cr[3]
-    _rectangle(ctx, x, y, width, height)
+function set_clip_rect(ctx::CairoContext, x1, y1, x2, y2)
+    width = x2 - x1
+    height = y2 - y1
+    rectangle(ctx, x1, y1, width, height)
     clip(ctx)
     new_path(ctx)
 end
