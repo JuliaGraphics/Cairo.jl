@@ -1,10 +1,49 @@
 require("Color")
 
 module Cairo
-using Base
 using Color
 
-export CairoSurface, finish, destroy, status,
+export
+    # drawing surface and context types
+    GraphicsDevice, GraphicsContext,
+    CairoSurface, CairoContext, CairoPattern,
+
+    # surface constructors
+    CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
+    CairoARGBSurface, CairoSVGSurface, CairoImageSurface,
+    surface_create_similar,
+    PNGRenderer, PDFRenderer, EPSRenderer, SVGRenderer,
+
+    # surface and context management
+    finish, destroy, status, get_source,
+    graphics_context, save, restore, show_page,
+
+    # drawing attribute manipulation
+    pattern_set_filter, set_fill_type, set_line_width, set_dash,
+    set_source_rgb, set_source_rgba, set_source_surface, color_to_rgb,
+    set, get,
+
+    # coordinate systems
+    reset_transform, setcoords, rotate, scale, translate, user_to_device!,
+    device_to_user!, user_to_device_distance!, device_to_user_distance!,
+
+    # clipping
+    clip, clip_preserve, reset_clip, set_clip_rect, 
+
+    # fill, stroke, path, and shape commands
+    fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
+    stroke_preserve, move_to, line_to, rel_line_to, rel_move_to, 
+    rectangle, circle, arc, symbol, symbols, curve, polygon,
+
+    # text
+    update_layout, show_layout, get_layout_size, layout_text, text,
+    textwidth, textheight, set_font_from_string, set_markup,
+    TeXLexer, tex2pango,
+
+    # images
+    write_to_png, image, read_from_png,
+
+    # cairo constants
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
     CAIRO_FORMAT_A8,
@@ -18,22 +57,9 @@ export CairoSurface, finish, destroy, status,
     CAIRO_FILTER_BEST,
     CAIRO_FILTER_NEAREST,
     CAIRO_FILTER_BILINEAR,
-    CAIRO_FILTER_GAUSSIAN,
-    CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
-    CairoARGBSurface, CairoSVGSurface, surface_create_similar,
-    CairoPattern, get_source, pattern_set_filter,
-    write_to_png, CairoContext, save, restore, show_page, clip, clip_preserve,
-    fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
-    stroke_preserve, set_fill_type, set_line_width, rotate, set_source_rgb,
-    set_source_surface,
-    move_to, line_to, rel_line_to, rel_move_to, set_source_rgba, rectangle,
-    circle, arc, set_dash, set_clip_rect, set_font_from_string, set_markup,
-    get_layout_size, update_layout, show_layout, image, read_from_png,
-    RendererState, color_to_rgb, Renderer, CairoRenderer, PNGRenderer,
-    PDFRenderer, EPSRenderer, save_state, restore_state, move, lineto,
-    linetorel, line, rect, ellipse, symbol, symbols, set, get,
-    open, close, curve, polygon, layout_text, text, textwidth, textheight,
-    TeXLexer, tex2pango, SVGRenderer
+    CAIRO_FILTER_GAUSSIAN
+
+global symbol, fill, set, get
 
 try
     global _jl_libcairo = dlopen("libcairo")
@@ -197,25 +223,50 @@ type CairoContext <: GraphicsContext
     bottom::Float64
 
     # extent in target device
-    x::Int32
-    y::Int32
-    width::Int32
-    height::Int32
+    x::Float64
+    y::Float64
+    width::Float64
+    height::Float64
 
-    function CairoContext(surface::CairoSurface)
+    function CairoContext(surface::CairoSurface, x, y, w, h, l, t, r, b)
         ptr = ccall(dlsym(_jl_libcairo,:cairo_create),
             Ptr{Void}, (Ptr{Void},), surface.ptr)
         layout = ccall(dlsym(_jl_libpangocairo,:pango_cairo_create_layout),
             Ptr{Void}, (Ptr{Void},), ptr)
         self = new(ptr, surface, layout)
+        setcoords(self, x, y, w, h, l, t, r, b)
         finalizer(self, destroy)
         self
     end
+    CairoContext(surface::CairoSurface) = CairoContext(surface, 0, 0, surface.width, surface.height, 0, 0, surface.width, surface.height)
 end
 
 function destroy(ctx::CairoContext)
     ccall(dlsym(_jl_libgobject,:g_object_unref), Void, (Ptr{Void},), ctx.layout)
     _destroy(ctx)
+end
+
+graphics_context(d::CairoSurface) = CairoContext(d)
+
+function setcoords(c::CairoContext, x, y, w, h, l, t, r, b)
+    c.x = x; c.y = y
+    c.width = w; c.height = h
+    c.left = l; c.right = r
+    c.top = t; c.bottom = b
+    reset_clip(c)
+    rectangle(c, x, y, w, h)
+    clip(c)
+    reset_transform(c)
+    if (r-l) != w || (b-t) != h || l != x || t != y
+        xs = w/(r-l)
+        ys = h/(b-t)
+        scale(c, xs, ys)
+
+        xcent = (l+r)/2
+        ycent = (t+b)/2
+        translate(c, -xcent + (w/2 + x)/xs, -ycent + (h/2 + y)/ys)
+    end
+    c
 end
 
 macro _CTX_FUNC_V(NAME, FUNCTION)
@@ -232,6 +283,8 @@ end
 @_CTX_FUNC_V show_page cairo_show_page
 @_CTX_FUNC_V clip cairo_clip
 @_CTX_FUNC_V clip_preserve cairo_clip_preserve
+@_CTX_FUNC_V reset_clip cairo_reset_clip
+@_CTX_FUNC_V reset_transform cairo_identity_matrix
 @_CTX_FUNC_V fill cairo_fill
 @_CTX_FUNC_V fill_preserve cairo_fill_preserve
 @_CTX_FUNC_V new_path cairo_new_path
@@ -351,6 +404,22 @@ function show_layout(ctx::CairoContext)
         (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
+# user<->device coordinate translation
+
+for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
+                      (:device_to_user!,:cairo_device_to_user),
+                      (:user_to_device_distance!,:cairo_user_to_device_distance),
+                      (:device_to_user_distance!,:cairo_device_to_user_distance))
+    @eval begin
+        function ($fname)(ctx::CairoContext, p::Vector{Float64})
+            ccall(($(expr(:quote,cname)),:libcairo),
+                  Void, (Ptr{Void}, Ptr{Float64}, Ptr{Float64}),
+                  ctx.ptr, pointer(p,1), pointer(p,2))
+            p
+        end
+    end
+end
+
 # -----------------------------------------------------------------------------
 
 const CAIRO_FILTER_FAST = 0
@@ -381,112 +450,54 @@ function set_clip_rect(ctx::CairoContext, x1, y1, x2, y2)
     height = y2 - y1
     rectangle(ctx, x1, y1, width, height)
     clip(ctx)
-    new_path(ctx)
-end
-
-type RendererState
-    current::Dict
-    saved::Vector{Dict}
-
-    RendererState() = new(Dict(),Dict[])
-end
-
-function set( self::RendererState, name, value )
-    self.current[name] = value
-end
-
-get(self::RendererState, name) = get(self, name, nothing)
-function get( self::RendererState, name, notfound )
-    if has(self.current, name)
-        return self.current[name]
-    end
-    for d = self.saved
-        if has(d,name)
-            return d[name]
-        end
-    end
-    return notfound
-end
-
-function save( self::RendererState )
-    enqueue( self.saved, self.current )
-    self.current = Dict()
-end
-
-function restore( self::RendererState )
-    self.current = self.saved[1]
-    del(self.saved, 1)
 end
 
 color_to_rgb(i::Integer) = hex2rgb(i)
 color_to_rgb(s::String) = name2rgb(s)
 
-function _set_color( ctx::CairoContext, color )
+function set_color(ctx::CairoContext, color)
     (r,g,b) = color_to_rgb( color )
     set_source_rgb( ctx, r, g, b )
 end
 
-function _set_line_type(ctx::CairoContext, nick::String)
-    const nick2name = [
-       "dot"       => "dotted",
-       "dash"      => "shortdashed",
-       "dashed"    => "shortdashed",
-    ]
-    # XXX:should be scaled by linewidth
-    const name2dashes = [
-        "solid"           => Float64[],
-        "dotted"          => [1.,3.],
-        "dotdashed"       => [1.,3.,4.,4.],
-        "longdashed"      => [6.,6.],
-        "shortdashed"     => [4.,4.],
-        "dotdotdashed"    => [1.,3.,1.,3.,4.,4.],
-        "dotdotdotdashed" => [1.,3.,1.,3.,1.,3.,4.,4.],
-    ]
+const nick2name = [
+    "dot"       => "dotted",
+    "dash"      => "shortdashed",
+    "dashed"    => "shortdashed",
+]
+const name2dashes = [
+    "solid"           => Float64[],
+    "dotted"          => [1.,3.],
+    "dotdashed"       => [1.,3.,4.,4.],
+    "longdashed"      => [6.,6.],
+    "shortdashed"     => [4.,4.],
+    "dotdotdashed"    => [1.,3.,1.,3.,4.,4.],
+    "dotdotdotdashed" => [1.,3.,1.,3.,1.,3.,4.,4.],
+]
+
+function set_line_type(ctx::CairoContext, nick::String)
     name = get(nick2name, nick, nick)
     if has(name2dashes, name)
+        # XXX:should be scaled by linewidth
         set_dash(ctx, name2dashes[name])
-    end
-end
-
-abstract Renderer
-
-type CairoRenderer <: Renderer
-    ctx::CairoContext
-    state::RendererState
-    on_open::Function
-    on_close::Function
-    lowerleft
-    upperright
-    bbox
-
-    function CairoRenderer(surface)
-        ctx = CairoContext(surface)
-        self = new(ctx)
-        self.on_open = () -> nothing
-        self.on_close = () -> nothing
-        self.lowerleft = (0,0)
-        self.bbox = nothing
-        self
     end
 end
 
 function PNGRenderer(filename::String, width::Integer, height::Integer)
     surface = CairoRGBSurface(width, height)
-    r = CairoRenderer(surface)
-    r.upperright = (width,height)
-    r.on_close = () -> write_to_png(surface, filename)
-    set_source_rgb(r.ctx, 1.,1.,1.)
-    paint(r.ctx)
-    set_source_rgb(r.ctx, 0.,0.,0.)
+    r = graphics_context(surface)
+    set_source_rgb(r, 1.,1.,1.)
+    paint(r)
+    set_source_rgb(r, 0.,0.,0.)
     r
 end
 
+# convert to postscipt pt = in/72
+const xx2pt = [ "in"=>72., "pt"=>1., "mm"=>2.835, "cm"=>28.35 ]
 function _str_size_to_pts( str )
     m = match(r"([\d.]+)([^\s]+)", str)
     num_xx = float64(m.captures[1])
     units = m.captures[2]
-    # convert to postscipt pt = in/72
-    const xx2pt = [ "in"=>72., "pt"=>1., "mm"=>2.835, "cm"=>28.35 ]
     num_pt = num_xx*xx2pt[units]
     return num_pt
 end
@@ -496,10 +507,7 @@ PDFRenderer(filename::String, w_str::String, h_str::String) =
 
 function PDFRenderer(filename::String, w_pts::Float64, h_pts::Float64)
     surface = CairoPDFSurface(filename, w_pts, h_pts)
-    r = CairoRenderer(surface)
-    r.upperright = (w_pts,h_pts)
-    r.on_close = () -> show_page(r.ctx)
-    r
+    graphics_context(surface)
 end
 
 EPSRenderer(filename::String, w_str::String, h_str::String) =
@@ -507,264 +515,213 @@ EPSRenderer(filename::String, w_str::String, h_str::String) =
 
 function EPSRenderer(filename::String, w_pts::Float64, h_pts::Float64)
     surface = CairoEPSSurface(filename, w_pts, h_pts)
-    r = CairoRenderer(surface)
-    r.upperright = (w_pts,h_pts)
-    r.on_close = () -> show_page(r.ctx)
-    r
+    graphics_context(surface)
 end
 
 function SVGRenderer(stream::IOStream, w::Real, h::Real)
     surface = CairoSVGSurface(stream, w, h)
-    r = CairoRenderer(surface)
-    r.upperright = (w,h)
-    #r.on_close = () -> show_page(r.ctx)
-    r
-end
-
-function open( self::CairoRenderer )
-    self.state = RendererState()
-    self.on_open()
-end
-
-function close( self::CairoRenderer )
-    self.on_close()
-    finish(self.ctx.surface)
+    graphics_context(surface)
 end
 
 ## state commands
 
 const __pl_style_func = [
-    "color"     => _set_color,
-    "linecolor" => _set_color,
-    "fillcolor" => _set_color,
-    "linestyle" => _set_line_type,
-    "linetype"  => _set_line_type,
+    "color"     => set_color,
+    "linecolor" => set_color,
+    "fillcolor" => set_color,
+    "linestyle" => set_line_type,
+    "linetype"  => set_line_type,
     "linewidth" => set_line_width,
     "filltype"  => set_fill_type,
     "cliprect"  => set_clip_rect,
 ]
 
-function set( self::CairoRenderer, key::String, value )
-    set(self.state, key, value )
+function set( self::CairoContext, key::String, value )
+    #set(self.state, key, value )
     if key == "fontface"
         fontsize = get(self, "fontsize", 12)
-        set_font_from_string(self.ctx, "$value $(fontsize)px")
+        set_font_from_string(self, "$value $(fontsize)px")
     elseif key == "fontsize"
         fontface = get(self, "fontface", "sans-serif")
-        set_font_from_string(self.ctx, "$fontface $(value)px")
+        set_font_from_string(self, "$fontface $(value)px")
     elseif has(__pl_style_func, key)
-        __pl_style_func[key](self.ctx, value)
+        __pl_style_func[key](self, value)
     end
 end
 
-function get(self::CairoRenderer, parameter::String, notfound)
-    return get(self.state, parameter, notfound)
+function get(self::CairoContext, parameter::String, notfound)
+    #return get(self.state, parameter, notfound)
+
+# TODO: cairo_pattern_get_rgba, cairo_get_dash, cairo_get_line_width,
+# cairo_get_fill_rule, cairo_clip_extents
+
 end
 
-function get(self::CairoRenderer, parameter::String)
+function get(self::CairoContext, parameter::String)
     get(self, parameter, nothing)
-end
-
-function save_state( self::CairoRenderer )
-    save(self.state)
-    save(self.ctx)
-end
-
-function restore_state( self::CairoRenderer )
-    restore(self.state)
-    restore(self.ctx)
 end
 
 ## drawing commands
 
-stroke(cr::CairoRenderer) = stroke(cr.ctx)
-
-function move(self::CairoRenderer, p)
-    _move_to( self.ctx, p[1], p[2] )
+function circle(self::CairoContext, x, y, r)
+    arc(self, x, y, r, 0, 2pi)
 end
 
-function lineto( self::CairoRenderer, p )
-    _line_to( self.ctx, p[1], p[2] )
+const symbol_funcs = [
+    "asterisk" => (c, x, y, r) -> (
+        move_to(c, x, y+r);
+        line_to(c, x, y-r);
+        move_to(c, x+0.866r, y-0.5r);
+        line_to(c, x-0.866r, y+0.5r);
+        move_to(c, x+0.866r, y+0.5r);
+        line_to(c, x-0.866r, y-0.5r)
+    ),
+    "cross" => (c, x, y, r) -> (
+        move_to(c, x+r, y+r);
+        line_to(c, x-r, y-r);
+        move_to(c, x+r, y-r);
+        line_to(c, x-r, y+r)
+    ),
+    "diamond" => (c, x, y, r) -> (
+        move_to(c, x, y+r);
+        line_to(c, x+r, y);
+        line_to(c, x, y-r);
+        line_to(c, x-r, y);
+        close_path(c)
+    ),
+    "dot" => (c, x, y, r) -> (
+        new_sub_path(c);
+        rectangle(c, x, y, 1., 1.)
+    ),
+    "plus" => (c, x, y, r) -> (
+        move_to(c, x+r, y);
+        line_to(c, x-r, y);
+        move_to(c, x, y+r);
+        line_to(c, x, y-r)
+    ),
+    "square" => (c, x, y, r) -> (
+        new_sub_path(c);
+        rectangle(c, x-0.866r, y-0.866r, 1.732r, 1.732r)
+    ),
+    "triangle" => (c, x, y, r) -> (
+        move_to(c, x, y+r);
+        line_to(c, x+0.866r, y-0.5r);
+        line_to(c, x-0.866r, y-0.5r);
+        close_path(c)
+    ),
+    "down-triangle" => (c, x, y, r) -> (
+        move_to(c, x, y-r);
+        line_to(c, x+0.866r, y+0.5r);
+        line_to(c, x-0.866r, y+0.5r);
+        close_path(c)
+    ),
+    "right-triangle" => (c, x, y, r) -> (
+        move_to(c, x+r, y);
+        line_to(c, x-0.5r, y+0.866r);
+        line_to(c, x-0.5r, y-0.866r);
+        close_path(c)
+    ),
+    "left-triangle" => (c, x, y, r) -> (
+        move_to(c, x-r, y);
+        line_to(c, x+0.5r, y+0.866r);
+        line_to(c, x+0.5r, y-0.866r);
+        close_path(c)
+    ),
+]
+
+function symbol(self::CairoContext, p, name, size)
+    symbols(self, [p[1]], [p[2]], name, size)
 end
 
-function linetorel( self::CairoRenderer, p )
-    _rel_line_to( self.ctx, p[1], p[2] )
-end
+function symbols(self::CairoContext, x, y, name, size)
+    #fullname = get(self.state, "symboltype", "square")
+    #size = get(self.state, "symbolsize", 0.01)
 
-function line( self::CairoRenderer, p, q )
-    _move_to(self.ctx, p[1], p[2])
-    _line_to(self.ctx, q[1], q[2])
-    stroke(self.ctx)
-end
-
-function rect( self::CairoRenderer, p, q )
-    _rectangle( self.ctx, p[1], p[2], q[1]-p[1], q[2]-p[2] )
-end
-
-function circle( self::CairoRenderer, p, r )
-    _circle( self.ctx, p[1], p[2], r )
-end
-
-function ellipse( self::CairoRenderer, p, rx, ry, angle )
-    ellipse( self.ctx, p[1], p[2], rx, ry, angle )
-end
-
-function arc( self::CairoRenderer, c, p, q )
-    arc( self.ctx, c[1], c[2], p[1], p[2], q[1], q[2] )
-end
-
-function symbol( self::CairoRenderer, p )
-    symbols( self, [p[1]], [p[2]] )
-end
-
-function symbols( self::CairoRenderer, x, y )
-    fullname = get(self.state, "symboltype", "square")
-    size = get(self.state, "symbolsize", 0.01)
-
-    splitname = split(fullname)
+    splitname = split(name)
     name = pop(splitname)
     filled = contains(splitname, "solid") || contains(splitname, "filled")
 
-    const symbol_funcs = [
-        "asterisk" => (c, x, y, r) -> (
-            _move_to(c, x, y+r);
-            _line_to(c, x, y-r);
-            _move_to(c, x+0.866r, y-0.5r);
-            _line_to(c, x-0.866r, y+0.5r);
-            _move_to(c, x+0.866r, y+0.5r);
-            _line_to(c, x-0.866r, y-0.5r)
-        ),
-        "cross" => (c, x, y, r) -> (
-            _move_to(c, x+r, y+r);
-            _line_to(c, x-r, y-r);
-            _move_to(c, x+r, y-r);
-            _line_to(c, x-r, y+r)
-        ),
-        "diamond" => (c, x, y, r) -> (
-            _move_to(c, x, y+r);
-            _line_to(c, x+r, y);
-            _line_to(c, x, y-r);
-            _line_to(c, x-r, y);
-            close_path(c)
-        ),
-        "dot" => (c, x, y, r) -> (
-            new_sub_path(c);
-            _rectangle(c, x, y, 1., 1.)
-        ),
-        "plus" => (c, x, y, r) -> (
-            _move_to(c, x+r, y);
-            _line_to(c, x-r, y);
-            _move_to(c, x, y+r);
-            _line_to(c, x, y-r)
-        ),
-        "square" => (c, x, y, r) -> (
-            new_sub_path(c);
-            _rectangle(c, x-0.866r, y-0.866r, 1.732r, 1.732r)
-        ),
-        "triangle" => (c, x, y, r) -> (
-            _move_to(c, x, y+r);
-            _line_to(c, x+0.866r, y-0.5r);
-            _line_to(c, x-0.866r, y-0.5r);
-            close_path(c)
-        ),
-        "down-triangle" => (c, x, y, r) -> (
-            _move_to(c, x, y-r);
-            _line_to(c, x+0.866r, y+0.5r);
-            _line_to(c, x-0.866r, y+0.5r);
-            close_path(c)
-        ),
-        "right-triangle" => (c, x, y, r) -> (
-            _move_to(c, x+r, y);
-            _line_to(c, x-0.5r, y+0.866r);
-            _line_to(c, x-0.5r, y-0.866r);
-            close_path(c)
-        ),
-        "left-triangle" => (c, x, y, r) -> (
-            _move_to(c, x-r, y);
-            _line_to(c, x+0.5r, y+0.866r);
-            _line_to(c, x+0.5r, y-0.866r);
-            close_path(c)
-        ),
-    ]
     default_symbol_func = (ctx,x,y,r) -> (
         new_sub_path(ctx);
-        _circle(ctx,x,y,r)
+        circle(ctx,x,y,r)
     )
     symbol_func = get(symbol_funcs, name, default_symbol_func)
 
-    save(self.ctx)
-    set_dash(self.ctx, Float64[])
-    new_path(self.ctx)
+    save(self)
+    set_dash(self, Float64[])
+    new_path(self)
     for i = 1:min(length(x),length(y))
-        symbol_func(self.ctx, x[i], y[i], 0.5*size)
+        symbol_func(self, x[i], y[i], 0.5*size)
     end
     if filled
-        fill_preserve(self.ctx)
+        fill_preserve(self)
     end
-    stroke(self.ctx)
-    restore(self.ctx)
+    stroke(self)
+    restore(self)
 end
 
-function curve( self::CairoRenderer, x::Vector, y::Vector )
+function curve(self::CairoContext, x::Vector, y::Vector)
     n = min(length(x), length(y))
     if n <= 0
         return
     end
-    new_path(self.ctx)
-    _move_to(self.ctx, x[1], y[1])
+    new_path(self)
+    move_to(self, x[1], y[1])
     for i = 2:n
-        _line_to( self.ctx, x[i], y[i] )
+        line_to(self, x[i], y[i])
     end
-    stroke(self.ctx)
+    stroke(self)
 end
 
-function image(r::CairoRenderer, s::CairoSurface, x, y, w, h)
-    _rectangle(r.ctx, x, y, w, h)
-    save(r.ctx)
-    _translate(r.ctx, x, y+h)
-    scale(r.ctx, w/s.width, h/s.height)
-    set_source_surface(r.ctx, s, 0, 0)
+function image(r::CairoContext, s::CairoSurface, x, y, w, h)
+    rectangle(r, x, y, w, h)
+    save(r)
+    translate(r, x, y+h)
+    scale(r, w/s.width, h/s.height)
+    set_source_surface(r, s, 0, 0)
     if w > s.width && h > s.height
         # use NEAREST filter when stretching an image
         # it's usually better to see pixels than a blurry mess when viewing
         # a small image
-        p = get_source(r.ctx)
+        p = get_source(r)
         pattern_set_filter(p, CAIRO_FILTER_NEAREST)
     end
-    fill(r.ctx)
-    restore(r.ctx)
+    fill(r)
+    restore(r)
 end
 
-image(r::CairoRenderer, img::Array{Uint32,2}, x, y, w, h) =
+image(r::CairoContext, img::Array{Uint32,2}, x, y, w, h) =
     image(r, CairoRGBSurface(img), x, y, w, h)
 
-function polygon( self::CairoRenderer, points::Vector )
-    move(self, points[1])
+function polygon( self::CairoContext, points::Vector )
+    move_to(self, points[1][1], points[1][2])
     for i in 2:length(points)
-        lineto(self, points[i])
+        p = points[i]
+        line_to(self, p[1], p[2])
     end
-    close_path(self.ctx)
-    fill(self.ctx)
+    close_path(self)
 end
 
 # text commands
 
-function layout_text(self::CairoRenderer, text::String)
-    markup = tex2pango(text, get(self,"fontsize"))
-    set_markup(self.ctx, markup)
+function layout_text(self::CairoContext, text::String, size)
+    markup = tex2pango(text, size)
+    set_markup(self, markup)
 end
 
-function text( self::CairoRenderer, p, text )
-    halign = get( self.state, "texthalign", "center" )
-    valign = get( self.state, "textvalign", "center" )
-    angle = get( self.state, "textangle", 0. )
+text(self::CairoContext, p, text) = text(self, p, text, "center", "center", 0.)
 
-    _move_to( self.ctx, p[1], p[2] )
-    save(self.ctx)
-    rotate(self.ctx, -angle*pi/180.)
+function text(self::CairoContext, p, text, halign, valign, angle)
+    #halign = get( self.state, "texthalign", "center" )
+    #valign = get( self.state, "textvalign", "center" )
+    #angle = get( self.state, "textangle", 0. )
+
+    move_to( self, p[1], p[2] )
+    save(self)
+    rotate(self, -angle*pi/180.)
 
     layout_text(self, text)
-    update_layout(self.ctx)
+    update_layout(self)
 
     const _xxx = [
         "center"    => 0.5,
@@ -773,23 +730,25 @@ function text( self::CairoRenderer, p, text )
         "top"       => 0.,
         "bottom"    => 1.,
     ]
-    extents = get_layout_size(self.ctx)
+    extents = get_layout_size(self)
     dx = -_xxx[halign]*extents[1]
     dy = _xxx[valign]*extents[2]
-    _rel_move_to(self.ctx, dx, dy)
+    rel_move_to(self, dx, dy)
 
-    show_layout(self.ctx)
-    restore(self.ctx)
+    show_layout(self)
+    restore(self)
 end
 
-function textwidth( self::CairoRenderer, str )
+function textwidth( self::CairoContext, str )
     layout_text(self, str)
-    extents = get_layout_size(self.ctx)
+    extents = get_layout_size(self)
     extents[1]
 end
 
-function textheight( self::CairoRenderer, str )
-    get( self.state, "fontsize" ) ## XXX: kludge?
+function textheight( self::CairoContext, str )
+    #get( self.state, "fontsize" ) ## XXX: kludge?
+    # TODO
+    return 3.0
 end
 
 type TeXLexer
