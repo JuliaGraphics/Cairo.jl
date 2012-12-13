@@ -16,7 +16,7 @@ export
 
     # surface and context management
     finish, destroy, status, get_source,
-    graphics_context, save, restore, show_page,
+    creategc, getgc, save, restore, show_page,
 
     # drawing attribute manipulation
     pattern_set_filter, set_fill_type, set_line_width, set_dash,
@@ -101,8 +101,8 @@ type CairoSurface <: GraphicsDevice
     end
 
     function CairoSurface(ptr::Ptr{Void}, w, h, data)
-        self = new(ptr, w, h, data)
-        finalizer(self, destroy)
+        self = CairoSurface(ptr, w, h)
+        self.data = data
         self
     end
 end
@@ -239,6 +239,13 @@ type CairoContext <: GraphicsContext
         self
     end
     CairoContext(surface::CairoSurface) = CairoContext(surface, 0, 0, surface.width, surface.height, 0, 0, surface.width, surface.height)
+
+    function CairoContext(c::CairoContext, x, y, w, h, l, t, r, b)
+        xy = user_to_device!(c, [float64(x), float64(y)])
+        wh = user_to_device_distance!(c, [float64(w), float64(h)])
+        CairoContext(c.surface, xy[1], xy[2], wh[1], wh[2], l, t, r, b)
+    end
+    CairoContext(c::CairoContext) = CairoContext(c.surface, c.x, c.y, c.width, c.height, c.left, c.top, c.right, c.bottom)
 end
 
 function destroy(ctx::CairoContext)
@@ -246,18 +253,23 @@ function destroy(ctx::CairoContext)
     _destroy(ctx)
 end
 
-graphics_context(d::CairoSurface) = CairoContext(d)
+creategc(d::CairoSurface, args...) = CairoContext(d, args...)
+
+getgc(c::CairoContext) = c
+creategc(c::CairoContext, args...) = CairoContext(c, args...)
 
 function setcoords(c::CairoContext, x, y, w, h, l, t, r, b)
     c.x = x; c.y = y
     c.width = w; c.height = h
     c.left = l; c.right = r
     c.top = t; c.bottom = b
+    reset_transform(c)
     reset_clip(c)
     rectangle(c, x, y, w, h)
     clip(c)
-    reset_transform(c)
     if (r-l) != w || (b-t) != h || l != x || t != y
+        # note: Cairo assigns integer pixel-space coordinates to the grid
+        # points between sample locations, not to the centers of pixels.
         xs = w/(r-l)
         ys = h/(b-t)
         scale(c, xs, ys)
@@ -267,6 +279,14 @@ function setcoords(c::CairoContext, x, y, w, h, l, t, r, b)
         translate(c, -xcent + (w/2 + x)/xs, -ycent + (h/2 + y)/ys)
     end
     c
+end
+
+function move(c::CairoContext, x, y)
+    setcoords(c, x, y, c.width, c.height, c.left, c.top, c.right, c.bottom)
+end
+
+function resize(c::CairoContext, w, h)
+    setcoords(c, c.x, c.y, w, h, c.left, c.top, c.right, c.bottom)
 end
 
 macro _CTX_FUNC_V(NAME, FUNCTION)
@@ -291,8 +311,23 @@ end
 @_CTX_FUNC_V new_sub_path cairo_new_sub_path
 @_CTX_FUNC_V close_path cairo_close_path
 @_CTX_FUNC_V paint cairo_paint
-@_CTX_FUNC_V stroke cairo_stroke
-@_CTX_FUNC_V stroke_preserve cairo_stroke_preserve
+@_CTX_FUNC_V stroke_transformed cairo_stroke
+@_CTX_FUNC_V stroke_transformed_preserve cairo_stroke_preserve
+
+function stroke(ctx::CairoContext)
+    save(ctx)
+    # use uniform scale for stroking
+    reset_transform(ctx)
+    ccall((:cairo_stroke, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    restore(ctx)
+end
+
+function stroke_preserve(ctx::CairoContext)
+    save(ctx)
+    reset_transform(ctx)
+    ccall((:cairo_stroke_preserve, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    restore(ctx)
+end
 
 macro _CTX_FUNC_I(NAME, FUNCTION)
     quote
@@ -485,7 +520,7 @@ end
 
 function PNGRenderer(filename::String, width::Integer, height::Integer)
     surface = CairoRGBSurface(width, height)
-    r = graphics_context(surface)
+    r = creategc(surface)
     set_source_rgb(r, 1.,1.,1.)
     paint(r)
     set_source_rgb(r, 0.,0.,0.)
@@ -507,7 +542,7 @@ PDFRenderer(filename::String, w_str::String, h_str::String) =
 
 function PDFRenderer(filename::String, w_pts::Float64, h_pts::Float64)
     surface = CairoPDFSurface(filename, w_pts, h_pts)
-    graphics_context(surface)
+    creategc(surface)
 end
 
 EPSRenderer(filename::String, w_str::String, h_str::String) =
@@ -515,12 +550,12 @@ EPSRenderer(filename::String, w_str::String, h_str::String) =
 
 function EPSRenderer(filename::String, w_pts::Float64, h_pts::Float64)
     surface = CairoEPSSurface(filename, w_pts, h_pts)
-    graphics_context(surface)
+    creategc(surface)
 end
 
 function SVGRenderer(stream::IOStream, w::Real, h::Real)
     surface = CairoSVGSurface(stream, w, h)
-    graphics_context(surface)
+    creategc(surface)
 end
 
 ## state commands
