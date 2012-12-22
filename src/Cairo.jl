@@ -614,8 +614,8 @@ function arc( self::CairoRenderer, c, p, q )
     arc( self.ctx, c[1], c[2], p[1], p[2], q[1], q[2] )
 end
 
-function symbol( self::CairoRenderer, p )
-    symbols( self, [p[1]], [p[2]] )
+function symbol(self::CairoRenderer, x::Real, y::Real)
+    symbols(self, [x], [y] )
 end
 
 function symbols( self::CairoRenderer, x, y )
@@ -755,12 +755,12 @@ function layout_text(self::CairoRenderer, text::String)
     set_markup(self.ctx, markup)
 end
 
-function text( self::CairoRenderer, p, text )
+function text(self::CairoRenderer, x::Real, y::Real, text::String)
     halign = get( self.state, "texthalign", "center" )
     valign = get( self.state, "textvalign", "center" )
     angle = get( self.state, "textangle", 0. )
 
-    _move_to( self.ctx, p[1], p[2] )
+    _move_to(self.ctx, x, y)
     save(self.ctx)
     rotate(self.ctx, -angle*pi/180.)
 
