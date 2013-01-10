@@ -58,9 +58,9 @@ catch err
     throw(err)
 end
 
-function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
-    n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
-    ret::Int32 = (n == len) ? 0 : 11
+function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
+    n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
+    ret::Int32 = (n == len) ? 0 : 11
 end
 
 type CairoSurface
@@ -410,13 +410,13 @@ function get( self::RendererState, name, notfound )
 end
 
 function save( self::RendererState )
-    enqueue( self.saved, self.current )
+    unshift!( self.saved, self.current )
     self.current = Dict()
 end
 
 function restore( self::RendererState )
     self.current = self.saved[1]
-    del(self.saved, 1)
+    delete!(self.saved, 1)
 end
 
 color_to_rgb(i::Integer) = hex2rgb(i)
@@ -838,7 +838,7 @@ function get_token( self::TeXLexer )
 end
 
 function put_token( self::TeXLexer, token )
-    push( self.token_stack, token )
+    push!( self.token_stack, token )
 end
 
 function peek( self::TeXLexer )
@@ -1181,7 +1181,7 @@ function tex2pango( str::String, fontsize::Real )
 #            mathmode = !mathmode
             more_output = L"$"
         elseif token == L"{"
-            push(font_stack, font)
+            push!(font_stack, font)
         elseif token == L"}"
             old_font = pop(font_stack)
             if old_font != font
