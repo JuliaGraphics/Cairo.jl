@@ -803,7 +803,7 @@ type TeXLexer
     function TeXLexer( str::String )
         self = new()
         self.str = str
-        self.len = strlen(str)
+        self.len = length(str)
         self.pos = 1
         self.token_stack = String[]
         self.re_control_sequence = r"^\\[a-zA-Z]+[ ]?|^\\[^a-zA-Z][ ]?"
@@ -824,9 +824,9 @@ function get_token( self::TeXLexer )
     m = match(self.re_control_sequence, str)
     if m != nothing
         token = m.match
-        self.pos = self.pos + strlen(token)
+        self.pos = self.pos + length(token)
         # consume trailing space
-        if strlen(token) > 2 && token[end] == ' '
+        if length(token) > 2 && token[end] == ' '
             token = token[1:end-1]
         end
     else
