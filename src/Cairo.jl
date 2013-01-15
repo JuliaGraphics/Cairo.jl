@@ -624,7 +624,7 @@ function symbols( self::CairoRenderer, x, y )
     size = get(self.state, "symbolsize", 0.01)
 
     splitname = split(fullname)
-    name = pop(splitname)
+    name = pop!(splitname)
     filled = contains(splitname, "solid") || contains(splitname, "filled")
 
     const symbol_funcs = [
@@ -707,7 +707,7 @@ function symbols( self::CairoRenderer, x, y )
     restore(self.ctx)
 end
 
-function curve( self::CairoRenderer, x::Vector, y::Vector )
+function curve( self::CairoRenderer, x::AbstractVector, y::AbstractVector )
     n = min(length(x), length(y))
     if n <= 0
         return
@@ -818,7 +818,7 @@ function get_token( self::TeXLexer )
     end
 
     if length(self.token_stack) > 0
-        return pop(self.token_stack)
+        return pop!(self.token_stack)
     end
 
     str = self.str[self.pos:end]
@@ -1184,7 +1184,7 @@ function tex2pango( str::String, fontsize::Real )
         elseif token == L"{"
             push!(font_stack, font)
         elseif token == L"}"
-            old_font = pop(font_stack)
+            old_font = pop!(font_stack)
             if old_font != font
                 font = old_font
 #                more_output = font_code[font]
