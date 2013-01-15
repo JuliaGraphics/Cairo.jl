@@ -21,8 +21,8 @@ export CairoSurface, finish, destroy, status,
     CAIRO_FILTER_BILINEAR,
     CAIRO_FILTER_GAUSSIAN,
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
-    CairoQuartzSurface, CairoARGBSurface, CairoSVGSurface, surface_create_similar,
-    CairoPattern, get_source, pattern_set_filter,
+    CairoQuartzSurface, CairoWin32Surface, CairoARGBSurface, CairoSVGSurface, 
+	surface_create_similar, CairoPattern, get_source, pattern_set_filter,
     write_to_png, CairoContext, save, restore, show_page, clip, clip_preserve,
     fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
     stroke_preserve, set_fill_type, set_line_width, rotate, set_source_rgb,
@@ -144,6 +144,11 @@ function CairoQuartzSurface(context, w, h)
                 context, w, h)
 
     CairoSurface(ptr,w,h)
+end
+
+function CairoWin32Surface(hdc,w,h)
+	ptr = ccall((:cairo_win32_surface_create, _jl_libcairo), Ptr{Void}, (Ptr{Void},), hdc)
+	CairoSurface(ptr,w,h)
 end
 
 function CairoSVGSurface(stream::IOStream, w, h)
@@ -306,16 +311,16 @@ function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real
 end
 
 function set_font_from_string(ctx::CairoContext, str::String)
-    fontdesc = ccall((:pango_font_description_from_string,_jl_libpangocairo),
+    fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
         Ptr{Void}, (Ptr{Uint8},), bytestring(str))
-    ccall((:pango_layout_set_font_description,_jl_libpangocairo), Void,
+    ccall((:pango_layout_set_font_description,_jl_libpango), Void,
         (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
-    ccall((:pango_font_description_free,_jl_libpangocairo), Void,
+    ccall((:pango_font_description_free,_jl_libpango), Void,
         (Ptr{Void},), fontdesc)
 end
 
 function set_markup(ctx::CairoContext, markup::String)
-    ccall((:pango_layout_set_markup,_jl_libpangocairo), Void,
+    ccall((:pango_layout_set_markup,_jl_libpango), Void,
         (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(markup), -1)
 end
 
