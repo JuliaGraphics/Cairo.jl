@@ -707,7 +707,7 @@ function symbols( self::CairoRenderer, x, y )
     restore(self.ctx)
 end
 
-function curve( self::CairoRenderer, x::Vector, y::Vector )
+function curve( self::CairoRenderer, x::AbstractVector, y::AbstractVector )
     n = min(length(x), length(y))
     if n <= 0
         return
