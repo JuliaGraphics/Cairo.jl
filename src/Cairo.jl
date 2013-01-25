@@ -73,7 +73,7 @@ end
 for name in ("destroy","finish","flush","mark_dirty")
     @eval begin
         $(Base.symbol(name))(surface::CairoSurface) =
-            ccall(($(strcat("cairo_surface_",name)),_jl_libcairo),
+            ccall(($(string("cairo_surface_",name)),_jl_libcairo),
                 Void, (Ptr{Void},), surface.ptr)
     end
 end
@@ -1151,7 +1151,7 @@ function math_group(lexer::TeXLexer)
         elseif token == L"}"
             break
         else
-            output = strcat(output, map_math_token(token))
+            output = string(output, map_math_token(token))
             if !bracketmode
                 break
             end
@@ -1201,20 +1201,20 @@ function tex2pango( str::String, fontsize::Real )
         elseif !mathmode
             more_output = map_text_token(token)
         elseif token == L"_"
-            more_output = strcat("<sub><span font=\"$script_size\">", math_group(lexer), L"</span></sub>")
+            more_output = string("<sub><span font=\"$script_size\">", math_group(lexer), L"</span></sub>")
             #if peek(lexer) == L"^"
-            #    more_output = strcat(L"\mk", more_output, L"\rt")
+            #    more_output = string(L"\mk", more_output, L"\rt")
             #end
         elseif token == L"^"
-            more_output = strcat("<sup><span font=\"$script_size\">", math_group(lexer), L"</span></sup>")
+            more_output = string("<sup><span font=\"$script_size\">", math_group(lexer), L"</span></sup>")
             #if peek(lexer) == L"_"
-            #    more_output = strcat(L"\mk", more_output, L"\rt")
+            #    more_output = string(L"\mk", more_output, L"\rt")
             #end
         else
             more_output = map_math_token(token)
         end
 
-        output = strcat(output, more_output)
+        output = string(output, more_output)
     end
 
     return output
