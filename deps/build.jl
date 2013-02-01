@@ -1,6 +1,6 @@
 @windows_only require("BinDeps")
 @windows_only begin
-	depsdir = joinpath(julia_pkgdir(),"Cairo","deps")
+	depsdir = joinpath(Pkg.dir(),"Cairo","deps")
 	require("BinDeps")
 	if(true)
 		local_file = joinpath(joinpath(depsdir,"downloads"),"Cairo.tar.gz")

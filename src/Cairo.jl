@@ -1,4 +1,4 @@
-include(joinpath(julia_pkgdir(),"Cairo","deps","ext.jl"))
+include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
 require("Color")
 
 module Cairo
