@@ -1,0 +1,5 @@
+deps/builds
+deps/downloads
+deps/src
+deps/usr
+.DS_Store
