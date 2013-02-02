@@ -4,7 +4,10 @@ s = @build_steps begin
 end
 
 ## Homebrew
-@osx_only push!(c,Choice(:brew,"Install depdendency using brew",HomebrewInstall("pango",ASCIIString[])))
+@osx_only push!(c,Choice(:brew,"Install depdendency using brew",@build_steps begin
+		HomebrewInstall("pango",ASCIIString[])
+		`brew link cairo`
+		end))
 
 ## Prebuilt Binaries
 depsdir = joinpath(Pkg.dir(),"Cairo","deps")
