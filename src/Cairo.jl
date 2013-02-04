@@ -124,7 +124,7 @@ function CairoPDFSurface(filename::String, w_pts::Real, h_pts::Real)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
-## EPS ## 
+## EPS ##
 
 function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
     callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
@@ -144,9 +144,9 @@ function CairoEPSSurface{T<:AsyncStream}(stream::T, w::Real, h::Real)
     CairoSurface(ptr, w, h)
 end
 
-function CairoEPSSurface(filename::String, w::Real, h::Real)
+function CairoEPSSurface(filename::String, w_pts::Real, h_pts::Real)
     ptr = ccall((:cairo_ps_surface_create,_jl_libcairo), Ptr{Void},
-        (Ptr{Uint8},Float64,Float64), bytestring(filename), w, h)
+        (Ptr{Uint8},Float64,Float64), bytestring(filename), w_pts, h_pts)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
         (Ptr{Void},Int32), ptr, 1)
     CairoSurface(ptr, w_pts, h_pts)
@@ -789,13 +789,13 @@ end
 
 # text commands
 
-function text_extents(ctx::CairoContext,value::String,extents)        
+function text_extents(ctx::CairoContext,value::String,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
               Void, (Ptr{Void}, Ptr{Uint8}, Ptr{Float64}),
               ctx.ptr, bytestring(value), extents)
 end
 
-function show_text(ctx::CairoContext,value::String) 
+function show_text(ctx::CairoContext,value::String)
     ccall((:cairo_text_extents, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{Uint8}),
           ctx.ptr, bytestring(value))
