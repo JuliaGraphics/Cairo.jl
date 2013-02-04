@@ -24,7 +24,9 @@ export CairoSurface, finish, destroy, status,
     open, close, curve, polygon, layout_text, text, textwidth, textheight,
     TeXLexer, tex2pango, SVGRenderer, stroke
 
-import Base.get, Base.open, Base.fill, Base.close, Base.symbol
+import Base.get
+
+global fill, open, close, symbol
 
 const _jl_libcairo = :libcairo
 const _jl_libpango = "libpango-1.0"
