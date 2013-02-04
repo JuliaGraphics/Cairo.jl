@@ -1,6 +1,6 @@
 require("BinDeps")
 s = @build_steps begin
-	c=Choices(Choice[])
+	c=Choices(Choice[Choice(:skip,"Skip Installation - Binaries must be installed manually",nothing)])
 end
 
 ## Homebrew
@@ -19,6 +19,7 @@ depsdir = joinpath(Pkg.dir(),"Cairo","deps")
 				FileUnpacker(local_file,joinpath(depsdir,"usr"))
 			end))
 end
+
 
 println(depsdir)
 
