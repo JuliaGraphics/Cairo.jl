@@ -201,6 +201,10 @@ type CairoContext
         finalizer(self, destroy)
         self
     end
+
+    function CairoContext(ptr::Ptr{Void})
+        new(ptr)
+    end
 end
 
 function destroy(ctx::CairoContext)
