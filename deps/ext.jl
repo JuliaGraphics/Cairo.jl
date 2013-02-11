@@ -13,7 +13,7 @@ let
         end
     end
     find_library("libcairo",OS_NAME == :Windows ? "libcairo-2" : "libcairo")
-    find_library("libfontconfig","libfontconfig")
+    find_library("libfontconfig",OS_NAME == :Windows ? "libfontconfig-1" : "libfontconfig")
     find_library("libpango-1.0",OS_NAME == :Windows ? "libpango-1.0-0" : "libpango-1.0")
     find_library("libpangocairo-1.0",OS_NAME == :Windows ? "libpangocairo-1.0-0" : "libpangocairo-1.0")
     find_library("libgobject-2.0",OS_NAME == :Windows ? "libgobject-2.0-0" : "libgobject-2.0")
