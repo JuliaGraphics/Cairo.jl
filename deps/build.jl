@@ -66,7 +66,7 @@ let
 
 	## Common dependencies
 	steps |= @build_steps begin
-		autotools_install("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz","pixman-0.28.2.tar.gz",String[],"pixman-0.28.2","pixman-0.28.2","pixman/libpixman-1.la",OS_NAME == :Windows ? "libpixman-1-0.$shlib_ext" : "libpixman-1.0.$shlib_ext")
+		autotools_install("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz","pixman-0.28.2.tar.gz",String[],"pixman-0.28.2","pixman-0.28.2","pixman/libpixman-1.la",OS_NAME == :Windows ? "libpixman-1-0.$shlib_ext" : (OS_NAME == :Linux ? "libpixman-1.$shlib_ext" : "libpixman-1.0.$shlib_ext"))
 		autotools_install("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz","freetype-2.4.11.tar.gz",String[],"freetype-2.4.11","freetype-2.4.11",OS_NAME == :Windows ? "objs/.libs/libfreetype.la" : ".libs/libfreetype.$shlib_ext","libfreetype.la",OS_NAME == :Windows ? "builds/unix" : "")
 		autotools_install("http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.10.2.tar.gz","fontconfig-2.10.2.tar.gz",String[],"fontconfig-2.10.2","fontconfig-2.10.2","src/libfontconfig.la","libfontconfig.la")
 		autotools_install("http://www.cairographics.org/releases/cairo-1.12.8.tar.xz","cairo-1.12.8.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include -D_SSIZE_T_DEFINED=1"],"cairo-1.12.8","cairo-1.12.8","src/libcairo.la","libcairo.la")
