@@ -42,7 +42,7 @@ let
 					MakeTargets(["-fwin32/Makefile.gcc"])
 					#MakeTargets(["-fwin32/Makefile.gcc","DESTDIR=../../usr/","INCLUDE_PATH=include","LIBRARY_PATH=lib","SHARED_MODE=1","install"])
 				end
-		steps |= prepare_src("ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng-1.5.13.tar.gz","libpng-1.5.13.tar.gz","libpng-1.5.13")
+		steps |= prepare_src("ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng15/libpng-1.5.14.tar.gz","libpng-1.5.13.tar.gz","libpng-1.5.13")
 		steps |= @build_steps begin
 					ChangeDirectory(pngbuilddir)
 					FileRule(joinpath(prefix,"lib","libpng15.dll"),@build_steps begin
