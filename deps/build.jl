@@ -60,7 +60,7 @@ let
 
 	## Unix Specific dependencies
 	@unix_only  steps |= @build_steps begin
-		autotools_install("ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng-1.5.14.tar.gz","libpng-1.5.14.tar.gz",String[],"libpng-1.5.14","libpng-1.5.14",".libs/libpng15.la","libpng15.la")
+		autotools_install("ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng15/libpng-1.5.14.tar.gz","libpng-1.5.14.tar.gz",String[],"libpng-1.5.14","libpng-1.5.14",".libs/libpng15.la","libpng15.la")
 		autotools_install("http://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.2.tar.gz","gettext-0.18.2.tar.gz",String[],"gettext-0.18.2","gettext-0.18.2","gettext-tools/gnulib-lib/.libs/libgettextlib.la","libgettextlib.la")
 	end
 
