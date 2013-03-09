@@ -7,7 +7,7 @@ using Color
 
 include("constants.jl")
 
-export CairoSurface, finish, destroy, status,
+export CairoSurface, finish, destroy, status, resize,
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
     CairoQuartzSurface, CairoWin32Surface, CairoARGBSurface, CairoSVGSurface, 
 	surface_create_similar, CairoPattern, get_source, pattern_set_filter,
@@ -65,6 +65,17 @@ end
 
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
+
+function resize(surface::CairoSurface, w, h)
+    println("in Cairo.resize")
+    if OS_NAME == :Linux
+        CairoXlibSurfaceSetSize(surface.ptr, w, h)
+    elseif OS_NAME == :Darwin
+    elseif OS_NAME == :Windows
+    else
+        error("Unsupported operating system")
+    end
+end
 
 for name in ("destroy","finish","flush","mark_dirty")
     @eval begin
@@ -171,6 +182,11 @@ function CairoXlibSurface(display, drawable, visual, w, h)
                 display, drawable, visual, w, h)
     CairoSurface(ptr, w, h)
 end
+
+CairoXlibSurfaceSetSize(surface, w, h) =
+    ccall((:cairo_xlib_surface_set_size,_jl_libcairo), Void,
+          (Ptr{Void}, Int32, Int32),
+          surface, w, h)
 
 ## Quartz ##
 
