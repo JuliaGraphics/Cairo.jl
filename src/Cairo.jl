@@ -958,9 +958,9 @@ function math_group(lexer::TeXLexer)
             break
         end
 
-        if token == L"{"
+        if token == "{"
             bracketmode = true
-        elseif token == L"}"
+        elseif token == "}"
             break
         else
             output = string(output, map_math_token(token))
@@ -972,7 +972,7 @@ function math_group(lexer::TeXLexer)
     return output
 end
 
-#font_code = [ L"\f0", L"\f1", L"\f2", L"\f3" ]
+#font_code = [ "\\f0", "\\f1", "\\f2", "\\f3" ]
 
 function tex2pango( str::String, fontsize::Real )
     output = ""
@@ -990,37 +990,37 @@ function tex2pango( str::String, fontsize::Real )
 
         more_output = ""
 
-        if token == L"$"
+        if token == "\$"
 #            mathmode = !mathmode
-            more_output = L"$"
-        elseif token == L"{"
+            more_output = "\$"
+        elseif token == "{"
             push!(font_stack, font)
-        elseif token == L"}"
+        elseif token == "}"
             old_font = pop!(font_stack)
             if old_font != font
                 font = old_font
 #                more_output = font_code[font]
             end
-        elseif token == L"\rm"
+        elseif token == "\\rm"
             font = 1
 #            more_output = font_code[font]
-        elseif token == L"\it"
+        elseif token == "\\it"
             font = 2
 #            more_output = font_code[font]
-        elseif token == L"\bf"
+        elseif token == "\\bf"
             font = 3
 #            more_output = font_code[font]
         elseif !mathmode
             more_output = map_text_token(token)
-        elseif token == L"_"
-            more_output = string("<sub><span font=\"$script_size\">", math_group(lexer), L"</span></sub>")
-            #if peek(lexer) == L"^"
-            #    more_output = string(L"\mk", more_output, L"\rt")
+        elseif token == "_"
+            more_output = string("<sub><span font=\"$script_size\">", math_group(lexer), "</span></sub>")
+            #if peek(lexer) == "^"
+            #    more_output = string("\\mk", more_output, "\\rt")
             #end
-        elseif token == L"^"
-            more_output = string("<sup><span font=\"$script_size\">", math_group(lexer), L"</span></sup>")
-            #if peek(lexer) == L"_"
-            #    more_output = string(L"\mk", more_output, L"\rt")
+        elseif token == "^"
+            more_output = string("<sup><span font=\"$script_size\">", math_group(lexer), "</span></sup>")
+            #if peek(lexer) == "_"
+            #    more_output = string("\\mk", more_output, "\\rt")
             #end
         else
             more_output = map_math_token(token)
