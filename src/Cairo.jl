@@ -119,36 +119,36 @@ function resize(surface::CairoSurface, w, h)
     end
 end
 
-for name in ("destroy","finish","flush","mark_dirty")
+for name in (:destroy,:finish,:flush,:mark_dirty)
     @eval begin
-        $(Base.symbol(name))(surface::CairoSurface) =
+        $(name)(surface::CairoSurface) =
             ccall(($(string("cairo_surface_",name)),_jl_libcairo),
-                Void, (Ptr{Void},), surface.ptr)
+                  Void, (Ptr{Void},), surface.ptr)
     end
 end
 
 function status(surface::CairoSurface)
     ccall((:cairo_surface_status,_jl_libcairo),
-        Int32, (Ptr{Void},), surface.ptr)
+          Int32, (Ptr{Void},), surface.ptr)
 end
 
 function CairoRGBSurface(w::Real, h::Real)
     ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-        Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_RGB24, w, h)
+                Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_RGB24, w, h)
     CairoSurface(ptr, w, h)
 end
 
 function CairoARGBSurface(w::Real, h::Real)
     ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-        Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_ARGB32, w, h)
+                Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_ARGB32, w, h)
     CairoSurface(ptr, w, h)
 end
 
 function CairoImageSurface(data::Array, format::Integer, w::Integer, h::Integer, stride::Integer)
     ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
-        Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
-        data, format, w, h, stride)
-    Cairo.CairoSurface(ptr, w, h, data)
+                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                data, format, w, h, stride)
+                Cairo.CairoSurface(ptr, w, h, data)
 end
 
 function CairoImageSurface(data::Array{Uint32,2}, format::Integer, w::Integer, h::Integer)
@@ -184,7 +184,7 @@ end
 
 function CairoPDFSurface(filename::String, w_pts::Real, h_pts::Real)
     ptr = ccall((:cairo_pdf_surface_create,_jl_libcairo), Ptr{Void},
-        (Ptr{Uint8},Float64,Float64), bytestring(filename), w_pts, h_pts)
+                (Ptr{Uint8},Float64,Float64), bytestring(filename), w_pts, h_pts)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
@@ -195,7 +195,7 @@ function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
-        (Ptr{Void},Int32), ptr, 1)
+          (Ptr{Void},Int32), ptr, 1)
     CairoSurface(ptr, w, h)
 end
 
@@ -204,15 +204,15 @@ function CairoEPSSurface{T<:AsyncStream}(stream::T, w::Real, h::Real)
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
-        (Ptr{Void},Int32), ptr, 1)
+          (Ptr{Void},Int32), ptr, 1)
     CairoSurface(ptr, w, h)
 end
 
 function CairoEPSSurface(filename::String, w_pts::Real, h_pts::Real)
     ptr = ccall((:cairo_ps_surface_create,_jl_libcairo), Ptr{Void},
-        (Ptr{Uint8},Float64,Float64), bytestring(filename), w_pts, h_pts)
+                (Ptr{Uint8},Float64,Float64), bytestring(filename), w_pts, h_pts)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
-        (Ptr{Void},Int32), ptr, 1)
+          (Ptr{Void},Int32), ptr, 1)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
@@ -265,7 +265,7 @@ end
 
 function CairoSVGSurface(filename::String, w::Real, h::Real)
     ptr = ccall((:cairo_svg_surface_create,_jl_libcairo), Ptr{Void},
-        (Ptr{Uint8},Float64,Float64), bytestring(filename), w, h)
+                (Ptr{Uint8},Float64,Float64), bytestring(filename), w, h)
     CairoSurface(ptr, w, h)
 end
 
@@ -273,17 +273,17 @@ end
 
 function read_from_png(filename::String)
     ptr = ccall((:cairo_image_surface_create_from_png,_jl_libcairo),
-        Ptr{Void}, (Ptr{Uint8},), bytestring(filename))
+                Ptr{Void}, (Ptr{Uint8},), bytestring(filename))
     w = ccall((:cairo_image_surface_get_width,_jl_libcairo),
-        Int32, (Ptr{Void},), ptr)
+              Int32, (Ptr{Void},), ptr)
     h = ccall((:cairo_image_surface_get_height,_jl_libcairo),
-        Int32, (Ptr{Void},), ptr)
+              Int32, (Ptr{Void},), ptr)
     CairoSurface(ptr, w, h)
 end
 
 function write_to_png(surface::CairoSurface, filename::String)
     ccall((:cairo_surface_write_to_png,_jl_libcairo), Void,
-        (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
+          (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
 end
 
 function surface_create_similar(s::CairoSurface, w, h)
@@ -295,7 +295,7 @@ end
 
 function format_stride_for_width(format::Integer, width::Integer)
     ccall((:cairo_format_stride_for_width,_jl_libcairo), Int32,
-        (Int32,Int32), format, width)
+          (Int32,Int32), format, width)
 end
 
 # -----------------------------------------------------------------------------
@@ -382,7 +382,7 @@ macro _CTX_FUNC_V(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext) =
             ccall(($(string(FUNCTION)),_jl_libcairo),
-                Void, (Ptr{Void},), ctx.ptr)
+                  Void, (Ptr{Void},), ctx.ptr)
     end
 end
 
@@ -422,7 +422,7 @@ macro _CTX_FUNC_I(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, i0::Integer) =
             ccall(($(string(FUNCTION)),_jl_libcairo),
-                Void, (Ptr{Void},Int32), ctx.ptr, i0)
+                  Void, (Ptr{Void},Int32), ctx.ptr, i0)
     end
 end
 
@@ -432,7 +432,7 @@ macro _CTX_FUNC_D(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real) =
             ccall(($(string(FUNCTION),_jl_libcairo)),
-                Void, (Ptr{Void},Float64), ctx.ptr, d0)
+                  Void, (Ptr{Void},Float64), ctx.ptr, d0)
     end
 end
 
@@ -444,7 +444,7 @@ macro _CTX_FUNC_DD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real) =
             ccall(($(string(FUNCTION)),_jl_libcairo),
-                Void, (Ptr{Void},Float64,Float64), ctx.ptr, d0, d1)
+                  Void, (Ptr{Void},Float64,Float64), ctx.ptr, d0, d1)
     end
 end
 
@@ -459,7 +459,7 @@ macro _CTX_FUNC_DDD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real) =
             ccall(($(string(FUNCTION)),_jl_libcairo),
-                Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, d0, d1, d2)
+                  Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, d0, d1, d2)
     end
 end
 
@@ -469,8 +469,8 @@ macro _CTX_FUNC_DDDD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
             ccall(($(string(FUNCTION)),_jl_libcairo), Void,
-                (Ptr{Void},Float64,Float64,Float64,Float64),
-                ctx.ptr, d0, d1, d2, d3)
+                  (Ptr{Void},Float64,Float64,Float64,Float64),
+                  ctx.ptr, d0, d1, d2, d3)
     end
 end
 
@@ -481,8 +481,8 @@ macro _CTX_FUNC_DDDDD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
             ccall(($(string(FUNCTION)),_jl_libcairo), Void,
-                (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
-                ctx.ptr, d0, d1, d2, d3, d4)
+                  (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
+                  ctx.ptr, d0, d1, d2, d3, d4)
     end
 end
 
@@ -490,43 +490,43 @@ end
 
 function set_dash(ctx::CairoContext, dashes::Vector{Float64})
     ccall((:cairo_set_dash,_jl_libcairo), Void,
-        (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), 0.)
+          (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), 0.)
 end
 
 function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
     ccall((:cairo_set_source_surface,_jl_libcairo), Void,
-        (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, s.ptr, x, y)
+          (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, s.ptr, x, y)
 end
 
 function set_font_from_string(ctx::CairoContext, str::String)
     fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
-        Ptr{Void}, (Ptr{Uint8},), bytestring(str))
+                     Ptr{Void}, (Ptr{Uint8},), bytestring(str))
     ccall((:pango_layout_set_font_description,_jl_libpango), Void,
-        (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
+          (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
     ccall((:pango_font_description_free,_jl_libpango), Void,
-        (Ptr{Void},), fontdesc)
+          (Ptr{Void},), fontdesc)
 end
 
 function set_markup(ctx::CairoContext, markup::String)
     ccall((:pango_layout_set_markup,_jl_libpango), Void,
-        (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(markup), -1)
+          (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(markup), -1)
 end
 
 function get_layout_size(ctx::CairoContext)
     w = Array(Int32,2)
     ccall((:pango_layout_get_pixel_size,_jl_libpango), Void,
-        (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
+          (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
     w
 end
 
 function update_layout(ctx::CairoContext)
     ccall((:pango_cairo_update_layout,_jl_libpangocairo), Void,
-        (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
+          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
 function show_layout(ctx::CairoContext)
     ccall((:pango_cairo_show_layout,_jl_libpangocairo), Void,
-        (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
+          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
 # user<->device coordinate translation
@@ -824,8 +824,8 @@ end
 
 function text_extents(ctx::CairoContext,value::String,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
-              Void, (Ptr{Void}, Ptr{Uint8}, Ptr{Float64}),
-              ctx.ptr, bytestring(value), extents)
+          Void, (Ptr{Void}, Ptr{Uint8}, Ptr{Float64}),
+          ctx.ptr, bytestring(value), extents)
 end
 
 function show_text(ctx::CairoContext,value::String)
