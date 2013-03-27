@@ -1,7 +1,10 @@
+include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
 require("Color")
 
 module Cairo
 using Color
+
+include("constants.jl")
 
 export
     # drawing surface and context types
@@ -10,12 +13,13 @@ export
 
     # surface constructors
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
-    CairoARGBSurface, CairoSVGSurface, CairoImageSurface,
+    CairoARGBSurface, CairoSVGSurface, CairoImageSurface, CairoQuartzSurface,
+    CairoWin32Surface,
     surface_create_similar,
     PNGRenderer, PDFRenderer, EPSRenderer, SVGRenderer,
 
     # surface and context management
-    finish, destroy, status, get_source,
+    finish, destroy, status, resize, get_source,
     creategc, getgc, save, restore, show_page,
 
     # drawing attribute manipulation
@@ -59,33 +63,27 @@ export
     CAIRO_FILTER_BILINEAR,
     CAIRO_FILTER_GAUSSIAN
 
+import Base.get
+
 global symbol, fill, set, get
 
-try
-    global _jl_libcairo = dlopen("libcairo")
-    global _jl_libpangocairo = dlopen("libpangocairo-1.0")
-    global _jl_libgobject = dlopen("libgobject-2.0")
-catch err
-    println("Oops, could not load cairo or pango libraries. Are they installed?")
-    if OS_NAME == :Darwin
-        println(E"
-  homebrew:
-    $ brew install cairo pango
+const _jl_libcairo = :libcairo
+const _jl_libpango = "libpango-1.0"
+const _jl_libpangocairo = "libpangocairo-1.0"
+const _jl_libgobject = "libgobject-2.0"
+const _jl_libglib = "libglib-2.0"
 
-  macports:
-    $ port install cairo pango
-    $ export LD_LIBRARY_PATH=/opt/local/lib
-"       )
-    end
-    throw(err)
+function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
+    n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
+    ret::Int32 = (n == len) ? 0 : 11
 end
 
 abstract GraphicsDevice
 abstract GraphicsContext
 
-function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
-    n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
-    ret::Int32 = (n == len) ? 0 : 11
+function cairo_write_to_stream_callback(s::AsyncStream, buf::Ptr{Uint8}, len::Uint32)
+    n = write(s,buf,len)
+    ret::Int32 = (n == len) ? 0 : 11
 end
 
 type CairoSurface <: GraphicsDevice
@@ -107,105 +105,196 @@ type CairoSurface <: GraphicsDevice
     end
 end
 
+width(surface::CairoSurface) = surface.width
+height(surface::CairoSurface) = surface.height
+
+function resize(surface::CairoSurface, w, h)
+    println("in Cairo.resize")
+    if OS_NAME == :Linux
+        CairoXlibSurfaceSetSize(surface.ptr, w, h)
+    elseif OS_NAME == :Darwin
+    elseif OS_NAME == :Windows
+    else
+        error("Unsupported operating system")
+    end
+end
+
 for name in ("destroy","finish","flush","mark_dirty")
     @eval begin
         $(Base.symbol(name))(surface::CairoSurface) =
-            ccall(dlsym(_jl_libcairo,$(strcat("cairo_surface_",name))),
+            ccall(($(string("cairo_surface_",name)),_jl_libcairo),
                 Void, (Ptr{Void},), surface.ptr)
     end
 end
 
 function status(surface::CairoSurface)
-    ccall(dlsym(_jl_libcairo,:cairo_surface_status),
+    ccall((:cairo_surface_status,_jl_libcairo),
         Int32, (Ptr{Void},), surface.ptr)
 end
 
-const CAIRO_FORMAT_ARGB32 = 0
-const CAIRO_FORMAT_RGB24 = 1
-const CAIRO_FORMAT_A8 = 2
-const CAIRO_FORMAT_A1 = 3
-const CAIRO_FORMAT_RGB16_565 = 4
-const CAIRO_CONTENT_COLOR = int(0x1000)
-const CAIRO_CONTENT_ALPHA = int(0x2000)
-const CAIRO_CONTENT_COLOR_ALPHA = int(0x3000)
-
-function CairoRGBSurface(w::Integer, h::Integer)
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_image_surface_create),
+function CairoRGBSurface(w::Real, h::Real)
+    ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
         Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_RGB24, w, h)
     CairoSurface(ptr, w, h)
 end
 
-function CairoARGBSurface(w::Integer, h::Integer)
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_image_surface_create),
+function CairoARGBSurface(w::Real, h::Real)
+    ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
         Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_ARGB32, w, h)
     CairoSurface(ptr, w, h)
+end
+
+function CairoImageSurface(data::Array, format::Integer, w::Integer, h::Integer, stride::Integer)
+    ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
+        Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+        data, format, w, h, stride)
+    Cairo.CairoSurface(ptr, w, h, data)
+end
+
+function CairoImageSurface(data::Array{Uint32,2}, format::Integer, w::Integer, h::Integer)
+    stride = format_stride_for_width(format, w)
+    @assert stride == 4w
+    CairoImageSurface(data, format, w, h, stride)
 end
 
 function CairoImageSurface(img::Array{Uint32,2}, format::Integer)
     data = img'
     w,h = size(data)
-    stride = format_stride_for_width(format, w)
-    @assert stride == 4w
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_image_surface_create_for_data),
-        Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
-        data, format, w, h, stride)
-    CairoSurface(ptr, w, h, data)
+    CairoImageSurface(data, format, w, h)
 end
+
 CairoARGBSurface(img) = CairoImageSurface(img, CAIRO_FORMAT_ARGB32)
 CairoRGBSurface(img) = CairoImageSurface(img, CAIRO_FORMAT_RGB24)
 
+## PDF ##
+
+function CairoPDFSurface(stream::IOStream, w::Real, h::Real)
+    callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
+    ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
+    CairoSurface(ptr, w, h)
+end
+
+function CairoPDFSurface{T<:AsyncStream}(stream::T, w::Real, h::Real)
+    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
+    CairoSurface(ptr, w, h)
+end
+
 function CairoPDFSurface(filename::String, w_pts::Real, h_pts::Real)
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_pdf_surface_create), Ptr{Void},
+    ptr = ccall((:cairo_pdf_surface_create,_jl_libcairo), Ptr{Void},
         (Ptr{Uint8},Float64,Float64), bytestring(filename), w_pts, h_pts)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
+## EPS ##
+
+function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
+    callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
+    ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
+    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
+        (Ptr{Void},Int32), ptr, 1)
+    CairoSurface(ptr, w, h)
+end
+
+function CairoEPSSurface{T<:AsyncStream}(stream::T, w::Real, h::Real)
+    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
+    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
+        (Ptr{Void},Int32), ptr, 1)
+    CairoSurface(ptr, w, h)
+end
+
 function CairoEPSSurface(filename::String, w_pts::Real, h_pts::Real)
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_ps_surface_create), Ptr{Void},
+    ptr = ccall((:cairo_ps_surface_create,_jl_libcairo), Ptr{Void},
         (Ptr{Uint8},Float64,Float64), bytestring(filename), w_pts, h_pts)
-    ccall(dlsym(_jl_libcairo,:cairo_ps_surface_set_eps), Void,
+    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
         (Ptr{Void},Int32), ptr, 1)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
+## Xlib ##
+
 function CairoXlibSurface(display, drawable, visual, w, h)
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_xlib_surface_create), Ptr{Void},
+    ptr = ccall((:cairo_xlib_surface_create,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Int32, Ptr{Void}, Int32, Int32),
                 display, drawable, visual, w, h)
     CairoSurface(ptr, w, h)
 end
 
+CairoXlibSurfaceSetSize(surface, w, h) =
+    ccall((:cairo_xlib_surface_set_size,_jl_libcairo), Void,
+          (Ptr{Void}, Int32, Int32),
+          surface, w, h)
+
+## Quartz ##
+
+function CairoQuartzSurface(context, w, h)
+    ptr = ccall((:cairo_quartz_surface_create_for_cg_context,_jl_libcairo),
+                Ptr{Void}, (Ptr{Void}, Uint32, Uint32),
+                context, w, h)
+
+    CairoSurface(ptr,w,h)
+end
+
+## Win32 ##
+
+function CairoWin32Surface(hdc,w,h)
+	ptr = ccall((:cairo_win32_surface_create, _jl_libcairo), Ptr{Void}, (Ptr{Void},), hdc)
+	CairoSurface(ptr,w,h)
+end
+
+## SVG ##
+
 function CairoSVGSurface(stream::IOStream, w, h)
     callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_svg_surface_create_for_stream), Ptr{Void},
+    ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
 end
 
+function CairoSVGSurface{T<:AsyncStream}(stream::T, w::Real, h::Real)
+    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
+    CairoSurface(ptr, w, h)
+end
+
+function CairoSVGSurface(filename::String, w::Real, h::Real)
+    ptr = ccall((:cairo_svg_surface_create,_jl_libcairo), Ptr{Void},
+        (Ptr{Uint8},Float64,Float64), bytestring(filename), w, h)
+    CairoSurface(ptr, w, h)
+end
+
+## PNG ##
+
 function read_from_png(filename::String)
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_image_surface_create_from_png),
+    ptr = ccall((:cairo_image_surface_create_from_png,_jl_libcairo),
         Ptr{Void}, (Ptr{Uint8},), bytestring(filename))
-    w = ccall(dlsym(_jl_libcairo,:cairo_image_surface_get_width),
+    w = ccall((:cairo_image_surface_get_width,_jl_libcairo),
         Int32, (Ptr{Void},), ptr)
-    h = ccall(dlsym(_jl_libcairo,:cairo_image_surface_get_height),
+    h = ccall((:cairo_image_surface_get_height,_jl_libcairo),
         Int32, (Ptr{Void},), ptr)
     CairoSurface(ptr, w, h)
 end
 
 function write_to_png(surface::CairoSurface, filename::String)
-    ccall(dlsym(_jl_libcairo,:cairo_surface_write_to_png), Void,
+    ccall((:cairo_surface_write_to_png,_jl_libcairo), Void,
         (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
 end
 
 function surface_create_similar(s::CairoSurface, w, h)
-    ptr = ccall(dlsym(_jl_libcairo,:cairo_surface_create_similar), Ptr{Void},
+    ptr = ccall((:cairo_surface_create_similar,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Int32, Int32, Int32),
                 s.ptr, CAIRO_CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
 
 function format_stride_for_width(format::Integer, width::Integer)
-    ccall(dlsym(_jl_libcairo,:cairo_format_stride_for_width), Int32,
+    ccall((:cairo_format_stride_for_width,_jl_libcairo), Int32,
         (Int32,Int32), format, width)
 end
 
@@ -229,10 +318,10 @@ type CairoContext <: GraphicsContext
     height::Float64
 
     function CairoContext(surface::CairoSurface, x, y, w, h, l, t, r, b)
-        ptr = ccall(dlsym(_jl_libcairo,:cairo_create),
-            Ptr{Void}, (Ptr{Void},), surface.ptr)
-        layout = ccall(dlsym(_jl_libpangocairo,:pango_cairo_create_layout),
-            Ptr{Void}, (Ptr{Void},), ptr)
+        ptr = ccall((:cairo_create,_jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},), surface.ptr)
+        layout = ccall((:pango_cairo_create_layout,_jl_libpangocairo),
+                       Ptr{Void}, (Ptr{Void},), ptr)
         self = new(ptr, surface, layout)
         setcoords(self, x, y, w, h, l, t, r, b)
         finalizer(self, destroy)
@@ -249,7 +338,7 @@ type CairoContext <: GraphicsContext
 end
 
 function destroy(ctx::CairoContext)
-    ccall(dlsym(_jl_libgobject,:g_object_unref), Void, (Ptr{Void},), ctx.layout)
+    ccall((:g_object_unref,_jl_libgobject), Void, (Ptr{Void},), ctx.layout)
     _destroy(ctx)
 end
 
@@ -292,7 +381,7 @@ end
 macro _CTX_FUNC_V(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext) =
-            ccall(dlsym(_jl_libcairo,$(string(FUNCTION))),
+            ccall(($(string(FUNCTION)),_jl_libcairo),
                 Void, (Ptr{Void},), ctx.ptr)
     end
 end
@@ -332,7 +421,7 @@ end
 macro _CTX_FUNC_I(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, i0::Integer) =
-            ccall(dlsym(_jl_libcairo,$(string(FUNCTION))),
+            ccall(($(string(FUNCTION)),_jl_libcairo),
                 Void, (Ptr{Void},Int32), ctx.ptr, i0)
     end
 end
@@ -342,18 +431,19 @@ end
 macro _CTX_FUNC_D(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real) =
-            ccall(dlsym(_jl_libcairo,$(string(FUNCTION))),
+            ccall(($(string(FUNCTION),_jl_libcairo)),
                 Void, (Ptr{Void},Float64), ctx.ptr, d0)
     end
 end
 
 @_CTX_FUNC_D set_line_width cairo_set_line_width
 @_CTX_FUNC_D rotate cairo_rotate
+@_CTX_FUNC_D set_font_size cairo_set_font_size
 
 macro _CTX_FUNC_DD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real) =
-            ccall(dlsym(_jl_libcairo,$(string(FUNCTION))),
+            ccall(($(string(FUNCTION)),_jl_libcairo),
                 Void, (Ptr{Void},Float64,Float64), ctx.ptr, d0, d1)
     end
 end
@@ -368,7 +458,7 @@ end
 macro _CTX_FUNC_DDD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real) =
-            ccall(dlsym(_jl_libcairo,$(string(FUNCTION))),
+            ccall(($(string(FUNCTION)),_jl_libcairo),
                 Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, d0, d1, d2)
     end
 end
@@ -378,7 +468,7 @@ end
 macro _CTX_FUNC_DDDD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
-            ccall(dlsym(_jl_libcairo,$(string(FUNCTION))), Void,
+            ccall(($(string(FUNCTION)),_jl_libcairo), Void,
                 (Ptr{Void},Float64,Float64,Float64,Float64),
                 ctx.ptr, d0, d1, d2, d3)
     end
@@ -390,7 +480,7 @@ end
 macro _CTX_FUNC_DDDDD(NAME, FUNCTION)
     quote
         $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
-            ccall(dlsym(_jl_libcairo,$(string(FUNCTION))), Void,
+            ccall(($(string(FUNCTION)),_jl_libcairo), Void,
                 (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
                 ctx.ptr, d0, d1, d2, d3, d4)
     end
@@ -399,43 +489,43 @@ end
 @_CTX_FUNC_DDDDD arc cairo_arc
 
 function set_dash(ctx::CairoContext, dashes::Vector{Float64})
-    ccall(dlsym(_jl_libcairo,:cairo_set_dash), Void,
+    ccall((:cairo_set_dash,_jl_libcairo), Void,
         (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), 0.)
 end
 
 function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
-    ccall(dlsym(_jl_libcairo,:cairo_set_source_surface), Void,
+    ccall((:cairo_set_source_surface,_jl_libcairo), Void,
         (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, s.ptr, x, y)
 end
 
 function set_font_from_string(ctx::CairoContext, str::String)
-    fontdesc = ccall(dlsym(_jl_libpangocairo,:pango_font_description_from_string),
+    fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
         Ptr{Void}, (Ptr{Uint8},), bytestring(str))
-    ccall(dlsym(_jl_libpangocairo,:pango_layout_set_font_description), Void,
+    ccall((:pango_layout_set_font_description,_jl_libpango), Void,
         (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
-    ccall(dlsym(_jl_libpangocairo,:pango_font_description_free), Void,
+    ccall((:pango_font_description_free,_jl_libpango), Void,
         (Ptr{Void},), fontdesc)
 end
 
 function set_markup(ctx::CairoContext, markup::String)
-    ccall(dlsym(_jl_libpangocairo,:pango_layout_set_markup), Void,
+    ccall((:pango_layout_set_markup,_jl_libpango), Void,
         (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(markup), -1)
 end
 
 function get_layout_size(ctx::CairoContext)
     w = Array(Int32,2)
-    ccall(dlsym(_jl_libpangocairo,:pango_layout_get_pixel_size), Void,
+    ccall((:pango_layout_get_pixel_size,_jl_libpango), Void,
         (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
     w
 end
 
 function update_layout(ctx::CairoContext)
-    ccall(dlsym(_jl_libpangocairo,:pango_cairo_update_layout), Void,
+    ccall((:pango_cairo_update_layout,_jl_libpangocairo), Void,
         (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
 function show_layout(ctx::CairoContext)
-    ccall(dlsym(_jl_libpangocairo,:pango_cairo_show_layout), Void,
+    ccall((:pango_cairo_show_layout,_jl_libpangocairo), Void,
         (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
@@ -457,24 +547,17 @@ end
 
 # -----------------------------------------------------------------------------
 
-const CAIRO_FILTER_FAST = 0
-const CAIRO_FILTER_GOOD = 1
-const CAIRO_FILTER_BEST = 2
-const CAIRO_FILTER_NEAREST = 3
-const CAIRO_FILTER_BILINEAR = 4
-const CAIRO_FILTER_GAUSSIAN = 5
-
 type CairoPattern
     ptr::Ptr{Void}
 end
 
 function get_source(ctx::CairoContext)
-    CairoPattern(ccall(dlsym(_jl_libcairo,:cairo_get_source),
+    CairoPattern(ccall((:cairo_get_source,_jl_libcairo),
                        Ptr{Void}, (Ptr{Void},), ctx.ptr))
 end
 
 function pattern_set_filter(p::CairoPattern, f)
-    ccall(dlsym(_jl_libcairo,:cairo_pattern_set_filter), Void,
+    ccall((:cairo_pattern_set_filter,_jl_libcairo), Void,
           (Ptr{Void},Int32), p.ptr, f)
 end
 
@@ -664,8 +747,8 @@ const symbol_funcs = [
     ),
 ]
 
-function symbol(self::CairoContext, p, name, size)
-    symbols(self, [p[1]], [p[2]], name, size)
+function symbol(self::CairoContext, x::Real, y::Real, name, size)
+    symbols(self, [x], [y], name, size)
 end
 
 function symbols(self::CairoContext, x, y, name, size)
@@ -673,7 +756,7 @@ function symbols(self::CairoContext, x, y, name, size)
     #size = get(self.state, "symbolsize", 0.01)
 
     splitname = split(name)
-    name = pop(splitname)
+    name = pop!(splitname)
     filled = contains(splitname, "solid") || contains(splitname, "filled")
 
     default_symbol_func = (ctx,x,y,r) -> (
@@ -695,7 +778,7 @@ function symbols(self::CairoContext, x, y, name, size)
     restore(self)
 end
 
-function curve(self::CairoContext, x::Vector, y::Vector)
+function curve(self::CairoContext, x::AbstractVector, y::AbstractVector)
     n = min(length(x), length(y))
     if n <= 0
         return
@@ -739,19 +822,39 @@ end
 
 # text commands
 
+function text_extents(ctx::CairoContext,value::String,extents)
+    ccall((:cairo_text_extents, _jl_libcairo),
+              Void, (Ptr{Void}, Ptr{Uint8}, Ptr{Float64}),
+              ctx.ptr, bytestring(value), extents)
+end
+
+function show_text(ctx::CairoContext,value::String)
+    ccall((:cairo_text_extents, _jl_libcairo),
+          Void, (Ptr{Void}, Ptr{Uint8}),
+          ctx.ptr, bytestring(value))
+end
+
+function select_font_face(ctx::CairoContext,family::String,slant,weight)
+    ccall((:cairo_select_font_face, _jl_libcairo),
+          Void, (Ptr{Void}, Ptr{Uint8},
+                 cairo_font_slant_t, cairo_font_weight_t),
+          ctx.ptr, bytestring(property.family),
+          slant, weight)
+end
+
 function layout_text(self::CairoContext, text::String, size)
     markup = tex2pango(text, size)
     set_markup(self, markup)
 end
 
-text(self::CairoContext, p, text) = text(self, p, text, "center", "center", 0.)
+text(self::CairoContext, x, y, text) = text(self, x, y, text, "center", "center", 0.)
 
-function text(self::CairoContext, p, text, halign, valign, angle)
+function text(self::CairoContext, x::Real, y::Real, text, halign, valign, angle)
     #halign = get( self.state, "texthalign", "center" )
     #valign = get( self.state, "textvalign", "center" )
     #angle = get( self.state, "textangle", 0. )
 
-    move_to( self, p[1], p[2] )
+    move_to(self, x, y)
     save(self)
     rotate(self, -angle*pi/180.)
 
@@ -796,7 +899,7 @@ type TeXLexer
     function TeXLexer( str::String )
         self = new()
         self.str = str
-        self.len = strlen(str)
+        self.len = length(str)
         self.pos = 1
         self.token_stack = String[]
         self.re_control_sequence = r"^\\[a-zA-Z]+[ ]?|^\\[^a-zA-Z][ ]?"
@@ -810,16 +913,16 @@ function get_token( self::TeXLexer )
     end
 
     if length(self.token_stack) > 0
-        return pop(self.token_stack)
+        return pop!(self.token_stack)
     end
 
     str = self.str[self.pos:end]
     m = match(self.re_control_sequence, str)
     if m != nothing
         token = m.match
-        self.pos = self.pos + strlen(token)
+        self.pos = self.pos + length(token)
         # consume trailing space
-        if strlen(token) > 2 && token[end] == ' '
+        if length(token) > 2 && token[end] == ' '
             token = token[1:end-1]
         end
     else
@@ -831,7 +934,7 @@ function get_token( self::TeXLexer )
 end
 
 function put_token( self::TeXLexer, token )
-    push( self.token_stack, token )
+    push!(self.token_stack, token)
 end
 
 function peek( self::TeXLexer )
@@ -839,279 +942,6 @@ function peek( self::TeXLexer )
     put_token( self, token )
     return token
 end
-
-const _common_token_dict = [
-    L"\{"               => L"{",
-    L"\}"               => L"}",
-    L"\_"               => L"_",
-    L"\^"               => L"^",
-    L"\-"               => L"-",
-
-    ## ignore stray brackets
-    L"{"                => L"",
-    L"}"                => L"",
-]
-
-const _text_token_dict = [
-    ## non-math symbols (p438)
-    L"\S"               => E"\ua7",
-    L"\P"               => E"\ub6",
-    L"\dag"             => E"\u2020",
-    L"\ddag"            => E"\u2021",
-]
-
-const _math_token_dict = [
-
-    L"-"                => E"\u2212", # minus sign
-
-    ## spacing
-    L"\quad"            => E"\u2003", # 1 em
-    L"\qquad"           => E"\u2003\u2003", # 2 em
-    L"\,"               => E"\u2006", # 3/18 em
-    L"\>"               => E"\u2005", # 4/18 em
-    L"\;"               => E"\u2004", # 5/18 em
-
-    ## lowercase greek
-    L"\alpha"           => E"\u03b1",
-    L"\beta"            => E"\u03b2",
-    L"\gamma"           => E"\u03b3",
-    L"\delta"           => E"\u03b4",
-    L"\epsilon"         => E"\u03b5",
-    L"\varepsilon"      => E"\u03f5",
-    L"\zeta"            => E"\u03b6",
-    L"\eta"             => E"\u03b7",
-    L"\theta"           => E"\u03b8",
-    L"\vartheta"        => E"\u03d1",
-    L"\iota"            => E"\u03b9",
-    L"\kappa"           => E"\u03ba",
-    L"\lambda"          => E"\u03bb",
-    L"\mu"              => E"\u03bc",
-    L"\nu"              => E"\u03bd",
-    L"\xi"              => E"\u03be",
-    L"\omicron"         => E"\u03bf",
-    L"\pi"              => E"\u03c0",
-    L"\varpi"           => E"\u03d6",
-    L"\rho"             => E"\u03c1",
-    L"\varrho"          => E"\u03f1",
-    L"\sigma"           => E"\u03c3",
-    L"\varsigma"        => E"\u03c2",
-    L"\tau"             => E"\u03c4",
-    L"\upsilon"         => E"\u03c5",
-    L"\phi"             => E"\u03d5",
-    L"\varphi"          => E"\u03c6",
-    L"\chi"             => E"\u03c7",
-    L"\psi"             => E"\u03c8",
-    L"\omega"           => E"\u03c9",
-
-    ## uppercase greek
-    L"\Alpha"           => E"\u0391",
-    L"\Beta"            => E"\u0392",
-    L"\Gamma"           => E"\u0393",
-    L"\Delta"           => E"\u0394",
-    L"\Epsilon"         => E"\u0395",
-    L"\Zeta"            => E"\u0396",
-    L"\Eta"             => E"\u0397",
-    L"\Theta"           => E"\u0398",
-    L"\Iota"            => E"\u0399",
-    L"\Kappa"           => E"\u039a",
-    L"\Lambda"          => E"\u039b",
-    L"\Mu"              => E"\u039c",
-    L"\Nu"              => E"\u039d",
-    L"\Xi"              => E"\u039e",
-    L"\Pi"              => E"\u03a0",
-    L"\Rho"             => E"\u03a1",
-    L"\Sigma"           => E"\u03a3",
-    L"\Tau"             => E"\u03a4",
-    L"\Upsilon"         => E"\u03a5",
-    L"\Phi"             => E"\u03a6",
-    L"\Chi"             => E"\u03a7",
-    L"\Psi"             => E"\u03a8",
-    L"\Omega"           => E"\u03a9",
-
-    ## miscellaneous
-    L"\aleph"           => E"\u2135",
-    L"\hbar"            => E"\u210f",
-    L"\ell"             => E"\u2113",
-    L"\wp"              => E"\u2118",
-    L"\Re"              => E"\u211c",
-    L"\Im"              => E"\u2111",
-    L"\partial"         => E"\u2202",
-    L"\infty"           => E"\u221e",
-    L"\prime"           => E"\u2032",
-    L"\emptyset"        => E"\u2205",
-    L"\nabla"           => E"\u2206",
-    L"\surd"            => E"\u221a",
-    L"\top"             => E"\u22a4",
-    L"\bot"             => E"\u22a5",
-    L"\|"               => E"\u2225",
-    L"\angle"           => E"\u2220",
-    L"\triangle"        => E"\u25b3", # == \bigtriangleup
-    L"\backslash"       => E"\u2216",
-    L"\forall"          => E"\u2200",
-    L"\exists"          => E"\u2203",
-    L"\neg"             => E"\uac",
-    L"\flat"            => E"\u266d",
-    L"\natural"         => E"\u266e",
-    L"\sharp"           => E"\u266f",
-    L"\clubsuit"        => E"\u2663",
-    L"\diamondsuit"     => E"\u2662",
-    L"\heartsuit"       => E"\u2661",
-    L"\spadesuit"       => E"\u2660",
-
-    ## large operators
-    L"\sum"             => E"\u2211",
-    L"\prod"            => E"\u220f",
-    L"\coprod"          => E"\u2210",
-    L"\int"             => E"\u222b",
-    L"\oint"            => E"\u222e",
-    L"\bigcap"          => E"\u22c2",
-    L"\bigcup"          => E"\u22c3",
-    L"\bigscup"         => E"\u2a06",
-    L"\bigvee"          => E"\u22c1",
-    L"\bigwedge"        => E"\u22c0",
-    L"\bigodot"         => E"\u2a00",
-    L"\bigotimes"       => E"\u2a02",
-    L"\bigoplus"        => E"\u2a01",
-    L"\biguplus"        => E"\u2a04",
-
-    ## binary operations
-    L"\pm"              => E"\ub1",
-    L"\mp"              => E"\u2213",
-    L"\setminus"        => E"\u2216",
-    L"\cdot"            => E"\u22c5",
-    L"\times"           => E"\ud7",
-    L"\ast"             => E"\u2217",
-    L"\star"            => E"\u22c6",
-    L"\diamond"         => E"\u22c4",
-    L"\circ"            => E"\u2218",
-    L"\bullet"          => E"\u2219",
-    L"\div"             => E"\uf7",
-    L"\cap"             => E"\u2229",
-    L"\cup"             => E"\u222a",
-    L"\uplus"           => E"\u228c", # 228e?
-    L"\sqcap"           => E"\u2293",
-    L"\sqcup"           => E"\u2294",
-    L"\triangleleft"    => E"\u22b2",
-    L"\triangleright"   => E"\u22b3",
-    L"\wr"              => E"\u2240",
-    L"\bigcirc"         => E"\u25cb",
-    L"\bigtriangleup"   => E"\u25b3", # == \triangle
-    L"\bigtriangledown" => E"\u25bd",
-    L"\vee"             => E"\u2228",
-    L"\wedge"           => E"\u2227",
-    L"\oplus"           => E"\u2295",
-    L"\ominus"          => E"\u2296",
-    L"\otimes"          => E"\u2297",
-    L"\oslash"          => E"\u2298",
-    L"\odot"            => E"\u2299",
-    L"\dagger"          => E"\u2020",
-    L"\ddagger"         => E"\u2021",
-    L"\amalg"           => E"\u2210",
-
-    ## relations
-    L"\leq"             => E"\u2264",
-    L"\prec"            => E"\u227a",
-    L"\preceq"          => E"\u227c",
-    L"\ll"              => E"\u226a",
-    L"\subset"          => E"\u2282",
-    L"\subseteq"        => E"\u2286",
-    L"\sqsubseteq"      => E"\u2291",
-    L"\in"              => E"\u2208",
-    L"\vdash"           => E"\u22a2",
-    L"\smile"           => E"\u2323",
-    L"\frown"           => E"\u2322",
-    L"\geq"             => E"\u2265",
-    L"\succ"            => E"\u227b",
-    L"\succeq"          => E"\u227d",
-    L"\gg"              => E"\u226b",
-    L"\supset"          => E"\u2283",
-    L"\supseteq"        => E"\u2287",
-    L"\sqsupseteq"      => E"\u2292",
-    L"\ni"              => E"\u220b",
-    L"\dashv"           => E"\u22a3",
-    L"\mid"             => E"\u2223",
-    L"\parallel"        => E"\u2225",
-    L"\equiv"           => E"\u2261",
-    L"\sim"             => E"\u223c",
-    L"\simeq"           => E"\u2243",
-    L"\asymp"           => E"\u224d",
-    L"\approx"          => E"\u2248",
-    L"\cong"            => E"\u2245",
-    L"\bowtie"          => E"\u22c8",
-    L"\propto"          => E"\u221d",
-    L"\models"          => E"\u22a7", # 22a8?
-    L"\doteq"           => E"\u2250",
-    L"\perp"            => E"\u27c2",
-
-    ## arrows
-    L"\leftarrow"       => E"\u2190",
-    L"\Leftarrow"       => E"\u21d0",
-    L"\rightarrow"      => E"\u2192",
-    L"\Rightarrow"      => E"\u21d2",
-    L"\leftrightarrow"  => E"\u2194",
-    L"\Leftrightarrow"  => E"\u21d4",
-    L"\mapsto"          => E"\u21a6",
-    L"\hookleftarrow"   => E"\u21a9",
-    L"\leftharpoonup"   => E"\u21bc",
-    L"\leftharpoondown" => E"\u21bd",
-    L"\rightleftharpoons" => E"\u21cc",
-    L"\longleftarrow"   => E"\u27f5",
-    L"\Longleftarrow"   => E"\u27f8",
-    L"\longrightarrow"  => E"\u27f6",
-    L"\Longrightarrow"  => E"\u27f9",
-    L"\longleftrightarrow" => E"\u27f7",
-    L"\Longleftrightarrow" => E"\u27fa",
-    L"\hookrightarrow"  => E"\u21aa",
-    L"\rightharpoonup"  => E"\u21c0",
-    L"\rightharpoondown" => E"\u21c1",
-    L"\uparrow"         => E"\u2191",
-    L"\Uparrow"         => E"\u21d1",
-    L"\downarrow"       => E"\u2193",
-    L"\Downarrow"       => E"\u21d3",
-    L"\updownarrow"     => E"\u2195",
-    L"\Updownarrow"     => E"\u21d5",
-    L"\nearrow"         => E"\u2197",
-    L"\searrow"         => E"\u2198",
-    L"\swarrow"         => E"\u2199",
-    L"\nwarrow"         => E"\u2196",
-
-    ## openings
-#    L"\lbrack"          => E"[",
-#    L"\lbrace"          => E"{",
-    L"\langle"          => E"\u27e8",
-    L"\lfloor"          => E"\u230a",
-    L"\lceil"           => E"\u2308",
-
-    ## closings
-#    L"\rbrack"          => E"]",
-#    L"\rbrace"          => E"}",
-    L"\rangle"          => E"\u27e9",
-    L"\rfloor"          => E"\u230b",
-    L"\rceil"           => E"\u2309",
-
-    ## alternate names
-    L"\ne"              => E"\u2260",
-    L"\neq"             => E"\u2260",
-    L"\le"              => E"\u2264",
-    L"\ge"              => E"\u2265",
-    L"\to"              => E"\u2192",
-    L"\gets"            => E"\u2192",
-    L"\owns"            => E"\u220b",
-    L"\land"            => E"\u2227",
-    L"\lor"             => E"\u2228",
-    L"\lnot"            => E"\uac",
-    L"\vert"            => E"\u2223",
-    L"\Vert"            => E"\u2225",
-
-    ## extensions
-    L"\deg"             => E"\ub0",
-    L"\degr"            => E"\ub0",
-    L"\degree"          => E"\ub0",
-    L"\degrees"         => E"\ub0",
-    L"\arcdeg"          => E"\ub0",
-    L"\arcmin"          => E"\u2032",
-    L"\arcsec"          => E"\u2033",
-]
 
 function map_text_token(token::String)
     if has(_text_token_dict, token)
@@ -1138,12 +968,12 @@ function math_group(lexer::TeXLexer)
             break
         end
 
-        if token == L"{"
+        if token == "{"
             bracketmode = true
-        elseif token == L"}"
+        elseif token == "}"
             break
         else
-            output = strcat(output, map_math_token(token))
+            output = string(output, map_math_token(token))
             if !bracketmode
                 break
             end
@@ -1152,7 +982,7 @@ function math_group(lexer::TeXLexer)
     return output
 end
 
-#font_code = [ L"\f0", L"\f1", L"\f2", L"\f3" ]
+#font_code = [ "\\f0", "\\f1", "\\f2", "\\f3" ]
 
 function tex2pango( str::String, fontsize::Real )
     output = ""
@@ -1170,43 +1000,43 @@ function tex2pango( str::String, fontsize::Real )
 
         more_output = ""
 
-        if token == L"$"
+        if token == "\$"
 #            mathmode = !mathmode
-            more_output = L"$"
-        elseif token == L"{"
-            push(font_stack, font)
-        elseif token == L"}"
-            old_font = pop(font_stack)
+            more_output = "\$"
+        elseif token == "{"
+            push!(font_stack, font)
+        elseif token == "}"
+            old_font = pop!(font_stack)
             if old_font != font
                 font = old_font
 #                more_output = font_code[font]
             end
-        elseif token == L"\rm"
+        elseif token == "\\rm"
             font = 1
 #            more_output = font_code[font]
-        elseif token == L"\it"
+        elseif token == "\\it"
             font = 2
 #            more_output = font_code[font]
-        elseif token == L"\bf"
+        elseif token == "\\bf"
             font = 3
 #            more_output = font_code[font]
         elseif !mathmode
             more_output = map_text_token(token)
-        elseif token == L"_"
-            more_output = strcat("<sub><span font=\"$script_size\">", math_group(lexer), L"</span></sub>")
-            #if peek(lexer) == L"^"
-            #    more_output = strcat(L"\mk", more_output, L"\rt")
+        elseif token == "_"
+            more_output = string("<sub><span font=\"$script_size\">", math_group(lexer), "</span></sub>")
+            #if peek(lexer) == "^"
+            #    more_output = string("\\mk", more_output, "\\rt")
             #end
-        elseif token == L"^"
-            more_output = strcat("<sup><span font=\"$script_size\">", math_group(lexer), L"</span></sup>")
-            #if peek(lexer) == L"_"
-            #    more_output = strcat(L"\mk", more_output, L"\rt")
+        elseif token == "^"
+            more_output = string("<sup><span font=\"$script_size\">", math_group(lexer), "</span></sup>")
+            #if peek(lexer) == "_"
+            #    more_output = string("\\mk", more_output, "\\rt")
             #end
         else
             more_output = map_math_token(token)
         end
 
-        output = strcat(output, more_output)
+        output = string(output, more_output)
     end
 
     return output
