@@ -36,7 +36,8 @@ export
 
     # fill, stroke, path, and shape commands
     fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
-    stroke_preserve, move_to, line_to, rel_line_to, rel_move_to, 
+    stroke_preserve, stroke_transformed, stroke_transformed_preserve,
+    move_to, line_to, rel_line_to, rel_move_to,
     rectangle, circle, arc, symbol, symbols, curve, polygon,
 
     # text
@@ -109,14 +110,16 @@ width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
 
 function resize(surface::CairoSurface, w, h)
-    println("in Cairo.resize")
+    #println("in Cairo.resize")
     if OS_NAME == :Linux
         CairoXlibSurfaceSetSize(surface.ptr, w, h)
+        surface.width = w; surface.height = h
     elseif OS_NAME == :Darwin
     elseif OS_NAME == :Windows
     else
         error("Unsupported operating system")
     end
+    surface
 end
 
 for name in (:destroy,:finish,:flush,:mark_dirty)
@@ -537,7 +540,7 @@ for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
                       (:device_to_user_distance!,:cairo_device_to_user_distance))
     @eval begin
         function ($fname)(ctx::CairoContext, p::Vector{Float64})
-            ccall(($(expr(:quote,cname)),:libcairo),
+            ccall(($(Expr(:quote,cname)),:libcairo),
                   Void, (Ptr{Void}, Ptr{Float64}, Ptr{Float64}),
                   ctx.ptr, pointer(p,1), pointer(p,2))
             p
@@ -849,6 +852,13 @@ end
 
 text(self::CairoContext, x, y, text) = text(self, x, y, text, "center", "center", 0.)
 
+const _xxx = [
+    "center"    => 0.5,
+    "left"      => 0.,
+    "right"     => 1.,
+    "top"       => 0.,
+    "bottom"    => 1.,
+]
 function text(self::CairoContext, x::Real, y::Real, text, halign, valign, angle)
     #halign = get( self.state, "texthalign", "center" )
     #valign = get( self.state, "textvalign", "center" )
@@ -861,13 +871,6 @@ function text(self::CairoContext, x::Real, y::Real, text, halign, valign, angle)
     layout_text(self, text)
     update_layout(self)
 
-    const _xxx = [
-        "center"    => 0.5,
-        "left"      => 0.,
-        "right"     => 1.,
-        "top"       => 0.,
-        "bottom"    => 1.,
-    ]
     extents = get_layout_size(self)
     dx = -_xxx[halign]*extents[1]
     dy = _xxx[valign]*extents[2]
