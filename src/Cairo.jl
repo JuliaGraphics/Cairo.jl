@@ -475,10 +475,10 @@ end
 function image(ctx::CairoContext, s::CairoSurface, x, y, w, h)
     rectangle(ctx, x, y, w, h)
     save(ctx)
-    translate(ctx, x, y+h)
+    translate(ctx, x, y)
     scale(ctx, w/s.width, h/s.height)
     set_source_surface(ctx, s, 0, 0)
-    if w > s.width && h > s.height
+    if abs(w) > s.width && abs(h) > s.height
         # use NEAREST filter when stretching an image
         # it's usually better to see pixels than a blurry mess when viewing
         # a small image
