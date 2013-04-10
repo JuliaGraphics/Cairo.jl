@@ -89,6 +89,15 @@ end
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
 
+function destroy(surface::CairoSurface)
+    if surface.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_surface_destroy,_jl_libcairo), Void, (Ptr{Void},), surface.ptr)
+    surface.ptr = C_NULL
+    nothing
+end
+
 # function resize(surface::CairoSurface, w, h)
 #     println("in Cairo.resize")
 #     if OS_NAME == :Linux
@@ -100,7 +109,7 @@ height(surface::CairoSurface) = surface.height
 #     end
 # end
 
-for name in ("destroy","finish","flush","mark_dirty")
+for name in ("finish","flush","mark_dirty")
     @eval begin
         $(Base.symbol(name))(surface::CairoSurface) =
             ccall(($(string("cairo_surface_",name)),_jl_libcairo),
@@ -299,8 +308,13 @@ type CairoContext <: GraphicsContext
 end
 
 function destroy(ctx::CairoContext)
+    if ctx.ptr == C_NULL
+        return
+    end
     ccall((:g_object_unref,_jl_libgobject), Void, (Ptr{Void},), ctx.layout)
     _destroy(ctx)
+    ctx.ptr = C_NULL
+    nothing
 end
 
 macro _CTX_FUNC_V(NAME, FUNCTION)
