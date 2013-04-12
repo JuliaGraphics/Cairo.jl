@@ -22,8 +22,8 @@ export
 
     # drawing attribute manipulation
     pattern_set_filter, set_fill_type, set_line_width, set_dash,
-    set_source_rgb, set_source_rgba, set_source_surface, color_to_rgb,
-    set_color, set_line_type,
+    set_source_rgb, set_source_rgba, set_source_surface,
+    set_line_type,
 
     # coordinate systems
     reset_transform, setcoords, rotate, scale, translate, user_to_device!,
@@ -392,6 +392,11 @@ set_source_rgba(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
           (Ptr{Void},Float64,Float64,Float64,Float64),
           ctx.ptr, d0, d1, d2, d3)
 
+function set_source_rgb(ctx::CairoContext, c::ColorValue)
+    rgb = convert(RGB, c)
+    set_source_rgb(ctx, rgb.r, rgb.g, rgb.b)
+end
+
 rectangle(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
     ccall((:cairo_rectangle,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64),
@@ -509,34 +514,25 @@ function set_clip_rect(ctx::CairoContext, cr)
     new_path(ctx)
 end
 
-color_to_rgb(i::Integer) = hex2rgb(i)
-color_to_rgb(s::String) = name2rgb(s)
-
-function set_color(ctx::CairoContext, color)
-    (r,g,b) = color_to_rgb(color)
-    set_source_rgb(ctx, r, g, b)
-end
-
-const nick2name = [
-    "dot"       => "dotted",
-    "dash"      => "shortdashed",
-    "dashed"    => "shortdashed",
-]
-const name2dashes = [
-    "solid"           => Float64[],
-    "dotted"          => [1.,3.],
-    "dotdashed"       => [1.,3.,4.,4.],
-    "longdashed"      => [6.,6.],
-    "shortdashed"     => [4.,4.],
-    "dotdotdashed"    => [1.,3.,1.,3.,4.,4.],
-    "dotdotdotdashed" => [1.,3.,1.,3.,1.,3.,4.,4.],
-]
-
 function set_line_type(ctx::CairoContext, nick::String)
-    name = get(nick2name, nick, nick)
-    if has(name2dashes, name)
-        set_dash(ctx, name2dashes[name])
+    if nick == "solid"
+        dash = Float64[]
+    elseif nick == "dotted" || nick == "dot"
+        dash = [1.,3.]
+    elseif nick == "dotdashed"
+        dash = [1.,3.,4.,4.]
+    elseif nick == "longdashed"
+        dash = [6.,6.]
+    elseif nick == "shortdashed" || nick == "dash" || nick == "dashed"
+        dash = [4.,4.]
+    elseif nick == "dotdotdashed"
+        dash = [1.,3.,1.,3.,4.,4.]
+    elseif nick == "dotdotdotdashed"
+        dash = [1.,3.,1.,3.,1.,3.,4.,4.]
+    else
+        error("unknown line type ", nick)
     end
+    set_dash(ctx, dash)
 end
 
 # text commands
@@ -566,13 +562,16 @@ function layout_text(ctx::CairoContext, str::String, fontsize)
     set_markup(ctx, markup)
 end
 
-const _xxx = [
-    "center"    => 0.5,
-    "left"      => 0.,
-    "right"     => 1.,
-    "top"       => 0.,
-    "bottom"    => 1.,
-]
+function align2offset(a)
+    if     a == "center" return 0.5
+    elseif a == "left"   return 0.0
+    elseif a == "right"  return 1.0
+    elseif a == "top"    return 0.0
+    elseif a == "bottom" return 1.0
+    end
+    @assert false
+end
+
 function text(ctx::CairoContext, x::Real, y::Real, str::String,
               fontsize, halign, valign, angle)
     move_to(ctx, x, y)
@@ -584,8 +583,8 @@ function text(ctx::CairoContext, x::Real, y::Real, str::String,
     update_layout(ctx)
 
     extents = get_layout_size(ctx)
-    dx = -_xxx[halign]*extents[1]
-    dy = _xxx[valign]*extents[2]
+    dx = -align2offset(halign)*extents[1]
+    dy = align2offset(valign)*extents[2]
     rel_move_to(ctx, dx, -dy)
 
     show_layout(ctx)
