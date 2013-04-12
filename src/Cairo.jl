@@ -317,30 +317,28 @@ function destroy(ctx::CairoContext)
     nothing
 end
 
-macro _CTX_FUNC_V(NAME, FUNCTION)
-    quote
-        $(esc(NAME))(ctx::CairoContext) =
-            ccall(($(string(FUNCTION)),_jl_libcairo),
+for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
+                         (:save, :cairo_save),
+                         (:restore, :cairo_restore),
+                         (:show_page, :cairo_show_page),
+                         (:clip, :cairo_clip),
+                         (:clip_preserve, :cairo_clip_preserve),
+                         (:reset_clip, :cairo_reset_clip),
+                         (:reset_transform, :cairo_identity_matrix),
+                         (:fill, :cairo_fill),
+                         (:fill_preserve, :cairo_fill_preserve),
+                         (:new_path, :cairo_new_path),
+                         (:new_sub_path, :cairo_new_sub_path),
+                         (:close_path, :cairo_close_path),
+                         (:paint, :cairo_paint),
+                         (:stroke_transformed, :cairo_stroke),
+                         (:stroke_transformed_preserve, :cairo_stroke_preserve)}
+    @eval begin
+        $NAME(ctx::CairoContext) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
                   Void, (Ptr{Void},), ctx.ptr)
     end
 end
-
-@_CTX_FUNC_V _destroy cairo_destroy
-@_CTX_FUNC_V save cairo_save
-@_CTX_FUNC_V restore cairo_restore
-@_CTX_FUNC_V show_page cairo_show_page
-@_CTX_FUNC_V clip cairo_clip
-@_CTX_FUNC_V clip_preserve cairo_clip_preserve
-@_CTX_FUNC_V reset_clip cairo_reset_clip
-@_CTX_FUNC_V reset_transform cairo_identity_matrix
-@_CTX_FUNC_V fill cairo_fill
-@_CTX_FUNC_V fill_preserve cairo_fill_preserve
-@_CTX_FUNC_V new_path cairo_new_path
-@_CTX_FUNC_V new_sub_path cairo_new_sub_path
-@_CTX_FUNC_V close_path cairo_close_path
-@_CTX_FUNC_V paint cairo_paint
-@_CTX_FUNC_V stroke_transformed cairo_stroke
-@_CTX_FUNC_V stroke_transformed_preserve cairo_stroke_preserve
 
 function stroke(ctx::CairoContext)
     save(ctx)
@@ -357,75 +355,52 @@ function stroke_preserve(ctx::CairoContext)
     restore(ctx)
 end
 
-macro _CTX_FUNC_I(NAME, FUNCTION)
-    quote
-        $(esc(NAME))(ctx::CairoContext, i0::Integer) =
-            ccall(($(string(FUNCTION)),_jl_libcairo),
-                  Void, (Ptr{Void},Int32), ctx.ptr, i0)
-    end
+function set_fill_type(ctx::CairoContext, i0::Integer)
+    ccall((:cairo_set_fill_rule, _jl_libcairo),
+          Void, (Ptr{Void},Int32), ctx.ptr, i0)
 end
 
-@_CTX_FUNC_I set_fill_type cairo_set_fill_rule
-
-macro _CTX_FUNC_D(NAME, FUNCTION)
-    quote
-        $(esc(NAME))(ctx::CairoContext, d0::Real) =
-            ccall(($(string(FUNCTION),_jl_libcairo)),
+for (NAME, FUNCTION) in {(:set_line_width, :cairo_set_line_width),
+                         (:rotate, :cairo_rotate),
+                         (:set_font_size, :cairo_set_font_size)}
+    @eval begin
+        $NAME(ctx::CairoContext, d0::Real) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
                   Void, (Ptr{Void},Float64), ctx.ptr, d0)
     end
 end
 
-@_CTX_FUNC_D set_line_width cairo_set_line_width
-@_CTX_FUNC_D rotate cairo_rotate
-@_CTX_FUNC_D set_font_size cairo_set_font_size
-
-macro _CTX_FUNC_DD(NAME, FUNCTION)
-    quote
-        $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real) =
-            ccall(($(string(FUNCTION)),_jl_libcairo),
+for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
+                         (:move_to, :cairo_move_to),
+                         (:rel_line_to, :cairo_rel_line_to),
+                         (:rel_move_to, :cairo_rel_move_to),
+                         (:scale, :cairo_scale),
+                         (:translate, :cairo_translate)}
+    @eval begin
+        $NAME(ctx::CairoContext, d0::Real, d1::Real) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
                   Void, (Ptr{Void},Float64,Float64), ctx.ptr, d0, d1)
     end
 end
 
-@_CTX_FUNC_DD line_to cairo_line_to
-@_CTX_FUNC_DD move_to cairo_move_to
-@_CTX_FUNC_DD rel_line_to cairo_rel_line_to
-@_CTX_FUNC_DD rel_move_to cairo_rel_move_to
-@_CTX_FUNC_DD scale cairo_scale
-@_CTX_FUNC_DD translate cairo_translate
+set_source_rgb(ctx::CairoContext, d0::Real, d1::Real, d2::Real) =
+    ccall((:cairo_set_source_rgb,_jl_libcairo),
+          Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, d0, d1, d2)
 
-macro _CTX_FUNC_DDD(NAME, FUNCTION)
-    quote
-        $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real) =
-            ccall(($(string(FUNCTION)),_jl_libcairo),
-                  Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, d0, d1, d2)
-    end
-end
+set_source_rgba(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
+    ccall((:cairo_set_source_rgba,_jl_libcairo), Void,
+          (Ptr{Void},Float64,Float64,Float64,Float64),
+          ctx.ptr, d0, d1, d2, d3)
 
-@_CTX_FUNC_DDD set_source_rgb cairo_set_source_rgb
+rectangle(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
+    ccall((:cairo_rectangle,_jl_libcairo), Void,
+          (Ptr{Void},Float64,Float64,Float64,Float64),
+          ctx.ptr, d0, d1, d2, d3)
 
-macro _CTX_FUNC_DDDD(NAME, FUNCTION)
-    quote
-        $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
-            ccall(($(string(FUNCTION)),_jl_libcairo), Void,
-                  (Ptr{Void},Float64,Float64,Float64,Float64),
-                  ctx.ptr, d0, d1, d2, d3)
-    end
-end
-
-@_CTX_FUNC_DDDD set_source_rgba cairo_set_source_rgba
-@_CTX_FUNC_DDDD rectangle cairo_rectangle
-
-macro _CTX_FUNC_DDDDD(NAME, FUNCTION)
-    quote
-        $(esc(NAME))(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
-            ccall(($(string(FUNCTION)),_jl_libcairo), Void,
-                  (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
-                  ctx.ptr, d0, d1, d2, d3, d4)
-    end
-end
-
-@_CTX_FUNC_DDDDD arc cairo_arc
+arc(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
+    ccall((:cairo_arc,_jl_libcairo), Void,
+          (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
+          ctx.ptr, d0, d1, d2, d3, d4)
 
 circle(ctx::CairoContext, x::Real, y::Real, r::Real) = arc(ctx, x, y, r, 0., 2pi)
 
