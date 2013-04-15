@@ -3,11 +3,12 @@ include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
 module Cairo
 using Color
 
+importall Base.Graphics
+
 include("constants.jl")
 
 export
     # drawing surface and context types
-    GraphicsDevice, GraphicsContext,
     CairoSurface, CairoContext, CairoPattern,
 
     # surface constructors
@@ -22,15 +23,14 @@ export
 
     # drawing attribute manipulation
     pattern_set_filter, set_fill_type, set_line_width, set_dash,
-    set_source_rgb, set_source_rgba, set_source_surface,
-    set_line_type,
+    set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
 
     # coordinate systems
-    reset_transform, setcoords, rotate, scale, translate, user_to_device!,
+    reset_transform, rotate, scale, translate, user_to_device!,
     device_to_user!, user_to_device_distance!, device_to_user_distance!,
 
     # clipping
-    clip, clip_preserve, reset_clip, set_clip_rect,
+    clip, clip_preserve, reset_clip,
 
     # fill, stroke, path, and shape commands
     fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
@@ -40,16 +40,11 @@ export
 
     # text
     update_layout, show_layout, get_layout_size, layout_text, text,
-    textwidth, textheight, set_font_from_string, set_markup,
-    TeXLexer, tex2pango,
+    textwidth, textheight, set_font_face, set_markup, select_font_face,
+    TeXLexer, tex2pango, set_font_size, show_text, text_extents,
 
     # images
     write_to_png, image, read_from_png
-
-global fill
-
-abstract GraphicsDevice
-abstract GraphicsContext
 
 const _jl_libcairo = :libcairo
 const _jl_libpango = "libpango-1.0"
@@ -109,9 +104,9 @@ end
 #     end
 # end
 
-for name in ("finish","flush","mark_dirty")
+for name in (:finish,:flush,:mark_dirty)
     @eval begin
-        $(Base.symbol(name))(surface::CairoSurface) =
+        $name(surface::CairoSurface) =
             ccall(($(string("cairo_surface_",name)),_jl_libcairo),
                   Void, (Ptr{Void},), surface.ptr)
     end
@@ -307,6 +302,8 @@ type CairoContext <: GraphicsContext
     end
 end
 
+creategc(s::CairoSurface) = CairoContext(s)
+
 function destroy(ctx::CairoContext)
     if ctx.ptr == C_NULL
         return
@@ -407,8 +404,6 @@ arc(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
           (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
           ctx.ptr, d0, d1, d2, d3, d4)
 
-circle(ctx::CairoContext, x::Real, y::Real, r::Real) = arc(ctx, x, y, r, 0., 2pi)
-
 function set_dash(ctx::CairoContext, dashes::Vector{Float64})
     ccall((:cairo_set_dash,_jl_libcairo), Void,
           (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), 0.)
@@ -419,7 +414,7 @@ function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real
           (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, s.ptr, x, y)
 end
 
-function set_font_from_string(ctx::CairoContext, str::String)
+function set_font_face(ctx::CairoContext, str::String)
     fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
                      Ptr{Void}, (Ptr{Uint8},), bytestring(str))
     ccall((:pango_layout_set_font_description,_jl_libpango), Void,
@@ -504,16 +499,6 @@ end
 
 # -----------------------------------------------------------------------------
 
-function set_clip_rect(ctx::CairoContext, cr)
-    x = cr[1]
-    y = cr[3]
-    width = cr[2] - cr[1]
-    height = cr[4] - cr[3]
-    rectangle(ctx, x, y, width, height)
-    clip(ctx)
-    new_path(ctx)
-end
-
 function set_line_type(ctx::CairoContext, nick::String)
     if nick == "solid"
         dash = Float64[]
@@ -544,7 +529,7 @@ function text_extents(ctx::CairoContext,value::String,extents)
 end
 
 function show_text(ctx::CairoContext,value::String)
-    ccall((:cairo_text_extents, _jl_libcairo),
+    ccall((:cairo_show_text, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{Uint8}),
           ctx.ptr, bytestring(value))
 end
