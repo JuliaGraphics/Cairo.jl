@@ -24,6 +24,7 @@ export
     # drawing attribute manipulation
     pattern_set_filter, set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
+    set_operator,
 
     # coordinate systems
     reset_transform, rotate, scale, translate, user_to_device!,
@@ -94,7 +95,6 @@ function destroy(surface::CairoSurface)
 end
 
 # function resize(surface::CairoSurface, w, h)
-#     println("in Cairo.resize")
 #     if OS_NAME == :Linux
 #         CairoXlibSurfaceSetSize(surface.ptr, w, h)
 #     elseif OS_NAME == :Darwin
@@ -102,6 +102,8 @@ end
 #     else
 #         error("Unsupported operating system")
 #     end
+#     surface.width = w
+#     surface.height = h
 # end
 
 for name in (:finish,:flush,:mark_dirty)
@@ -130,10 +132,10 @@ function CairoARGBSurface(w::Real, h::Real)
 end
 
 function CairoImageSurface(data::Array, format::Integer, w::Integer, h::Integer, stride::Integer)
-    ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
+    ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
                 Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
                 data, format, w, h, stride)
-    Cairo.CairoSurface(ptr, w, h, data)
+    CairoSurface(ptr, w, h, data)
 end
 
 function CairoImageSurface(data::Array{Uint32,2}, format::Integer, w::Integer, h::Integer)
@@ -352,9 +354,18 @@ function stroke_preserve(ctx::CairoContext)
     restore(ctx)
 end
 
-function set_fill_type(ctx::CairoContext, i0::Integer)
-    ccall((:cairo_set_fill_rule, _jl_libcairo),
-          Void, (Ptr{Void},Int32), ctx.ptr, i0)
+function get_operator(ctx::CairoContext)
+    int(ccall((:cairo_get_operator,_jl_libcairo), Int32, (Ptr{Void},), ctx.ptr))
+end
+
+
+for (NAME, FUNCTION) in {(:set_fill_type, :cairo_set_fill_rule),
+                         (:set_operator, :cairo_set_operator)}
+    @eval begin
+        $NAME(ctx::CairoContext, i0::Integer) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+                  Void, (Ptr{Void},Int32), ctx.ptr, i0)
+    end
 end
 
 for (NAME, FUNCTION) in {(:set_line_width, :cairo_set_line_width),
@@ -404,9 +415,9 @@ arc(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
           (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
           ctx.ptr, d0, d1, d2, d3, d4)
 
-function set_dash(ctx::CairoContext, dashes::Vector{Float64})
+function set_dash(ctx::CairoContext, dashes::Vector{Float64}, offset::Real = 0.0)
     ccall((:cairo_set_dash,_jl_libcairo), Void,
-          (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), 0.)
+          (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), offset)
 end
 
 function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
