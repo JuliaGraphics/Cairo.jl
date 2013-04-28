@@ -11,13 +11,40 @@ end
 
 ## Prebuilt Binaries
 depsdir = joinpath(Pkg.dir(),"Cairo","deps")
-@windows_only begin	
+@windows_only begin
 	local_file = joinpath(joinpath(depsdir,"downloads"),"Cairo.tar.gz")
 	push!(c,Choice(:binary,"Download prebuilt binary",@build_steps begin
 				ChangeDirectory(depsdir)
 				FileDownloader("http://julialang.googlecode.com/files/Cairo.tar.gz",local_file)
 				FileUnpacker(local_file,joinpath(depsdir,"usr"))
 			end))
+@windows_only begin
+	local_dir = joinpath(depsdir,"downloads")
+    steps = @build_steps begin end
+    if WORD_SIZE == 32
+        binaries = (
+            ("zlib_1.2.5-2_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/zlib_1.2.5-2_win32.zip"),
+            ("cairo_1.10.2-2_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/cairo_1.10.2-2_win32.zip"),
+            ("libpng_1.4.3-1_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/libpng_1.4.3-1_win32.zip"),
+            ("freetype_2.4.2-1_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/freetype_2.4.2-1_win32.zip"),
+            ("fontconfig_2.8.0-2_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/fontconfig_2.8.0-2_win32.zip"),
+            ("expat_2.0.1-1_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/expat_2.0.1-1_win32.zip"),
+            ("gettext-runtime_0.18.1.1-2_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip"),
+            ("glib_2.28.8-1_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip"),
+            ("pango_1.29.4-1_win32.zip", "http://ftp.gnome.org/pub/gnome/binaries/win32/pango/1.29/pango_1.29.4-1_win32.zip"))
+    else
+        binaries = ()
+    end
+    for (file,url) in binaries; let file=file, url=url, local_file
+        steps |= @build_steps begin
+                local_file = joinpath(local_dir,file)
+				ChangeDirectory(depsdir)
+				FileDownloader(url,local_file)
+				FileUnpacker(local_file,joinpath(depsdir,"usr"))
+			end
+        end
+    end; end
+	push!(c,Choice(:preferred,"Download prebuilt binaries [preferred]",))
 end
 
 

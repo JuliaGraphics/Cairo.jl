@@ -1,9 +1,12 @@
 let 
     function find_library(libname,filename)
-        try 
-            dl = dlopen(joinpath(Pkg.dir(),"Cairo","deps","usr","lib",filename))
+        dl = dlopen_e(joinpath(Pkg.dir(),"Cairo","deps","usr","lib",filename))
+        if dl == C_NULL
+            dl = dlopen_e(joinpath(Pkg.dir(),"Cairo","deps","usr","bin",filename))
+        end
+        if dl != C_NULL
             ccall(:add_library_mapping,Int32,(Ptr{Uint8},Ptr{Uint8}),libname,dl)
-        catch
+        else
             try 
                 dl = dlopen(libname)
                 dlclose(dl)
