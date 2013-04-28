@@ -31,7 +31,7 @@ depsdir = joinpath(Pkg.dir(),"Cairo","deps")
             ("zlib_1.2.3-2_win64.zip", "zlib1.dll", "http://ftp.gnome.org/pub/GNOME/binaries/win64/dependencies/zlib_1.2.3-2_win64.zip"),
             ("cairo_1.10.2-1_win64.zip", "libcairo-2.dll", "http://ftp.gnome.org/pub/gnome/binaries/win64/dependencies/cairo_1.10.2-1_win64.zip"),
             ("libpng_1.4.0-1_win64.zip", "libpng14-14.dll", "http://ftp.gnome.org/pub/gnome/binaries/win64/dependencies/libpng_1.4.0-1_win64.zip"),
-            ("freetype_2.3.12-1_win64.zip", "freetype6.dll", "http://ftp.gnome.org/pub/gnome/binaries/win64/dependencies/freetype_2.3.12-1_win64.zip"),
+            ("freetype_2.3.12-1_win64.zip", "libfreetype-6.dll", "http://ftp.gnome.org/pub/gnome/binaries/win64/dependencies/freetype_2.3.12-1_win64.zip"),
             ("fontconfig_2.8.0-1_win64.zip", "libfontconfig-1.dll", "http://ftp.gnome.org/pub/gnome/binaries/win64/dependencies/fontconfig_2.8.0-1_win64.zip"),
             ("expat_2.0.1-2_win64.zip", "libexpat-1.dll", "http://ftp.gnome.org/pub/gnome/binaries/win64/dependencies/expat_2.0.1-2_win64.zip"),
             ("glib_2.26.1-1_win64.zip", "libglib-2.0-0.dll", "http://ftp.gnome.org/pub/gnome/binaries/win64/glib/2.26/glib_2.26.1-1_win64.zip"),
@@ -46,7 +46,6 @@ depsdir = joinpath(Pkg.dir(),"Cairo","deps")
                     FileDownloader(url,local_file)
                     FileRule(local_dll,unpack_cmd(local_file,usr))
                 end
-            end
         end
     end
     push!(c,Choice(:binary,"Download prebuilt binaries [preferred]",steps))
