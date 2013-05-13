@@ -29,6 +29,7 @@ export
     # coordinate systems
     reset_transform, rotate, scale, translate, user_to_device!,
     device_to_user!, user_to_device_distance!, device_to_user_distance!,
+    get_matrix, set_matrix,
 
     # clipping
     clip, clip_preserve, reset_clip,
@@ -510,6 +511,28 @@ end
 
 # -----------------------------------------------------------------------------
 
+immutable CairoMatrix
+    xx::Float64
+    yx::Float64
+    xy::Float64
+    yy::Float64
+    x0::Float64
+    y0::Float64
+end
+
+CairoMatrix() = CairoMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+function get_matrix(ctx::CairoContext)
+    m = [CairoMatrix()]
+    ccall((:cairo_get_matrix, _jl_libcairo), Void, (Ptr{Void}, Ptr{Void}), ctx.ptr, m)
+    m[1]
+end
+
+function set_matrix(ctx::CairoContext, m::CairoMatrix)
+    ccall((:cairo_set_matrix, _jl_libcairo), Void, (Ptr{Void}, Ptr{Void}), ctx.ptr, [m])
+end
+
+# -----------------------------------------------------------------------------
 function set_line_type(ctx::CairoContext, nick::String)
     if nick == "solid"
         dash = Float64[]
