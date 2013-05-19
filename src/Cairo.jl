@@ -473,6 +473,20 @@ for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
     end
 end
 
+const d2ubuf = zeros(2)
+function device_to_user(r::CairoContext, x::Real, y::Real)
+    d2ubuf[1] = x
+    d2ubuf[2] = y
+    device_to_user!(r, d2ubuf)
+    d2ubuf[1], d2ubuf[2]
+end
+function user_to_device(r::CairoContext, x::Real, y::Real)
+    d2ubuf[1] = x
+    d2ubuf[2] = y
+    user_to_device!(r, d2ubuf)
+    d2ubuf[1], d2ubuf[2]
+end
+
 function image(ctx::CairoContext, s::CairoSurface, x, y, w, h)
     rectangle(ctx, x, y, w, h)
     save(ctx)
