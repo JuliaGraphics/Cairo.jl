@@ -677,7 +677,7 @@ function peek(self::TeXLexer)
 end
 
 function map_text_token(token::String)
-    if has(_text_token_dict, token)
+    if haskey(_text_token_dict, token)
         return _text_token_dict[token]
     else
         return get(_common_token_dict, token, token)
@@ -685,7 +685,7 @@ function map_text_token(token::String)
 end
 
 function map_math_token(token::String)
-    if has(_math_token_dict, token)
+    if haskey(_math_token_dict, token)
         return _math_token_dict[token]
     else
         return get(_common_token_dict, token, token)
