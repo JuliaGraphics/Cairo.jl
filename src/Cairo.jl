@@ -24,7 +24,7 @@ export
     # drawing attribute manipulation
     pattern_set_filter, set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
-    set_operator,
+    set_operator, set_source,
 
     # coordinate systems
     reset_transform, rotate, scale, translate, user_to_device!,
@@ -401,7 +401,7 @@ set_source_rgba(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
           (Ptr{Void},Float64,Float64,Float64,Float64),
           ctx.ptr, d0, d1, d2, d3)
 
-function set_source_rgb(ctx::CairoContext, c::ColorValue)
+function set_source(ctx::CairoContext, c::ColorValue)
     rgb = convert(RGB, c)
     set_source_rgb(ctx, rgb.r, rgb.g, rgb.b)
 end
@@ -425,6 +425,11 @@ function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real
     ccall((:cairo_set_source_surface,_jl_libcairo), Void,
           (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, s.ptr, x, y)
 end
+
+function set_source(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
+    set_source_surface(ctx, s, x, y)
+end
+set_source(ctx::CairoContext, s::CairoSurface) = set_source_surface(ctx, s, 0, 0)
 
 function set_font_face(ctx::CairoContext, str::String)
     fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
