@@ -82,13 +82,25 @@ function build()
 
 end # build()
 
+function find_library(pkg,libname,filename)
+    dl = dlopen_e(joinpath(Pkg.dir(),pkg,"deps","usr","lib",filename))
+    if dl == C_NULL
+        dl = dlopen_e(libname)
+        if dl == C_NULL; return false; end
+    end
+
+    if dl != C_NULL
+        dlclose(dl)
+        return true
+    end
+end
 
 builddeps = false
 
-if !BinDeps.find_library("Cairo", "libcairo", OS_NAME == :Windows ? "libcairo-2" : "libcairo"); builddeps = true; end
-if !BinDeps.find_library("Cairo", "libfontconfig", OS_NAME == :Windows ? "libfontconfig-1" : "libfontconfig"); builddeps = true; end
-if !BinDeps.find_library("Cairo", "libpango-1.0", OS_NAME == :Windows ? "libpango-1.0-0" : "libpango-1.0"); builddeps = true; end
-if !BinDeps.find_library("Cairo", "libpangocairo-1.0", OS_NAME == :Windows ? "libpangocairo-1.0-0" : "libpangocairo-1.0"); builddeps = true; end
-if !BinDeps.find_library("Cairo", "libgobject-2.0", OS_NAME == :Windows ? "libgobject-2.0-0" : "libgobject-2.0"); builddeps = true; end
+if !find_library("Cairo", "libcairo", OS_NAME == :Windows ? "libcairo-2" : "libcairo"); builddeps = true; end
+if !find_library("Cairo", "libfontconfig", OS_NAME == :Windows ? "libfontconfig-1" : "libfontconfig"); builddeps = true; end
+if !find_library("Cairo", "libpango-1.0", OS_NAME == :Windows ? "libpango-1.0-0" : "libpango-1.0"); builddeps = true; end
+if !find_library("Cairo", "libpangocairo-1.0", OS_NAME == :Windows ? "libpangocairo-1.0-0" : "libpangocairo-1.0"); builddeps = true; end
+if !find_library("Cairo", "libgobject-2.0", OS_NAME == :Windows ? "libgobject-2.0-0" : "libgobject-2.0"); builddeps = true; end
 
 if builddeps; build(); end
