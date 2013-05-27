@@ -1,30 +1,46 @@
 using BinDeps
-s = @build_steps begin
-	c=Choices(Choice[Choice(:skip,"Skip Installation - Binaries must be installed manually",nothing)])
+
+function find_library(libname,filename)
+    try 
+        dl = dlopen(joinpath(Pkg.dir(),"Cairo","deps","usr","lib",filename))
+    catch
+        try 
+            dl = dlopen(libname)
+            dlclose(dl)
+        catch
+            return false
+        end
+    end
+    return true
 end
 
-## Homebrew
-@osx_only push!(c,Choice(:brew,"Install depdendency using brew",@build_steps begin
-		HomebrewInstall("pango",ASCIIString[])
-		`brew link cairo`
-		end))
+function build()
+    s = @build_steps begin
+	c=Choices(Choice[Choice(:skip,"Skip Installation - Binaries must be installed manually",nothing)])
+    end
+    
+    ## Homebrew
+    @osx_only push!(c,Choice(:brew,"Install depdendency using brew",@build_steps begin
+	HomebrewInstall("pango",ASCIIString[])
+	`brew link cairo`
+    end))
 
-## Prebuilt Binaries
-depsdir = joinpath(Pkg.dir(),"Cairo","deps")
-@windows_only begin	
+    ## Prebuilt Binaries
+    depsdir = joinpath(Pkg.dir(),"Cairo","deps")
+    @windows_only begin	
 	local_file = joinpath(joinpath(depsdir,"downloads"),"Cairo.tar.gz")
 	push!(c,Choice(:binary,"Download prebuilt binary",@build_steps begin
 				ChangeDirectory(depsdir)
 				FileDownloader("http://julialang.googlecode.com/files/Cairo.tar.gz",local_file)
 				FileUnpacker(local_file,joinpath(depsdir,"usr"))
-			end))
-end
+		       end))
+    end
 
 
-println(depsdir)
+    println(depsdir)
 
-## Install from source
-let 
+    ## Install from source
+    let 
 	prefix=joinpath(depsdir,"usr")
 	uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
 	pngsrcdir = joinpath(depsdir,"src","libpng-1.5.13")
@@ -75,5 +91,18 @@ let
 		autotools_install(depsdir,"http://ftp.gnome.org/pub/GNOME/sources/pango/1.32/pango-1.32.6.tar.xz","pango-1.32.6.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include","--with-included-modules=yes", OS_NAME != :Linux ? "--without-x" : ""],"pango-1.32.6","pango-1.32.6","pango/libpango-1.0.la","libpango-1.0.la")
 	end
 	push!(c,Choice(:source,"Install depdendency from source",steps))
-end
-run(s)
+    end
+    run(s)
+
+end # build()
+
+
+builddeps = false
+
+if !find_library("libcairo",OS_NAME == :Windows ? "libcairo-2" : "libcairo"); builddeps = true; end
+if !find_library("libfontconfig",OS_NAME == :Windows ? "libfontconfig-1" : "libfontconfig"); builddeps = true; end
+if !find_library("libpango-1.0",OS_NAME == :Windows ? "libpango-1.0-0" : "libpango-1.0"); builddeps = true; end
+if !find_library("libpangocairo-1.0",OS_NAME == :Windows ? "libpangocairo-1.0-0" : "libpangocairo-1.0"); builddeps = true; end
+if !find_library("libgobject-2.0",OS_NAME == :Windows ? "libgobject-2.0-0" : "libgobject-2.0"); builddeps = true; end
+
+if builddeps; build(); end
