@@ -1,19 +1,5 @@
 using BinDeps
 
-function find_library(libname,filename)
-    try 
-        dl = dlopen(joinpath(Pkg.dir(),"Cairo","deps","usr","lib",filename))
-    catch
-        try 
-            dl = dlopen(libname)
-            dlclose(dl)
-        catch
-            return false
-        end
-    end
-    return true
-end
-
 function build()
     s = @build_steps begin
 	c=Choices(Choice[Choice(:skip,"Skip Installation - Binaries must be installed manually",nothing)])
@@ -99,10 +85,10 @@ end # build()
 
 builddeps = false
 
-if !find_library("libcairo",OS_NAME == :Windows ? "libcairo-2" : "libcairo"); builddeps = true; end
-if !find_library("libfontconfig",OS_NAME == :Windows ? "libfontconfig-1" : "libfontconfig"); builddeps = true; end
-if !find_library("libpango-1.0",OS_NAME == :Windows ? "libpango-1.0-0" : "libpango-1.0"); builddeps = true; end
-if !find_library("libpangocairo-1.0",OS_NAME == :Windows ? "libpangocairo-1.0-0" : "libpangocairo-1.0"); builddeps = true; end
-if !find_library("libgobject-2.0",OS_NAME == :Windows ? "libgobject-2.0-0" : "libgobject-2.0"); builddeps = true; end
+if !BinDeps.find_library("Cairo", "libcairo", OS_NAME == :Windows ? "libcairo-2" : "libcairo"); builddeps = true; end
+if !BinDeps.find_library("Cairo", "libfontconfig", OS_NAME == :Windows ? "libfontconfig-1" : "libfontconfig"); builddeps = true; end
+if !BinDeps.find_library("Cairo", "libpango-1.0", OS_NAME == :Windows ? "libpango-1.0-0" : "libpango-1.0"); builddeps = true; end
+if !BinDeps.find_library("Cairo", "libpangocairo-1.0", OS_NAME == :Windows ? "libpangocairo-1.0-0" : "libpangocairo-1.0"); builddeps = true; end
+if !BinDeps.find_library("Cairo", "libgobject-2.0", OS_NAME == :Windows ? "libgobject-2.0-0" : "libgobject-2.0"); builddeps = true; end
 
 if builddeps; build(); end
