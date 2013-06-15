@@ -88,4 +88,4 @@ alllibs = find_library("Cairo", "libcairo", ["libcairo-2", "libcairo"]) ||
           find_library("Cairo", "libpangocairo", ["libpangocairo-1.0-0", "libpangocairo-1.0"]) ||
           find_library("Cairo", "libgobject", ["libgobject-2.0-0", "libgobject-2.0"])
 
-!alllibs || build()
+if !alllibs; build(); end
