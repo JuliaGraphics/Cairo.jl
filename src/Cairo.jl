@@ -48,11 +48,11 @@ export
     # images
     write_to_png, image, read_from_png
 
-const _jl_libcairo = :libcairo
-const _jl_libpango = "libpango-1.0"
-const _jl_libpangocairo = "libpangocairo-1.0"
-const _jl_libgobject = "libgobject-2.0"
-const _jl_libglib = "libglib-2.0"
+const _jl_libcairo = "libcairo"
+const _jl_libpango = "libpango"
+const _jl_libpangocairo = "libpangocairo"
+const _jl_libgobject = "libgobject"
+const _jl_libglib = "libglib"
 
 function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)

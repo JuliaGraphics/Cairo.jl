@@ -84,10 +84,10 @@ end # build()
 
 builddeps = false
 
-if !find_library("Cairo", "libcairo", OS_NAME == :Windows ? "libcairo-2" : "libcairo"); builddeps = true; end
-if !find_library("Cairo", "libfontconfig", OS_NAME == :Windows ? "libfontconfig-1" : "libfontconfig"); builddeps = true; end
-if !find_library("Cairo", "libpango-1.0", OS_NAME == :Windows ? "libpango-1.0-0" : "libpango-1.0"); builddeps = true; end
-if !find_library("Cairo", "libpangocairo-1.0", OS_NAME == :Windows ? "libpangocairo-1.0-0" : "libpangocairo-1.0"); builddeps = true; end
-if !find_library("Cairo", "libgobject-2.0", OS_NAME == :Windows ? "libgobject-2.0-0" : "libgobject-2.0"); builddeps = true; end
+find_library("Cairo", "libcairo", ["libcairo-2", "libcairo"]) || builddeps = true
+find_library("Cairo", "libfontconfig", ["libfontconfig-1", "libfontconfig"]) || builddeps = true 
+find_library("Cairo", "libpango",["libpango-1.0-0", "libpango-1.0"]) || builddeps = true
+find_library("Cairo", "libpangocairo", ["libpangocairo-1.0-0", "libpangocairo-1.0"]) || builddeps = true
+find_library("Cairo", "libgobject", ["libgobject-2.0-0", "libgobject-2.0"]) || builddeps = true
 
-if builddeps; build(); end
+builddeps && build()
