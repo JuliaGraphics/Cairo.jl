@@ -221,11 +221,14 @@ CairoXlibSurfaceSetSize(surface, w, h) =
 ## Quartz ##
 
 function CairoQuartzSurface(context, w, h)
+    context = ccall((:flipCairoAxes, :libcairo_wrapper), Ptr{Void},
+                    (Ptr{Void}, Int32), context, h)
     ptr = ccall((:cairo_quartz_surface_create_for_cg_context,_jl_libcairo),
                 Ptr{Void}, (Ptr{Void}, Uint32, Uint32),
-                context, w, h)
-
-    CairoSurface(ptr,w,h)
+                    context, w, h)
+    context = ccall((:flipCairoAxes, :libcairo_wrapper), Ptr{Void},
+                    (Ptr{Void}, Int32), context, -h)
+    CairoSurface(ptr, w, h)
 end
 
 ## Win32 ##
