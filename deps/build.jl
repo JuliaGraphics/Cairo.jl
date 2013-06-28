@@ -89,3 +89,30 @@ alllibs = find_library("Cairo", "libcairo", ["libcairo-2", "libcairo"]) &&
           find_library("Cairo", "libgobject", ["libgobject-2.0-0", "libgobject-2.0"])
 
 if !alllibs; build(); end
+
+function build_wrapper()
+    include_paths = ["$prefix/include", "/usr/local/include"]
+    lib_paths = ["$prefix/lib"]
+    cc = CCompile("src/cairo_wrapper.c","$prefix/lib/libcairo_wrapper."*BinDeps.shlib_ext,
+                  ["-shared","-g","-fPIC","-I$prefix/include",
+                   ["-I$path" for path in include_paths]...,
+                   ["-L$path" for path in lib_paths]...],
+                   [""])
+    unshift!(cc.options, "-mmacosx-version-min=10.6")
+    unshift!(cc.options,"-xobjective-c")
+    append!(cc.libs,["-framework","AppKit","-framework","Foundation","-framework","ApplicationServices"])
+    s = @build_steps begin
+        CreateDirectory(joinpath(prefix,"lib"))
+        cc
+    end
+
+    run(s)
+end
+
+# Build cairo_wrapper
+@osx_only begin
+    depsdir = joinpath(Pkg.dir(),"Cairo","deps")
+    prefix=joinpath(depsdir,"usr")
+    uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
+    find_library("Cairo", "libcairo_wrapper", ["libcairo_wrapper"]) || build_wrapper()
+end
