@@ -110,7 +110,9 @@ function build_wrapper()
 end
 
 # Build cairo_wrapper
-depsdir = joinpath(Pkg.dir(),"Cairo","deps")
-prefix=joinpath(depsdir,"usr")
-uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
-find_library("Cairo", "libcairo_wrapper", ["libcairo_wrapper"]) || build_wrapper()
+@osx_only begin
+    depsdir = joinpath(Pkg.dir(),"Cairo","deps")
+    prefix=joinpath(depsdir,"usr")
+    uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
+    find_library("Cairo", "libcairo_wrapper", ["libcairo_wrapper"]) || build_wrapper()
+end
