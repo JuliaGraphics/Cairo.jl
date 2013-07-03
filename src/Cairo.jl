@@ -220,6 +220,10 @@ CairoXlibSurfaceSetSize(surface, w, h) =
 
 ## Quartz ##
 
+# Wrap in @osx_only because the libcairo_wrapper causes trouble if not built:
+# compiling any function that calls this, even if it's a code-path not taken,
+# causes the compiler to try to resolve :libcairo_wrapper
+@osx_only begin
 function CairoQuartzSurface(context, w, h)
     context = ccall((:flipCairoAxes, :libcairo_wrapper), Ptr{Void},
                     (Ptr{Void}, Int32), context, h)
@@ -229,6 +233,7 @@ function CairoQuartzSurface(context, w, h)
     context = ccall((:flipCairoAxes, :libcairo_wrapper), Ptr{Void},
                     (Ptr{Void}, Int32), context, -h)
     CairoSurface(ptr, w, h)
+end
 end
 
 ## Win32 ##
