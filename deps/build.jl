@@ -102,6 +102,7 @@ function build_wrapper()
     unshift!(cc.options,"-xobjective-c")
     append!(cc.libs,["-framework","AppKit","-framework","Foundation","-framework","ApplicationServices"])
     s = @build_steps begin
+    	ChangeDirectory(depsdir)
         CreateDirectory(joinpath(prefix,"lib"))
         cc
     end
