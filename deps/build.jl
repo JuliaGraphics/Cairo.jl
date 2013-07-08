@@ -4,14 +4,14 @@ using BinDeps
 
 deps = [
 	pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"])
-	libffi = library_dependency("ffi", aliases = ["libffi"])
+	libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false)
 	gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0"])
 	freetype = library_dependency("freetype", aliases = ["libfreetype"])
-	fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig"], depends = [freetype])
-	libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15"])
-	cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo"], depends = [gobject,fontconfig,libpng])
-	pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0"])
-	pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0"], depends = [cairo])
+	fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "ibfontconfig.so.1"], depends = [freetype])
+	libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"])
+	cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng])
+	pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0"])
+	pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo])
 	gettext = library_dependency("gettext", aliases = ["libgettext", "libgettextlib"], os = :Unix)
 	zlib = library_dependency("zlib", aliases = ["libzlib"], os = :Windows)
 ]
@@ -33,6 +33,7 @@ provides(AptGet,
 	 "libpango1.0-0" => [pango,pangocairo],
 	 "libglib2.0-0" => gobject,
 	 "libpng12-0" => libpng,
+	 "libpixman-1-0" => pixman,
 	 "gettext" => gettext})
 
 # TODO: check whether these are accurate
