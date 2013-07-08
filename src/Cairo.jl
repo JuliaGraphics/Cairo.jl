@@ -1,6 +1,9 @@
-include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
-
 module Cairo
+
+using BinDeps
+@BinDeps.load_dependencies [:gobject => :_jl_libgobject, :cairo => :_jl_libcairo, 
+                            :pango => :_jl_libpango, :pangocairo => :_jl_libpangocairo]
+
 using Color
 
 importall Base.Graphics
@@ -47,12 +50,6 @@ export
 
     # images
     write_to_png, image, read_from_png
-
-const _jl_libcairo = "libcairo"
-const _jl_libpango = "libpango"
-const _jl_libpangocairo = "libpangocairo"
-const _jl_libgobject = "libgobject"
-const _jl_libglib = "libglib"
 
 function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
@@ -348,14 +345,14 @@ function stroke(ctx::CairoContext)
     save(ctx)
     # use uniform scale for stroking
     reset_transform(ctx)
-    ccall((:cairo_stroke, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    ccall((:cairo_stroke, _jl_libcairo), Void, (Ptr{Void},), ctx.ptr)
     restore(ctx)
 end
 
 function stroke_preserve(ctx::CairoContext)
     save(ctx)
     reset_transform(ctx)
-    ccall((:cairo_stroke_preserve, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    ccall((:cairo_stroke_preserve, _jl_libcairo), Void, (Ptr{Void},), ctx.ptr)
     restore(ctx)
 end
 
@@ -474,7 +471,7 @@ for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
                       (:device_to_user_distance!,:cairo_device_to_user_distance))
     @eval begin
         function ($fname)(ctx::CairoContext, p::Vector{Float64})
-            ccall(($(Expr(:quote,cname)),:libcairo),
+            ccall(($(Expr(:quote,cname)),_jl_libcairo),
                   Void, (Ptr{Void}, Ptr{Float64}, Ptr{Float64}),
                   ctx.ptr, pointer(p,1), pointer(p,2))
             p
