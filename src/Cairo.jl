@@ -225,12 +225,10 @@ else
     typealias CGFloat Float64
 end
 function CairoQuartzSurface(context, w, h)
-    ccall(:CGContextSaveGState, Void, (Ptr{Void},), context)
     ccall(:CGContextTranslateCTM, Void, (Ptr{Void}, CGFloat, CGFloat), context, 0, h)
     ccall(:CGContextScaleCTM, Void, (Ptr{Void}, CGFloat, CGFloat), context, 1, -1)
     ptr = ccall((:cairo_quartz_surface_create_for_cg_context,_jl_libcairo),
           Ptr{Void}, (Ptr{Void}, Uint32, Uint32), context, w, h)
-    ccall(:CGContextRestoreGState, Void, (Ptr{Void},), context)
     CairoSurface(ptr, w, h)
 end
 
