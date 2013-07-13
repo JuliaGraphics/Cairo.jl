@@ -227,14 +227,7 @@ CairoXlibSurfaceSetSize(surface, w, h) =
           surface, w, h)
 
 ## Quartz ##
-if WORD_SIZE == 32
-    typealias CGFloat Float32
-else
-    typealias CGFloat Float64
-end
 function CairoQuartzSurface(context, w, h)
-    ccall(:CGContextTranslateCTM, Void, (Ptr{Void}, CGFloat, CGFloat), context, 0, h)
-    ccall(:CGContextScaleCTM, Void, (Ptr{Void}, CGFloat, CGFloat), context, 1, -1)
     ptr = ccall((:cairo_quartz_surface_create_for_cg_context,_jl_libcairo),
           Ptr{Void}, (Ptr{Void}, Uint32, Uint32), context, w, h)
     CairoSurface(ptr, w, h)
