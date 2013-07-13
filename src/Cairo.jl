@@ -224,9 +224,25 @@ if WORD_SIZE == 32
 else
     typealias CGFloat Float64
 end
+immutable CGAffineTransform
+    a::CGFloat
+    b::CGFloat
+    c::CGFloat
+    d::CGFloat
+    tx::CGFloat
+    ty::CGFloat
+    CGAffineTransform(a,b,c,d,tx,ty)=new(a,b,c,d,tx,ty)
+end
 function CairoQuartzSurface(context, w, h)
-    ccall(:CGContextTranslateCTM, Void, (Ptr{Void}, CGFloat, CGFloat), context, 0, h)
-    ccall(:CGContextScaleCTM, Void, (Ptr{Void}, CGFloat, CGFloat), context, 1, -1)
+    cga = ccall(:CGContextGetUserSpaceToDeviceSpaceTransform,CGAffineTransform,(Ptr{Void},),context)
+    if WORD_SIZE == 32 #manually fixing the calling conventions (badly and incorrectly), until keno's patch is merged in base
+        icga = ccall(:CGAffineTransformInvert,CGAffineTransform,(CGAffineTransform,),cga)
+        ccall(:CGContextConcatCTM,Void,(Ptr{Void},CGAffineTransform),context,icga)
+    else
+        icga = ccall(:CGAffineTransformInvert,CGAffineTransform,(Ptr{CGAffineTransform},),&cga)
+        ccall(:CGContextConcatCTM,Void,(Ptr{Void},Ptr{CGAffineTransform}),context,&icga)
+    end
+    ccall(:CGContextTranslateCTM, Void, (Ptr{Void}, CGFloat, CGFloat), context, 0, 22) #mac menu bar height, observed
     ptr = ccall((:cairo_quartz_surface_create_for_cg_context,_jl_libcairo),
           Ptr{Void}, (Ptr{Void}, Uint32, Uint32), context, w, h)
     CairoSurface(ptr, w, h)
