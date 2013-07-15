@@ -216,7 +216,7 @@ end
 
 function CairoXlibSurface(display, drawable, visual, w, h)
     ptr = ccall((:cairo_xlib_surface_create,_jl_libcairo), Ptr{Void},
-                (Ptr{Void}, Int32, Ptr{Void}, Int32, Int32),
+                (Ptr{Void}, Int, Ptr{Void}, Int32, Int32),
                 display, drawable, visual, w, h)
     CairoSurface(ptr, w, h)
 end
