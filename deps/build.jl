@@ -38,9 +38,9 @@ function build()
 	@windows_only ENV["PATH"]=joinpath(prefix,"bin")*";"*ENV["PATH"]
 	## Windows Specific dependencies
 	@windows_only begin
-		steps |= prepare_src(depsdir,"http://zlib.net/zlib-1.2.7.tar.gz","zlib-1.2.7.tar.gz","zlib-1.2.7")
+		steps |= prepare_src(depsdir,"http://zlib.net/zlib-1.2.8.tar.gz","zlib-1.2.8.tar.gz","zlib-1.2.8")
 		steps |= @build_steps begin
-					ChangeDirectory(joinpath(depsdir,"src","zlib-1.2.7"))
+					ChangeDirectory(joinpath(depsdir,"src","zlib-1.2.8"))
 					MakeTargets(["-fwin32/Makefile.gcc"])
 					#MakeTargets(["-fwin32/Makefile.gcc","DESTDIR=../../usr/","INCLUDE_PATH=include","LIBRARY_PATH=lib","SHARED_MODE=1","install"])
 				end
