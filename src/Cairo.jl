@@ -4,6 +4,7 @@ include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
 using Color
 
 importall Base.Graphics
+import Base.copy
 
 include("constants.jl")
 
@@ -266,12 +267,16 @@ function write_to_png(surface::CairoSurface, filename::String)
           (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
 end
 
-function surface_create_similar(s::CairoSurface, w, h)
+## Generic ##
+
+function surface_create_similar(s::CairoSurface, w = width(s), h = height(s))
     ptr = ccall((:cairo_surface_create_similar,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Int32, Int32, Int32),
                 s.ptr, CAIRO_CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
+
+# Utilities
 
 function format_stride_for_width(format::Integer, width::Integer)
     ccall((:cairo_format_stride_for_width,_jl_libcairo), Int32,
@@ -307,6 +312,15 @@ function destroy(ctx::CairoContext)
     ctx.ptr = C_NULL
     nothing
 end
+
+function copy(ctx::CairoContext)
+    surf = surface_create_similar(ctx.surface)
+    c = creategc(surf)
+    set_source_surface(c, ctx.surface)
+    paint(c)
+    c
+end
+
 
 for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
                          (:save, :cairo_save),
@@ -397,6 +411,10 @@ function set_source(ctx::CairoContext, c::ColorValue)
     set_source_rgb(ctx, rgb.r, rgb.g, rgb.b)
 end
 
+set_source(dest::CairoContext, src::CairoContext) = set_source_surface(dest, src.surface)
+
+set_source(dest::CairoContext, src::CairoSurface) = set_source_surface(dest, src)
+
 rectangle(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
     ccall((:cairo_rectangle,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64),
@@ -412,7 +430,7 @@ function set_dash(ctx::CairoContext, dashes::Vector{Float64}, offset::Real = 0.0
           (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), offset)
 end
 
-function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
+function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real = 0.0, y::Real = 0.0)
     ccall((:cairo_set_source_surface,_jl_libcairo), Void,
           (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, s.ptr, x, y)
 end
