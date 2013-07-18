@@ -335,14 +335,14 @@ function stroke(ctx::CairoContext)
     save(ctx)
     # use uniform scale for stroking
     reset_transform(ctx)
-    ccall((:cairo_stroke, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    ccall((:cairo_stroke, _jl_libcairo), Void, (Ptr{Void},), ctx.ptr)
     restore(ctx)
 end
 
 function stroke_preserve(ctx::CairoContext)
     save(ctx)
     reset_transform(ctx)
-    ccall((:cairo_stroke_preserve, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    ccall((:cairo_stroke_preserve, _jl_libcairo), Void, (Ptr{Void},), ctx.ptr)
     restore(ctx)
 end
 
@@ -461,7 +461,7 @@ for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
                       (:device_to_user_distance!,:cairo_device_to_user_distance))
     @eval begin
         function ($fname)(ctx::CairoContext, p::Vector{Float64})
-            ccall(($(Expr(:quote,cname)),:libcairo),
+            ccall(($(Expr(:quote,cname)),_jl_libcairo),
                   Void, (Ptr{Void}, Ptr{Float64}, Ptr{Float64}),
                   ctx.ptr, pointer(p,1), pointer(p,2))
             p
