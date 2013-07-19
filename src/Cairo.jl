@@ -318,6 +318,7 @@ function copy(ctx::CairoContext)
     c = creategc(surf)
     set_source_surface(c, ctx.surface)
     paint(c)
+    set_matrix(c, get_matrix(ctx))
     c
 end
 
