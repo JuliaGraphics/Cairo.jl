@@ -1,9 +1,10 @@
-include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
 
 module Cairo
+include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
 using Color
 
 importall Base.Graphics
+import Base.copy
 
 include("constants.jl")
 
@@ -47,12 +48,6 @@ export
 
     # images
     write_to_png, image, read_from_png
-
-const _jl_libcairo = "libcairo"
-const _jl_libpango = "libpango"
-const _jl_libpangocairo = "libpangocairo"
-const _jl_libgobject = "libgobject"
-const _jl_libglib = "libglib"
 
 function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
@@ -208,7 +203,7 @@ end
 
 function CairoXlibSurface(display, drawable, visual, w, h)
     ptr = ccall((:cairo_xlib_surface_create,_jl_libcairo), Ptr{Void},
-                (Ptr{Void}, Int32, Ptr{Void}, Int32, Int32),
+                (Ptr{Void}, Int, Ptr{Void}, Int32, Int32),
                 display, drawable, visual, w, h)
     CairoSurface(ptr, w, h)
 end
@@ -219,21 +214,10 @@ CairoXlibSurfaceSetSize(surface, w, h) =
           surface, w, h)
 
 ## Quartz ##
-
-# Wrap in @osx_only because the libcairo_wrapper causes trouble if not built:
-# compiling any function that calls this, even if it's a code-path not taken,
-# causes the compiler to try to resolve :libcairo_wrapper
-@osx_only begin
 function CairoQuartzSurface(context, w, h)
-    context = ccall((:flipCairoAxes, :libcairo_wrapper), Ptr{Void},
-                    (Ptr{Void}, Int32), context, h)
     ptr = ccall((:cairo_quartz_surface_create_for_cg_context,_jl_libcairo),
-                Ptr{Void}, (Ptr{Void}, Uint32, Uint32),
-                    context, w, h)
-    context = ccall((:flipCairoAxes, :libcairo_wrapper), Ptr{Void},
-                    (Ptr{Void}, Int32), context, -h)
+          Ptr{Void}, (Ptr{Void}, Uint32, Uint32), context, w, h)
     CairoSurface(ptr, w, h)
-end
 end
 
 ## Win32 ##
@@ -283,12 +267,16 @@ function write_to_png(surface::CairoSurface, filename::String)
           (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
 end
 
-function surface_create_similar(s::CairoSurface, w, h)
+## Generic ##
+
+function surface_create_similar(s::CairoSurface, w = width(s), h = height(s))
     ptr = ccall((:cairo_surface_create_similar,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Int32, Int32, Int32),
                 s.ptr, CAIRO_CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
+
+# Utilities
 
 function format_stride_for_width(format::Integer, width::Integer)
     ccall((:cairo_format_stride_for_width,_jl_libcairo), Int32,
@@ -325,6 +313,16 @@ function destroy(ctx::CairoContext)
     nothing
 end
 
+function copy(ctx::CairoContext)
+    surf = surface_create_similar(ctx.surface)
+    c = creategc(surf)
+    set_source_surface(c, ctx.surface)
+    paint(c)
+    set_matrix(c, get_matrix(ctx))
+    c
+end
+
+
 for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
                          (:save, :cairo_save),
                          (:restore, :cairo_restore),
@@ -352,14 +350,14 @@ function stroke(ctx::CairoContext)
     save(ctx)
     # use uniform scale for stroking
     reset_transform(ctx)
-    ccall((:cairo_stroke, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    ccall((:cairo_stroke, _jl_libcairo), Void, (Ptr{Void},), ctx.ptr)
     restore(ctx)
 end
 
 function stroke_preserve(ctx::CairoContext)
     save(ctx)
     reset_transform(ctx)
-    ccall((:cairo_stroke_preserve, :libcairo), Void, (Ptr{Void},), ctx.ptr)
+    ccall((:cairo_stroke_preserve, _jl_libcairo), Void, (Ptr{Void},), ctx.ptr)
     restore(ctx)
 end
 
@@ -414,6 +412,10 @@ function set_source(ctx::CairoContext, c::ColorValue)
     set_source_rgb(ctx, rgb.r, rgb.g, rgb.b)
 end
 
+set_source(dest::CairoContext, src::CairoContext) = set_source_surface(dest, src.surface)
+
+set_source(dest::CairoContext, src::CairoSurface) = set_source_surface(dest, src)
+
 rectangle(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
     ccall((:cairo_rectangle,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64),
@@ -429,7 +431,7 @@ function set_dash(ctx::CairoContext, dashes::Vector{Float64}, offset::Real = 0.0
           (Ptr{Void},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), offset)
 end
 
-function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
+function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real = 0.0, y::Real = 0.0)
     ccall((:cairo_set_source_surface,_jl_libcairo), Void,
           (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, s.ptr, x, y)
 end
@@ -478,7 +480,7 @@ for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
                       (:device_to_user_distance!,:cairo_device_to_user_distance))
     @eval begin
         function ($fname)(ctx::CairoContext, p::Vector{Float64})
-            ccall(($(Expr(:quote,cname)),:libcairo),
+            ccall(($(Expr(:quote,cname)),_jl_libcairo),
                   Void, (Ptr{Void}, Ptr{Float64}, Ptr{Float64}),
                   ctx.ptr, pointer(p,1), pointer(p,2))
             p
