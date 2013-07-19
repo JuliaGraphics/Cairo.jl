@@ -1,11 +1,5 @@
 using BinDeps
 
-function maybemkdir(path::String)
-	if !isdir(path)
-		mkdir(path)
-	end
-end
-
 function build()
     s = @build_steps begin
 	c=Choices(Choice[Choice(:skip,"Skip Installation - Binaries must be installed manually",nothing)])
@@ -39,8 +33,8 @@ function build()
 	pngsrcdir = joinpath(depsdir,"src","libpng-"*libpngver)
 	builddir = joinpath(depsdir,"builds")
 	pngbuilddir = joinpath(builddir,"libpng-"*libpngver)
-	maybemkdir(builddir)
-	maybemkdir(pngbuilddir)
+	CreateDirectory(builddir)
+	CreateDirectory(pngbuilddir)
 	steps = @build_steps begin ChangeDirectory(depsdir) end
 
 	ENV["PKG_CONFIG_LIBDIR"]=ENV["PKG_CONFIG_PATH"]=joinpath(depsdir,"usr","lib","pkgconfig")
@@ -60,10 +54,10 @@ function build()
 		steps |= prepare_src(depsdir,"ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-"*libpngver*".tar.gz","libpng-"*libpngver*".tar.gz","libpng-"*libpngver)
 		steps |= @build_steps begin
 					ChangeDirectory(pngbuilddir)
-					maybemkdir(prefix)
-					maybemkdir(joinpath(prefix, "lib"))
-					maybemkdir(joinpath(prefix, "lib", "pkgconfig"))
-					maybemkdir(joinpath(prefix, "include"))
+					CreateDirectory(prefix)
+					CreateDirectory(joinpath(prefix, "lib"))
+					CreateDirectory(joinpath(prefix, "lib", "pkgconfig"))
+					CreateDirectory(joinpath(prefix, "include"))
 					FileRule(joinpath(prefix,"lib","libpng15.dll"),@build_steps begin
 						`cmake -DCMAKE_INSTALL_PREFIX="$prefix" -DZLIB_INCLUDE_DIR:PATH=$zlibdir -DZLIB_LIBRARY:FILEPATH=$zliblib -G"MSYS Makefiles" $pngsrcdir`
 						`make`
