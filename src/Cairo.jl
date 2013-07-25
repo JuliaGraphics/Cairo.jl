@@ -51,12 +51,12 @@ export
 
 function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
-    ret::Int32 = (n == len) ? 0 : 11
+    int32((n == len) ? 0 : 11)
 end
 
 function cairo_write_to_stream_callback(s::AsyncStream, buf::Ptr{Uint8}, len::Uint32)
     n = write(s,buf,len)
-    ret::Int32 = (n == len) ? 0 : 11
+    int32((n == len) ? 0 : 11)
 end
 
 type CairoSurface <: GraphicsDevice
@@ -260,6 +260,18 @@ function read_from_png(filename::String)
     h = ccall((:cairo_image_surface_get_height,_jl_libcairo),
               Int32, (Ptr{Void},), ptr)
     CairoSurface(ptr, w, h)
+end
+
+function write_to_png(surface::CairoSurface, stream::IOStream)
+    callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
+    ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Void,
+          (Ptr{Uint8},Ptr{Void},Ptr{Void}), surface.ptr, callback, stream)
+end
+
+function write_to_png{T<:AsyncStream}(surface::CairoSurface, stream::T)
+    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Void,
+          (Ptr{Uint8},Ptr{Void},Any), surface.ptr, callback, stream)
 end
 
 function write_to_png(surface::CairoSurface, filename::String)
