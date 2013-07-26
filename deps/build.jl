@@ -27,13 +27,18 @@ function build()
 
     ## Install from source
     let 
+        srcdir = joinpath(depsdir,"src")
 	prefix=joinpath(depsdir,"usr")
 	uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
 	pngsrcdir = joinpath(depsdir,"src","libpng-1.5.13")
 	pngbuilddir = joinpath(depsdir,"builds","libpng-1.5.13")
-	steps = @build_steps begin ChangeDirectory(depsdir) end
-
-	ENV["PKG_CONFIG_LIBDIR"]=ENV["PKG_CONFIG_PATH"]=joinpath(depsdir,"usr","lib","pkgconfig")
+	steps = @build_steps begin
+                                 ChangeDirectory(depsdir)
+                                 CreateDirectory(srcdir)
+                             end
+                             
+        pkgconfigpath = joinpath(depsdir,"usr","lib","pkgconfig")
+	ENV["PKG_CONFIG_LIBDIR"]=ENV["PKG_CONFIG_PATH"]=pkgconfigpath
 	@unix_only ENV["PATH"]=joinpath(prefix,"bin")*":"*ENV["PATH"]
 	@windows_only ENV["PATH"]=joinpath(prefix,"bin")*";"*ENV["PATH"]
 	## Windows Specific dependencies
@@ -67,14 +72,17 @@ function build()
 	end
 
 	## Common dependencies
+	harfbuzzver = "harfbuzz-0.9.19"
+        fontconfigver = "fontconfig-2.10.93"
 	steps |= @build_steps begin
 		autotools_install(depsdir,"http://www.cairographics.org/releases/pixman-0.28.2.tar.gz","pixman-0.28.2.tar.gz",String[],"pixman-0.28.2","pixman-0.28.2","pixman/libpixman-1.la",OS_NAME == :Windows ? "libpixman-1-0."*BinDeps.shlib_ext : (OS_NAME == :Linux ? "libpixman-1."*BinDeps.shlib_ext : "libpixman-1.0."*BinDeps.shlib_ext))
 		autotools_install(depsdir,"http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz","freetype-2.4.11.tar.gz",String[],"freetype-2.4.11","freetype-2.4.11",OS_NAME == :Windows ? "objs/.libs/libfreetype.la" : ".libs/libfreetype."*BinDeps.shlib_ext,"libfreetype.la",OS_NAME == :Windows ? "builds/unix" : "")
-		autotools_install(depsdir,"http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.10.2.tar.gz","fontconfig-2.10.2.tar.gz",String[],"fontconfig-2.10.2","fontconfig-2.10.2","src/libfontconfig.la","libfontconfig.la")
+		autotools_install(depsdir,"http://www.freedesktop.org/software/fontconfig/release/$fontconfigver.tar.gz","$fontconfigver.tar.gz",String[],fontconfigver,fontconfigver,"src/libfontconfig.la","libfontconfig.la")
 		autotools_install(depsdir,"http://www.cairographics.org/releases/cairo-1.12.8.tar.xz","cairo-1.12.8.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include -D_SSIZE_T_DEFINED=1",OS_NAME != :Linux ? "--without-x" : "", OS_NAME != :Linux ? "--disable-xlib" : "", OS_NAME != :Linux ? "--disable-xcb" : "", OS_NAME == :Darwin ? "--enable-quartz" : "", OS_NAME == :Darwin ? "--enable-quartz-font" : "", OS_NAME == :Darwin ? "--enable-quartz-image" : "", OS_NAME == :Darwin ? "--disable-gl" : ""],"cairo-1.12.8","cairo-1.12.8","src/libcairo.la","libcairo.la")
 		autotools_install(depsdir,"ftp://sourceware.org/pub/libffi/libffi-3.0.11.tar.gz","libffi-3.0.11.tar.gz",String[],"libffi-3.0.11","libffi-3.0.11",OS_NAME == :Windows ? "i686-pc-mingw32/.libs/libffi.la" : ".libs/libffi.la","libffi.la",OS_NAME == :Windows ? "i686-pc-mingw32" : "")
 		autotools_install(depsdir,"http://ftp.gnome.org/pub/gnome/sources/glib/2.34/glib-2.34.3.tar.xz","glib-2.34.3.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include",OS_NAME == :Windows?"CFLAGS=-march=i686":""],"glib-2.34.3","glib-2.34.3","glib/libglib-2.0.la","libglib-2.0.la")
-		autotools_install(depsdir,"http://ftp.gnome.org/pub/GNOME/sources/pango/1.32/pango-1.32.6.tar.xz","pango-1.32.6.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include","--with-included-modules=yes", OS_NAME != :Linux ? "--without-x" : ""],"pango-1.32.6","pango-1.32.6","pango/libpango-1.0.la","libpango-1.0.la")
+                autotools_install(depsdir,"http://www.freedesktop.org/software/harfbuzz/release/$harfbuzzver.tar.bz2","$harfbuzzver.tar.bz2",String[],harfbuzzver,harfbuzzver,"src/libharfbuzz.la","libharfbuzz.la")
+                autotools_install(depsdir,"http://ftp.gnome.org/pub/GNOME/sources/pango/1.32/pango-1.32.6.tar.xz","pango-1.32.6.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include","--with-included-modules=yes", OS_NAME != :Linux ? "--without-x" : ""],"pango-1.32.6","pango-1.32.6","pango/libpango-1.0.la","libpango-1.0.la")
 	end
 	push!(c,Choice(:source,"Install depdendency from source",steps))
     end
