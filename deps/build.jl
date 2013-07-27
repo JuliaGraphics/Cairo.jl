@@ -16,8 +16,6 @@ deps = [
 	zlib = library_dependency("zlib", aliases = ["libzlib"], os = :Windows)
 ]
 
-@BinDeps.if_install begin
-
 # System Package Managers
 provides(Homebrew,
 	{"cairo" => cairo,
@@ -113,7 +111,3 @@ provides(BuildProcess,
 			end)
 		end
 	end),libpng, os = :Windows)
-
-@BinDeps.install 
-
-end
