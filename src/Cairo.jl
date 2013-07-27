@@ -1,6 +1,9 @@
-
 module Cairo
-include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
+
+using BinDeps
+@BinDeps.load_dependencies [:gobject => :_jl_libgobject, :cairo => :_jl_libcairo, 
+                            :pango => :_jl_libpango, :pangocairo => :_jl_libpangocairo]
+
 using Color
 
 importall Base.Graphics
