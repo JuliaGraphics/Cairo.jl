@@ -230,14 +230,14 @@ end
 
 ## SVG ##
 
-function CairoSVGSurface(stream::IOStream, w, h)
+function CairoSVGSurface(stream::IOStream, w::Real, h::Real)
     callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
 end
 
-function CairoSVGSurface{T<:IO}(stream::T, w::Real, h::Real)
+function CairoSVGSurface(stream::IO, w::Real, h::Real)
     callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
