@@ -133,23 +133,17 @@ function CairoARGBSurface(w::Real, h::Real)
     CairoSurface(ptr, w, h)
 end
 
-function CairoImageSurface(data::Array, format::Integer, w::Integer, h::Integer, stride::Integer)
+function CairoImageSurface(img::Array{Uint32,2}, format::Integer; flipxy::Bool = true)
+    if flipxy
+        img = img'
+    end
+    w,h = size(img)
+    stride = format_stride_for_width(format, w)
+    @assert stride == 4w
     ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
                 Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
                 data, format, w, h, stride)
     CairoSurface(ptr, w, h, data)
-end
-
-function CairoImageSurface(data::Array{Uint32,2}, format::Integer, w::Integer, h::Integer)
-    stride = format_stride_for_width(format, w)
-    @assert stride == 4w
-    CairoImageSurface(data, format, w, h, stride)
-end
-
-function CairoImageSurface(img::Array{Uint32,2}, format::Integer)
-    data = img'
-    w,h = size(data)
-    CairoImageSurface(data, format, w, h)
 end
 
 CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
