@@ -1,4 +1,6 @@
 ## Cairo Constants ##
+
+# deprecated exports---do not add more!
 export CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
     CAIRO_FORMAT_A8,
@@ -12,110 +14,106 @@ export CAIRO_FORMAT_ARGB32,
     CAIRO_FILTER_BEST,
     CAIRO_FILTER_NEAREST,
     CAIRO_FILTER_BILINEAR,
-    CAIRO_FILTER_GAUSSIAN,
-    CAIRO_ANTIALIAS_DEFAULT,
-    CAIRO_ANTIALIAS_NONE,
-    CAIRO_ANTIALIAS_GRAY,
-    CAIRO_ANTIALIAS_SUBPIXEL
+    CAIRO_FILTER_GAUSSIAN
 
-typealias cairo_format_t Int32
-const CAIRO_FORMAT_INVALID   = int32(-1)
-const CAIRO_FORMAT_ARGB32    = int32(0)
-const CAIRO_FORMAT_RGB24     = int32(1)
-const CAIRO_FORMAT_A8        = int32(2)
-const CAIRO_FORMAT_A1        = int32(3)
-const CAIRO_FORMAT_RGB16_565 = int32(4)
-const CAIRO_FORMAT_RGB30     = int32(5)
+typealias format_t Int32
+const FORMAT_INVALID   = int32(-1)
+const FORMAT_ARGB32    = int32(0)
+const FORMAT_RGB24     = int32(1)
+const FORMAT_A8        = int32(2)
+const FORMAT_A1        = int32(3)
+const FORMAT_RGB16_565 = int32(4)
+const FORMAT_RGB30     = int32(5)
 
-typealias cairo_status_t Int32
-const CAIRO_STATUS_SUCCESS                   = int32(0)
-const CAIRO_STATUS_NO_MEMORY                 = int32(1)
-const CAIRO_STATUS_INVALID_RESTORE           = int32(2)
-const CAIRO_STATUS_INVALID_POP_GROUP         = int32(3)
-const CAIRO_STATUS_NO_CURRENT_POINT          = int32(4)
-const CAIRO_STATUS_INVALID_MATRIX            = int32(5)
-const CAIRO_STATUS_INVALID_STATUS            = int32(6)
-const CAIRO_STATUS_NULL_POINTER              = int32(7)
-const CAIRO_STATUS_INVALID_STRING            = int32(8)
-const CAIRO_STATUS_INVALID_PATH_DATA         = int32(9)
-const CAIRO_STATUS_READ_ERROR                = int32(10)
-const CAIRO_STATUS_WRITE_ERROR               = int32(11)
-const CAIRO_STATUS_SURFACE_FINISHED          = int32(12)
-const CAIRO_STATUS_SURFACE_TYPE_MISMATCH     = int32(13)
-const CAIRO_STATUS_PATTERN_TYPE_MISMATCH     = int32(14)
-const CAIRO_STATUS_INVALID_CONTENT           = int32(15)
-const CAIRO_STATUS_INVALID_FORMAT            = int32(16)
-const CAIRO_STATUS_INVALID_VISUAL            = int32(17)
-const CAIRO_STATUS_FILE_NOT_FOUND            = int32(17)
-const CAIRO_STATUS_INVALID_DASH              = int32(18)
-const CAIRO_STATUS_INVALID_DSC_COMMENT       = int32(19)
-const CAIRO_STATUS_INVALID_INDEX             = int32(20)
-const CAIRO_STATUS_CLIP_NOT_REPRESENTABLE    = int32(21)
-const CAIRO_STATUS_TEMP_FILE_ERROR           = int32(22)
-const CAIRO_STATUS_INVALID_STRIDE            = int32(23)
-const CAIRO_STATUS_FONT_TYPE_MISMATCH        = int32(24)
-const CAIRO_STATUS_USER_FONT_IMMUTABLE       = int32(25)
-const CAIRO_STATUS_USER_FONT_ERROR           = int32(26)
-const CAIRO_STATUS_NEGATIVE_COUNT            = int32(27)
-const CAIRO_STATUS_INVALID_CLUSTERS          = int32(28)
-const CAIRO_STATUS_INVALID_SLANT             = int32(29)
-const CAIRO_STATUS_INVALID_WEIGHT            = int32(30)
-const CAIRO_STATUS_INVALID_SIZE              = int32(31)
-const CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED = int32(32)
-const CAIRO_STATUS_DEVICE_TYPE_MISMATCH      = int32(33)
-const CAIRO_STATUS_DEVICE_ERROR              = int32(34)
-const CAIRO_STATUS_INVALID_MESH_CONSTRUCTION = int32(35)
-const CAIRO_STATUS_DEVICE_FINISHED           = int32(36)
-const CAIRO_STATUS_LAST_STATUS               = int32(37)
+typealias status_t Int32
+const STATUS_SUCCESS                   = int32(0)
+const STATUS_NO_MEMORY                 = int32(1)
+const STATUS_INVALID_RESTORE           = int32(2)
+const STATUS_INVALID_POP_GROUP         = int32(3)
+const STATUS_NO_CURRENT_POINT          = int32(4)
+const STATUS_INVALID_MATRIX            = int32(5)
+const STATUS_INVALID_STATUS            = int32(6)
+const STATUS_NULL_POINTER              = int32(7)
+const STATUS_INVALID_STRING            = int32(8)
+const STATUS_INVALID_PATH_DATA         = int32(9)
+const STATUS_READ_ERROR                = int32(10)
+const STATUS_WRITE_ERROR               = int32(11)
+const STATUS_SURFACE_FINISHED          = int32(12)
+const STATUS_SURFACE_TYPE_MISMATCH     = int32(13)
+const STATUS_PATTERN_TYPE_MISMATCH     = int32(14)
+const STATUS_INVALID_CONTENT           = int32(15)
+const STATUS_INVALID_FORMAT            = int32(16)
+const STATUS_INVALID_VISUAL            = int32(17)
+const STATUS_FILE_NOT_FOUND            = int32(17)
+const STATUS_INVALID_DASH              = int32(18)
+const STATUS_INVALID_DSC_COMMENT       = int32(19)
+const STATUS_INVALID_INDEX             = int32(20)
+const STATUS_CLIP_NOT_REPRESENTABLE    = int32(21)
+const STATUS_TEMP_FILE_ERROR           = int32(22)
+const STATUS_INVALID_STRIDE            = int32(23)
+const STATUS_FONT_TYPE_MISMATCH        = int32(24)
+const STATUS_USER_FONT_IMMUTABLE       = int32(25)
+const STATUS_USER_FONT_ERROR           = int32(26)
+const STATUS_NEGATIVE_COUNT            = int32(27)
+const STATUS_INVALID_CLUSTERS          = int32(28)
+const STATUS_INVALID_SLANT             = int32(29)
+const STATUS_INVALID_WEIGHT            = int32(30)
+const STATUS_INVALID_SIZE              = int32(31)
+const STATUS_USER_FONT_NOT_IMPLEMENTED = int32(32)
+const STATUS_DEVICE_TYPE_MISMATCH      = int32(33)
+const STATUS_DEVICE_ERROR              = int32(34)
+const STATUS_INVALID_MESH_CONSTRUCTION = int32(35)
+const STATUS_DEVICE_FINISHED           = int32(36)
+const STATUS_LAST_STATUS               = int32(37)
 
-typealias cairo_font_slant_t Int32
-const CAIRO_FONT_SLANT_NORMAL  = int32(0)
-const CAIRO_FONT_SLANT_ITALIC  = int32(1)
-const CAIRO_FONT_SLANT_OBLIQUE = int32(2)
+typealias font_slant_t Int32
+const FONT_SLANT_NORMAL  = int32(0)
+const FONT_SLANT_ITALIC  = int32(1)
+const FONT_SLANT_OBLIQUE = int32(2)
 
-typealias cairo_font_weight_t Int32
-const CAIRO_FONT_WEIGHT_NORMAL = int32(0)
-const CAIRO_FONT_WEIGHT_BOLD = int32(1)
+typealias font_weight_t Int32
+const FONT_WEIGHT_NORMAL = int32(0)
+const FONT_WEIGHT_BOLD = int32(1)
 
-const CAIRO_CONTENT_COLOR = int(0x1000)
-const CAIRO_CONTENT_ALPHA = int(0x2000)
-const CAIRO_CONTENT_COLOR_ALPHA = int(0x3000)
+const CONTENT_COLOR = int(0x1000)
+const CONTENT_ALPHA = int(0x2000)
+const CONTENT_COLOR_ALPHA = int(0x3000)
 
-const CAIRO_FILTER_FAST = 0
-const CAIRO_FILTER_GOOD = 1
-const CAIRO_FILTER_BEST = 2
-const CAIRO_FILTER_NEAREST = 3
-const CAIRO_FILTER_BILINEAR = 4
-const CAIRO_FILTER_GAUSSIAN = 5
+const FILTER_FAST = 0
+const FILTER_GOOD = 1
+const FILTER_BEST = 2
+const FILTER_NEAREST = 3
+const FILTER_BILINEAR = 4
+const FILTER_GAUSSIAN = 5
 
-const CAIRO_ANTIALIAS_DEFAULT = 0
-const CAIRO_ANTIALIAS_NONE = 1
-const CAIRO_ANTIALIAS_GRAY = 2
-const CAIRO_ANTIALIAS_SUBPIXEL = 3
+const ANTIALIAS_DEFAULT = 0
+const ANTIALIAS_NONE = 1
+const ANTIALIAS_GRAY = 2
+const ANTIALIAS_SUBPIXEL = 3
 # next 3 are not available on all Cairo installations (only since 1.12)
-const CAIRO_ANTIALIAS_FAST = 4
-const CAIRO_ANTIALIAS_GOOD = 5
-const CAIRO_ANTIALIAS_BEST = 6
+const ANTIALIAS_FAST = 4
+const ANTIALIAS_GOOD = 5
+const ANTIALIAS_BEST = 6
 
-const CAIRO_OPERATOR_CLEAR = 0
-const CAIRO_OPERATOR_SOURCE = 1
-const CAIRO_OPERATOR_OVER = 2
-const CAIRO_OPERATOR_IN = 3
-const CAIRO_OPERATOR_OUT = 4
-const CAIRO_OPERATOR_ATOP = 5
-const CAIRO_OPERATOR_DEST = 6
-const CAIRO_OPERATOR_DEST_OVER = 7
-const CAIRO_OPERATOR_DEST_IN = 8
-const CAIRO_OPERATOR_DEST_OUT = 9
-const CAIRO_OPERATOR_DEST_ATOP = 10
-const CAIRO_OPERATOR_XOR = 11
-const CAIRO_OPERATOR_ADD = 12
-const CAIRO_OPERATOR_SATURATE = 13
-const CAIRO_OPERATOR_MULTIPLY = 14
-const CAIRO_OPERATOR_SCREEN = 15
-const CAIRO_OPERATOR_OVERLAY = 16
-const CAIRO_OPERATOR_DARKEN = 17
-const CAIRO_OPERATOR_LIGHTEN = 18
+const OPERATOR_CLEAR = 0
+const OPERATOR_SOURCE = 1
+const OPERATOR_OVER = 2
+const OPERATOR_IN = 3
+const OPERATOR_OUT = 4
+const OPERATOR_ATOP = 5
+const OPERATOR_DEST = 6
+const OPERATOR_DEST_OVER = 7
+const OPERATOR_DEST_IN = 8
+const OPERATOR_DEST_OUT = 9
+const OPERATOR_DEST_ATOP = 10
+const OPERATOR_XOR = 11
+const OPERATOR_ADD = 12
+const OPERATOR_SATURATE = 13
+const OPERATOR_MULTIPLY = 14
+const OPERATOR_SCREEN = 15
+const OPERATOR_OVERLAY = 16
+const OPERATOR_DARKEN = 17
+const OPERATOR_LIGHTEN = 18
 
 
 ## LaTex Token Dicts ##
@@ -391,3 +389,19 @@ const _math_token_dict = [
     "\\arcmin"          => "\u2032",
     "\\arcsec"          => "\u2033",
 ]
+
+
+@deprecate CAIRO_FORMAT_ARGB32   Cairo.FORMAT_ARGB32
+@deprecate CAIRO_FORMAT_RGB24   Cairo.FORMAT_RGB24
+@deprecate CAIRO_FORMAT_A8   Cairo.FORMAT_A8
+@deprecate CAIRO_FORMAT_A1   Cairo.FORMAT_A1
+@deprecate CAIRO_FORMAT_RGB16_565   Cairo.FORMAT_RGB16_565
+@deprecate CAIRO_CONTENT_COLOR   Cairo.CONTENT_COLOR
+@deprecate CAIRO_CONTENT_ALPHA   Cairo.CONTENT_ALPHA
+@deprecate CAIRO_CONTENT_COLOR_ALPHA   Cairo.CONTENT_COLOR_ALPHA
+@deprecate CAIRO_FILTER_FAST   Cairo.FILTER_FAST
+@deprecate CAIRO_FILTER_GOOD   Cairo.FILTER_GOOD
+@deprecate CAIRO_FILTER_BEST   Cairo.FILTER_BEST
+@deprecate CAIRO_FILTER_NEAREST   Cairo.FILTER_NEAREST
+@deprecate CAIRO_FILTER_BILINEAR   Cairo.FILTER_BILINEAR
+@deprecate CAIRO_FILTER_GAUSSIAN   Cairo.FILTER_GAUSSIAN

@@ -123,13 +123,13 @@ end
 
 function CairoRGBSurface(w::Real, h::Real)
     ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-                Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_RGB24, w, h)
+                Ptr{Void}, (Int32,Int32,Int32), FORMAT_RGB24, w, h)
     CairoSurface(ptr, w, h)
 end
 
 function CairoARGBSurface(w::Real, h::Real)
     ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-                Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_ARGB32, w, h)
+                Ptr{Void}, (Int32,Int32,Int32), FORMAT_ARGB32, w, h)
     CairoSurface(ptr, w, h)
 end
 
@@ -152,8 +152,8 @@ function CairoImageSurface(img::Array{Uint32,2}, format::Integer)
     CairoImageSurface(data, format, w, h)
 end
 
-CairoARGBSurface(img) = CairoImageSurface(img, CAIRO_FORMAT_ARGB32)
-CairoRGBSurface(img) = CairoImageSurface(img, CAIRO_FORMAT_RGB24)
+CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
+CairoRGBSurface(img) = CairoImageSurface(img, FORMAT_RGB24)
 
 ## PDF ##
 
@@ -290,7 +290,7 @@ end
 function surface_create_similar(s::CairoSurface, w = width(s), h = height(s))
     ptr = ccall((:cairo_surface_create_similar,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Int32, Int32, Int32),
-                s.ptr, CAIRO_CONTENT_COLOR_ALPHA, w, h)
+                s.ptr, CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
 
@@ -488,7 +488,7 @@ function image(ctx::CairoContext, s::CairoSurface, x, y, w, h)
         # it's usually better to see pixels than a blurry mess when viewing
         # a small image
         p = get_source(ctx)
-        pattern_set_filter(p, CAIRO_FILTER_NEAREST)
+        pattern_set_filter(p, FILTER_NEAREST)
     end
     fill(ctx)
     restore(ctx)
