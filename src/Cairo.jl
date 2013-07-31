@@ -416,14 +416,14 @@ for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
     end
 end
 
-set_source_rgb(ctx::CairoContext, d0::Real, d1::Real, d2::Real) =
+set_source_rgb(ctx::CairoContext, r::Real, g::Real, b::Real) =
     ccall((:cairo_set_source_rgb,_jl_libcairo),
-          Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, d0, d1, d2)
+          Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, r, g, b)
 
-set_source_rgba(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
+set_source_rgba(ctx::CairoContext, r::Real, g::Real, b::Real, a::Real) =
     ccall((:cairo_set_source_rgba,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64),
-          ctx.ptr, d0, d1, d2, d3)
+          ctx.ptr, r, g, b, a)
 
 function set_source(ctx::CairoContext, c::ColorValue)
     rgb = convert(RGB, c)
@@ -434,15 +434,15 @@ set_source(dest::CairoContext, src::CairoContext) = set_source_surface(dest, src
 
 set_source(dest::CairoContext, src::CairoSurface) = set_source_surface(dest, src)
 
-rectangle(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
+rectangle(ctx::CairoContext, x::Real, y::Real, w::Real, h::Real) =
     ccall((:cairo_rectangle,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64),
-          ctx.ptr, d0, d1, d2, d3)
+          ctx.ptr, x, y, w, h)
 
-arc(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
+arc(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
     ccall((:cairo_arc,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
-          ctx.ptr, d0, d1, d2, d3, d4)
+          ctx.ptr, xc, yc, radius, angle1, angle2)
 
 function set_dash(ctx::CairoContext, dashes::Vector{Float64}, offset::Real = 0.0)
     ccall((:cairo_set_dash,_jl_libcairo), Void,
