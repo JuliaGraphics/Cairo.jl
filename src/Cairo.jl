@@ -45,9 +45,12 @@ export
     rectangle, circle, arc,
 
     # text
-    update_layout, show_layout, get_layout_size, layout_text, text,
-    textwidth, textheight, set_font_face, set_text, select_font_face,
-    TeXLexer, tex2pango, set_font_size, show_text, text_extents,
+    text,
+    update_layout, show_layout, get_layout_size, layout_text,
+    set_text, set_latex,
+    set_font_face, set_font_size, select_font_face,
+    textwidth, textheight, text_extents,
+    TeXLexer, tex2pango, show_text, 
 
     # images
     write_to_png, image, read_from_png
