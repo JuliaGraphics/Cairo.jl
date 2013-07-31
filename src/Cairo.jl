@@ -46,7 +46,7 @@ export
 
     # text
     update_layout, show_layout, get_layout_size, layout_text, text,
-    textwidth, textheight, set_font_face, set_markup, select_font_face,
+    textwidth, textheight, set_font_face, set_text, select_font_face,
     TeXLexer, tex2pango, set_font_size, show_text, text_extents,
 
     # images
@@ -456,36 +456,7 @@ function set_source(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
 end
 set_source(ctx::CairoContext, s::CairoSurface) = set_source_surface(ctx, s, 0, 0)
 
-function set_font_face(ctx::CairoContext, str::String)
-    fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
-                     Ptr{Void}, (Ptr{Uint8},), bytestring(str))
-    ccall((:pango_layout_set_font_description,_jl_libpango), Void,
-          (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
-    ccall((:pango_font_description_free,_jl_libpango), Void,
-          (Ptr{Void},), fontdesc)
-end
 
-function set_markup(ctx::CairoContext, markup::String)
-    ccall((:pango_layout_set_markup,_jl_libpango), Void,
-          (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(markup), -1)
-end
-
-function get_layout_size(ctx::CairoContext)
-    w = Array(Int32,2)
-    ccall((:pango_layout_get_pixel_size,_jl_libpango), Void,
-          (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
-    w
-end
-
-function update_layout(ctx::CairoContext)
-    ccall((:pango_cairo_update_layout,_jl_libpangocairo), Void,
-          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
-end
-
-function show_layout(ctx::CairoContext)
-    ccall((:pango_cairo_show_layout,_jl_libpangocairo), Void,
-          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
-end
 
 # user<->device coordinate translation
 
@@ -584,7 +555,45 @@ function set_line_type(ctx::CairoContext, nick::String)
     set_dash(ctx, dash)
 end
 
+# -----------------------------------------------------------------------------
 # text commands
+
+function set_font_face(ctx::CairoContext, str::String)
+    fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
+                     Ptr{Void}, (Ptr{Uint8},), bytestring(str))
+    ccall((:pango_layout_set_font_description,_jl_libpango), Void,
+          (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
+    ccall((:pango_font_description_free,_jl_libpango), Void,
+          (Ptr{Void},), fontdesc)
+end
+
+function set_text(ctx::CairoContext, text::String, markup::Bool = false)
+    if markup
+        ccall((:pango_layout_set_markup,_jl_libpango), Void,
+            (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(text), -1)
+    else
+        ccall((:pango_layout_set_text,_jl_libpango), Void,
+            (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(text), -1)
+    end
+    text
+end
+
+function get_layout_size(ctx::CairoContext)
+    w = Array(Int32,2)
+    ccall((:pango_layout_get_pixel_size,_jl_libpango), Void,
+          (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
+    w
+end
+
+function update_layout(ctx::CairoContext)
+    ccall((:pango_cairo_update_layout,_jl_libpangocairo), Void,
+          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
+end
+
+function show_layout(ctx::CairoContext)
+    ccall((:pango_cairo_show_layout,_jl_libpangocairo), Void,
+          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
+end
 
 function text_extents(ctx::CairoContext,value::String,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
@@ -606,12 +615,7 @@ function select_font_face(ctx::CairoContext,family::String,slant,weight)
           slant, weight)
 end
 
-function layout_text(ctx::CairoContext, str::String, fontsize)
-    markup = tex2pango(str, fontsize)
-    set_markup(ctx, markup)
-end
-
-function align2offset(a)
+function align2offset(a::String)
     if     a == "center" return 0.5
     elseif a == "left"   return 0.0
     elseif a == "right"  return 1.0
@@ -621,36 +625,40 @@ function align2offset(a)
     @assert false
 end
 
-function text(ctx::CairoContext, x::Real, y::Real, str::String,
-              fontsize, halign, valign, angle)
+function text(ctx::CairoContext, x::Real, y::Real, str::String;
+              halign::String = "left", valign::String = "bottom", angle::Real = 0, markup::Bool=false)
     move_to(ctx, x, y)
     save(ctx)
     reset_transform(ctx)
     rotate(ctx, -angle*pi/180.)
 
-    layout_text(ctx, str, fontsize)
+    set_text(ctx, str, markup)
     update_layout(ctx)
 
     extents = get_layout_size(ctx)
-    dx = -align2offset(halign)*extents[1]
-    dy = align2offset(valign)*extents[2]
-    rel_move_to(ctx, dx, -dy)
+    dxrel = -align2offset(halign)
+    dyrel = align2offset(valign)
+    rel_move_to(ctx, dxrel*extents[1], -dyrel*extents[2])
 
     show_layout(ctx)
     restore(ctx)
+    w, h = Base.Graphics.device_to_user(ctx, extents[1], extents[2])
+    BoundingBox(x+dxrel*w, x+(dxrel+1)*w, y-dyrel*h, y+(1-dyrel)*h)
 end
 
-function textwidth(ctx::CairoContext, str, fontsize)
-    layout_text(ctx, str, fontsize)
+function textwidth(ctx::CairoContext, str::String, markup::Bool = false)
+    set_text(ctx, str, markup)
     extents = get_layout_size(ctx)
     extents[1]
 end
 
-function textheight(ctx::CairoContext, str, fontsize)
-    layout_text(ctx, str, fontsize)
+function textheight(ctx::CairoContext, str::String, markup::Bool = false)
+    set_text(ctx, str, markup)
     extents = get_layout_size(ctx)
     extents[2]
 end
+
+set_latex(ctx::CairoContext, str::String, fontsize::Real) = set_text(ctx, tex2pango(str, fontsize), true)
 
 type TeXLexer
     str::String
@@ -804,5 +812,10 @@ function tex2pango(str::String, fontsize::Real)
 
     return output
 end
+
+@deprecate text(ctx::CairoContext,x::Real,y::Real,str::String,fontsize::Real,halign::String,valign,angle)    text(ctx,x,y,set_latex(ctx,str,fontsize),halign=halign,valign=valign,angle=angle,markup=true)
+@deprecate layout_text(ctx::CairoContext, str::String, fontsize::Real)       set_latex(ctx, str, fontsize)
+@deprecate textwidth(ctx::CairoContext, str::String, fontsize::Real)         textwidth(ctx, tex2pango(str, fontsize), true)
+@deprecate textheight(ctx::CairoContext, str::String, fontsize::Real)        textheight(ctx, tex2pango(str, fontsize), true)
 
 end  # module
