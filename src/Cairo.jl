@@ -143,8 +143,8 @@ function CairoImageSurface(img::Array{Uint32,2}, format::Integer; flipxy::Bool =
     @assert stride == 4w
     ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
                 Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
-                data, format, w, h, stride)
-    CairoSurface(ptr, w, h, data)
+                img, format, w, h, stride)
+    CairoSurface(ptr, w, h, img)
 end
 
 CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
