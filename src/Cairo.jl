@@ -26,7 +26,8 @@ export
     creategc, getgc, save, restore, show_page, width, height,
 
     # drawing attribute manipulation
-    pattern_set_filter, set_fill_type, set_line_width, set_dash,
+    pattern_set_filter, set_antialias, get_antialias,
+    set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_operator, set_source,
 
@@ -506,6 +507,14 @@ function pattern_set_filter(p::CairoPattern, f)
     ccall((:cairo_pattern_set_filter,_jl_libcairo), Void,
           (Ptr{Void},Int32), p.ptr, f)
 end
+
+set_antialias(ctx::CairoContext, a) =
+    ccall((:cairo_set_antialias,_jl_libcairo), Void,
+          (Ptr{Void},Cint), ctx.ptr, a)
+
+get_antialias(ctx::CairoContext) = 
+    ccall((:cairo_get_antialias,_jl_libcairo), Cint,
+          (Ptr{Void},), ctx.ptr)
 
 # -----------------------------------------------------------------------------
 
