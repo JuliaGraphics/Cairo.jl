@@ -616,7 +616,7 @@ end
 function select_font_face(ctx::CairoContext,family::String,slant,weight)
     ccall((:cairo_select_font_face, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{Uint8},
-                 cairo_font_slant_t, cairo_font_weight_t),
+                 font_slant_t, font_weight_t),
           ctx.ptr, bytestring(family),
           slant, weight)
 end
