@@ -111,3 +111,5 @@ provides(BuildProcess,
 			end)
 		end
 	end),libpng, os = :Windows)
+
+@BinDeps.install
