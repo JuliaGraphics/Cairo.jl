@@ -389,19 +389,3 @@ const _math_token_dict = [
     "\\arcmin"          => "\u2032",
     "\\arcsec"          => "\u2033",
 ]
-
-
-@deprecate CAIRO_FORMAT_ARGB32   Cairo.FORMAT_ARGB32
-@deprecate CAIRO_FORMAT_RGB24   Cairo.FORMAT_RGB24
-@deprecate CAIRO_FORMAT_A8   Cairo.FORMAT_A8
-@deprecate CAIRO_FORMAT_A1   Cairo.FORMAT_A1
-@deprecate CAIRO_FORMAT_RGB16_565   Cairo.FORMAT_RGB16_565
-@deprecate CAIRO_CONTENT_COLOR   Cairo.CONTENT_COLOR
-@deprecate CAIRO_CONTENT_ALPHA   Cairo.CONTENT_ALPHA
-@deprecate CAIRO_CONTENT_COLOR_ALPHA   Cairo.CONTENT_COLOR_ALPHA
-@deprecate CAIRO_FILTER_FAST   Cairo.FILTER_FAST
-@deprecate CAIRO_FILTER_GOOD   Cairo.FILTER_GOOD
-@deprecate CAIRO_FILTER_BEST   Cairo.FILTER_BEST
-@deprecate CAIRO_FILTER_NEAREST   Cairo.FILTER_NEAREST
-@deprecate CAIRO_FILTER_BILINEAR   Cairo.FILTER_BILINEAR
-@deprecate CAIRO_FILTER_GAUSSIAN   Cairo.FILTER_GAUSSIAN
