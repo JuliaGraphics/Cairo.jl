@@ -4,7 +4,7 @@ include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
 using Color
 
 importall Base.Graphics
-import Base.copy
+import Base: copy, writemime
 
 include("constants.jl")
 
@@ -278,6 +278,9 @@ function write_to_png(surface::CairoSurface, filename::String)
     ccall((:cairo_surface_write_to_png,_jl_libcairo), Void,
           (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
 end
+
+writemime(io::IO, ::@MIME("image/png"), surface::CairoSurface) =
+   write_to_png(surface, io)
 
 ## Generic ##
 
