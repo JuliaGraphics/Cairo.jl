@@ -1,6 +1,9 @@
-
 module Cairo
-include(joinpath(Pkg.dir(),"Cairo","deps","ext.jl"))
+
+using BinDeps
+@BinDeps.load_dependencies [:gobject => :_jl_libgobject, :cairo => :_jl_libcairo, 
+                            :pango => :_jl_libpango, :pangocairo => :_jl_libpangocairo]
+
 using Color
 
 importall Base.Graphics
@@ -23,7 +26,8 @@ export
     creategc, getgc, save, restore, show_page, width, height,
 
     # drawing attribute manipulation
-    pattern_set_filter, set_fill_type, set_line_width, set_dash,
+    pattern_set_filter, set_antialias, get_antialias,
+    set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_operator, set_source,
 
@@ -42,19 +46,22 @@ export
     rectangle, circle, arc,
 
     # text
-    update_layout, show_layout, get_layout_size, layout_text, text,
-    textwidth, textheight, set_font_face, set_markup, select_font_face,
-    TeXLexer, tex2pango, set_font_size, show_text, text_extents,
+    text,
+    update_layout, show_layout, get_layout_size, layout_text,
+    set_text, set_latex,
+    set_font_face, set_font_size, select_font_face,
+    textwidth, textheight, text_extents,
+    TeXLexer, tex2pango, show_text, 
 
     # images
     write_to_png, image, read_from_png
 
-function cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
+function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
     int32((n == len) ? 0 : 11)
 end
 
-function cairo_write_to_stream_callback(s::IO, buf::Ptr{Uint8}, len::Uint32)
+function write_to_stream_callback(s::IO, buf::Ptr{Uint8}, len::Uint32)
     n = write(s,buf,len)
     int32((n == len) ? 0 : 11)
 end
@@ -117,49 +124,43 @@ end
 
 function CairoRGBSurface(w::Real, h::Real)
     ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-                Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_RGB24, w, h)
+                Ptr{Void}, (Int32,Int32,Int32), FORMAT_RGB24, w, h)
     CairoSurface(ptr, w, h)
 end
 
 function CairoARGBSurface(w::Real, h::Real)
     ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-                Ptr{Void}, (Int32,Int32,Int32), CAIRO_FORMAT_ARGB32, w, h)
+                Ptr{Void}, (Int32,Int32,Int32), FORMAT_ARGB32, w, h)
     CairoSurface(ptr, w, h)
 end
 
-function CairoImageSurface(data::Array, format::Integer, w::Integer, h::Integer, stride::Integer)
-    ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
-                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
-                data, format, w, h, stride)
-    CairoSurface(ptr, w, h, data)
-end
-
-function CairoImageSurface(data::Array{Uint32,2}, format::Integer, w::Integer, h::Integer)
+function CairoImageSurface(img::Array{Uint32,2}, format::Integer; flipxy::Bool = true)
+    if flipxy
+        img = img'
+    end
+    w,h = size(img)
     stride = format_stride_for_width(format, w)
     @assert stride == 4w
-    CairoImageSurface(data, format, w, h, stride)
+    ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
+                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                img, format, w, h, stride)
+    CairoSurface(ptr, w, h, img)
 end
 
-function CairoImageSurface(img::Array{Uint32,2}, format::Integer)
-    data = img'
-    w,h = size(data)
-    CairoImageSurface(data, format, w, h)
-end
-
-CairoARGBSurface(img) = CairoImageSurface(img, CAIRO_FORMAT_ARGB32)
-CairoRGBSurface(img) = CairoImageSurface(img, CAIRO_FORMAT_RGB24)
+CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
+CairoRGBSurface(img) = CairoImageSurface(img, FORMAT_RGB24)
 
 ## PDF ##
 
 function CairoPDFSurface(stream::IOStream, w::Real, h::Real)
-    callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
+    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
 end
 
 function CairoPDFSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
@@ -174,7 +175,7 @@ end
 ## EPS ##
 
 function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
-    callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
+    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
@@ -183,7 +184,7 @@ function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
 end
 
 function CairoEPSSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
@@ -230,15 +231,15 @@ end
 
 ## SVG ##
 
-function CairoSVGSurface(stream::IOStream, w, h)
-    callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
+function CairoSVGSurface(stream::IOStream, w::Real, h::Real)
+    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
 end
 
-function CairoSVGSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+function CairoSVGSurface(stream::IO, w::Real, h::Real)
+    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
@@ -263,13 +264,13 @@ function read_from_png(filename::String)
 end
 
 function write_to_png(surface::CairoSurface, stream::IOStream)
-    callback = cfunction(cairo_write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
+    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{Uint8},Uint32))
     ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Void,
           (Ptr{Uint8},Ptr{Void},Ptr{Void}), surface.ptr, callback, stream)
 end
 
 function write_to_png{T<:IO}(surface::CairoSurface, stream::T)
-    callback = cfunction(cairo_write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
     ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Void,
           (Ptr{Uint8},Ptr{Void},Any), surface.ptr, callback, stream)
 end
@@ -287,7 +288,7 @@ writemime(io::IO, ::@MIME("image/png"), surface::CairoSurface) =
 function surface_create_similar(s::CairoSurface, w = width(s), h = height(s))
     ptr = ccall((:cairo_surface_create_similar,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Int32, Int32, Int32),
-                s.ptr, CAIRO_CONTENT_COLOR_ALPHA, w, h)
+                s.ptr, CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
 
@@ -413,14 +414,14 @@ for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
     end
 end
 
-set_source_rgb(ctx::CairoContext, d0::Real, d1::Real, d2::Real) =
+set_source_rgb(ctx::CairoContext, r::Real, g::Real, b::Real) =
     ccall((:cairo_set_source_rgb,_jl_libcairo),
-          Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, d0, d1, d2)
+          Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, r, g, b)
 
-set_source_rgba(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
+set_source_rgba(ctx::CairoContext, r::Real, g::Real, b::Real, a::Real) =
     ccall((:cairo_set_source_rgba,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64),
-          ctx.ptr, d0, d1, d2, d3)
+          ctx.ptr, r, g, b, a)
 
 function set_source(ctx::CairoContext, c::ColorValue)
     rgb = convert(RGB, c)
@@ -431,15 +432,15 @@ set_source(dest::CairoContext, src::CairoContext) = set_source_surface(dest, src
 
 set_source(dest::CairoContext, src::CairoSurface) = set_source_surface(dest, src)
 
-rectangle(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real) =
+rectangle(ctx::CairoContext, x::Real, y::Real, w::Real, h::Real) =
     ccall((:cairo_rectangle,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64),
-          ctx.ptr, d0, d1, d2, d3)
+          ctx.ptr, x, y, w, h)
 
-arc(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real) =
+arc(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
     ccall((:cairo_arc,_jl_libcairo), Void,
           (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
-          ctx.ptr, d0, d1, d2, d3, d4)
+          ctx.ptr, xc, yc, radius, angle1, angle2)
 
 function set_dash(ctx::CairoContext, dashes::Vector{Float64}, offset::Real = 0.0)
     ccall((:cairo_set_dash,_jl_libcairo), Void,
@@ -456,36 +457,7 @@ function set_source(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
 end
 set_source(ctx::CairoContext, s::CairoSurface) = set_source_surface(ctx, s, 0, 0)
 
-function set_font_face(ctx::CairoContext, str::String)
-    fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
-                     Ptr{Void}, (Ptr{Uint8},), bytestring(str))
-    ccall((:pango_layout_set_font_description,_jl_libpango), Void,
-          (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
-    ccall((:pango_font_description_free,_jl_libpango), Void,
-          (Ptr{Void},), fontdesc)
-end
 
-function set_markup(ctx::CairoContext, markup::String)
-    ccall((:pango_layout_set_markup,_jl_libpango), Void,
-          (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(markup), -1)
-end
-
-function get_layout_size(ctx::CairoContext)
-    w = Array(Int32,2)
-    ccall((:pango_layout_get_pixel_size,_jl_libpango), Void,
-          (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
-    w
-end
-
-function update_layout(ctx::CairoContext)
-    ccall((:pango_cairo_update_layout,_jl_libpangocairo), Void,
-          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
-end
-
-function show_layout(ctx::CairoContext)
-    ccall((:pango_cairo_show_layout,_jl_libpangocairo), Void,
-          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
-end
 
 # user<->device coordinate translation
 
@@ -514,7 +486,7 @@ function image(ctx::CairoContext, s::CairoSurface, x, y, w, h)
         # it's usually better to see pixels than a blurry mess when viewing
         # a small image
         p = get_source(ctx)
-        pattern_set_filter(p, CAIRO_FILTER_NEAREST)
+        pattern_set_filter(p, FILTER_NEAREST)
     end
     fill(ctx)
     restore(ctx)
@@ -538,6 +510,14 @@ function pattern_set_filter(p::CairoPattern, f)
     ccall((:cairo_pattern_set_filter,_jl_libcairo), Void,
           (Ptr{Void},Int32), p.ptr, f)
 end
+
+set_antialias(ctx::CairoContext, a) =
+    ccall((:cairo_set_antialias,_jl_libcairo), Void,
+          (Ptr{Void},Cint), ctx.ptr, a)
+
+get_antialias(ctx::CairoContext) = 
+    ccall((:cairo_get_antialias,_jl_libcairo), Cint,
+          (Ptr{Void},), ctx.ptr)
 
 # -----------------------------------------------------------------------------
 
@@ -584,7 +564,45 @@ function set_line_type(ctx::CairoContext, nick::String)
     set_dash(ctx, dash)
 end
 
+# -----------------------------------------------------------------------------
 # text commands
+
+function set_font_face(ctx::CairoContext, str::String)
+    fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
+                     Ptr{Void}, (Ptr{Uint8},), bytestring(str))
+    ccall((:pango_layout_set_font_description,_jl_libpango), Void,
+          (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
+    ccall((:pango_font_description_free,_jl_libpango), Void,
+          (Ptr{Void},), fontdesc)
+end
+
+function set_text(ctx::CairoContext, text::String, markup::Bool = false)
+    if markup
+        ccall((:pango_layout_set_markup,_jl_libpango), Void,
+            (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(text), -1)
+    else
+        ccall((:pango_layout_set_text,_jl_libpango), Void,
+            (Ptr{Void},Ptr{Uint8},Int32), ctx.layout, bytestring(text), -1)
+    end
+    text
+end
+
+function get_layout_size(ctx::CairoContext)
+    w = Array(Int32,2)
+    ccall((:pango_layout_get_pixel_size,_jl_libpango), Void,
+          (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
+    w
+end
+
+function update_layout(ctx::CairoContext)
+    ccall((:pango_cairo_update_layout,_jl_libpangocairo), Void,
+          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
+end
+
+function show_layout(ctx::CairoContext)
+    ccall((:pango_cairo_show_layout,_jl_libpangocairo), Void,
+          (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
+end
 
 function text_extents(ctx::CairoContext,value::String,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
@@ -601,17 +619,12 @@ end
 function select_font_face(ctx::CairoContext,family::String,slant,weight)
     ccall((:cairo_select_font_face, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{Uint8},
-                 cairo_font_slant_t, cairo_font_weight_t),
+                 font_slant_t, font_weight_t),
           ctx.ptr, bytestring(family),
           slant, weight)
 end
 
-function layout_text(ctx::CairoContext, str::String, fontsize)
-    markup = tex2pango(str, fontsize)
-    set_markup(ctx, markup)
-end
-
-function align2offset(a)
+function align2offset(a::String)
     if     a == "center" return 0.5
     elseif a == "left"   return 0.0
     elseif a == "right"  return 1.0
@@ -621,36 +634,40 @@ function align2offset(a)
     @assert false
 end
 
-function text(ctx::CairoContext, x::Real, y::Real, str::String,
-              fontsize, halign, valign, angle)
+function text(ctx::CairoContext, x::Real, y::Real, str::String;
+              halign::String = "left", valign::String = "bottom", angle::Real = 0, markup::Bool=false)
     move_to(ctx, x, y)
     save(ctx)
     reset_transform(ctx)
     rotate(ctx, -angle*pi/180.)
 
-    layout_text(ctx, str, fontsize)
+    set_text(ctx, str, markup)
     update_layout(ctx)
 
     extents = get_layout_size(ctx)
-    dx = -align2offset(halign)*extents[1]
-    dy = align2offset(valign)*extents[2]
-    rel_move_to(ctx, dx, -dy)
+    dxrel = -align2offset(halign)
+    dyrel = align2offset(valign)
+    rel_move_to(ctx, dxrel*extents[1], -dyrel*extents[2])
 
     show_layout(ctx)
     restore(ctx)
+    w, h = Base.Graphics.device_to_user(ctx, extents[1], extents[2])
+    BoundingBox(x+dxrel*w, x+(dxrel+1)*w, y-dyrel*h, y+(1-dyrel)*h)
 end
 
-function textwidth(ctx::CairoContext, str, fontsize)
-    layout_text(ctx, str, fontsize)
+function textwidth(ctx::CairoContext, str::String, markup::Bool = false)
+    set_text(ctx, str, markup)
     extents = get_layout_size(ctx)
     extents[1]
 end
 
-function textheight(ctx::CairoContext, str, fontsize)
-    layout_text(ctx, str, fontsize)
+function textheight(ctx::CairoContext, str::String, markup::Bool = false)
+    set_text(ctx, str, markup)
     extents = get_layout_size(ctx)
     extents[2]
 end
+
+set_latex(ctx::CairoContext, str::String, fontsize::Real) = set_text(ctx, tex2pango(str, fontsize), true)
 
 type TeXLexer
     str::String
@@ -804,5 +821,12 @@ function tex2pango(str::String, fontsize::Real)
 
     return output
 end
+
+@deprecate text(ctx::CairoContext,x::Real,y::Real,str::String,fontsize::Real,halign::String,valign,angle)    text(ctx,x,y,set_latex(ctx,str,fontsize),halign=halign,valign=valign,angle=angle,markup=true)
+@deprecate layout_text(ctx::CairoContext, str::String, fontsize::Real)       set_latex(ctx, str, fontsize)
+@deprecate textwidth(ctx::CairoContext, str::String, fontsize::Real)         textwidth(ctx, tex2pango(str, fontsize), true)
+@deprecate textheight(ctx::CairoContext, str::String, fontsize::Real)        textheight(ctx, tex2pango(str, fontsize), true)
+@deprecate cairo_write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)   write_to_ios_callback(s, buf, len)
+@deprecate cairo_write_to_stream_callback(s::IO, buf::Ptr{Uint8}, len::Uint32)       write_to_stream_callback(s, buf, len)
 
 end  # module

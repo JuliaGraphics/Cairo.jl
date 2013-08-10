@@ -1,93 +1,115 @@
 using BinDeps
 
-function build()
-    s = @build_steps begin
-	c=Choices(Choice[Choice(:skip,"Skip Installation - Binaries must be installed manually",nothing)])
-    end
-    
-    ## Homebrew
-    @osx_only push!(c,Choice(:brew,"Install depdendency using brew",@build_steps begin
-	HomebrewInstall("pango",ASCIIString[])
-	`brew link cairo`
-    end))
+@BinDeps.setup
 
-    ## Prebuilt Binaries
-    depsdir = joinpath(Pkg.dir(),"Cairo","deps")
-    @windows_only begin	
-	local_file = joinpath(joinpath(depsdir,"downloads"),"Cairo.tar.gz")
-	push!(c,Choice(:binary,"Download prebuilt binary",@build_steps begin
-				ChangeDirectory(depsdir)
-				FileDownloader("http://julialang.googlecode.com/files/Cairo.tar.gz",local_file)
-				FileUnpacker(local_file,joinpath(depsdir,"usr"))
-		       end))
-    end
+deps = [
+	libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"])
+	pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng])
+	libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false)
+	gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0"])
+	freetype = library_dependency("freetype", aliases = ["libfreetype"])
+	fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "ibfontconfig.so.1"], depends = [freetype])
+	cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng])
+	pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0"])
+	pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo])
+	gettext = library_dependency("gettext", aliases = ["libgettext", "libgettextlib"], os = :Unix)
+	zlib = library_dependency("zlib", aliases = ["libzlib"], os = :Windows)
+]
 
+# System Package Managers
+provides(Homebrew,
+	{"cairo" => cairo,
+	 "fontconfig" => fontconfig,
+	 "pango" => [pango,pangocairo],
+	 "glib" => gobject,
+	 "libpng" => libpng,
+	 "gettext" => gettext})
 
-    println(depsdir)
+provides(AptGet,
+	{"libcairo2" => cairo,
+	 "libfontconfig1" => fontconfig,
+	 "libpango1.0-0" => [pango,pangocairo],
+	 "libglib2.0-0" => gobject,
+	 "libpng12-0" => libpng,
+	 "libpixman-1-0" => pixman,
+	 "gettext" => gettext})
 
-    ## Install from source
-    let 
-	prefix=joinpath(depsdir,"usr")
-	uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
-	pngsrcdir = joinpath(depsdir,"src","libpng-1.5.13")
-	pngbuilddir = joinpath(depsdir,"builds","libpng-1.5.13")
-	steps = @build_steps begin ChangeDirectory(depsdir) end
+# TODO: check whether these are accurate
+provides(Yum,
+	{"cairo" => cairo,
+	 "fontconfig" => fontconfig,
+	 "pango" => [pango,pangocairo],
+	 "glib" => gobject,
+	 "libpng" => libpng,
+	 "gettext" => gettext})
 
-	ENV["PKG_CONFIG_LIBDIR"]=ENV["PKG_CONFIG_PATH"]=joinpath(depsdir,"usr","lib","pkgconfig")
-	@unix_only ENV["PATH"]=joinpath(prefix,"bin")*":"*ENV["PATH"]
-	@windows_only ENV["PATH"]=joinpath(prefix,"bin")*";"*ENV["PATH"]
-	## Windows Specific dependencies
-	@windows_only begin
-		steps |= prepare_src(depsdir,"http://zlib.net/zlib-1.2.8.tar.gz","zlib-1.2.8.tar.gz","zlib-1.2.8")
-		steps |= @build_steps begin
-					ChangeDirectory(joinpath(depsdir,"src","zlib-1.2.8"))
-					MakeTargets(["-fwin32/Makefile.gcc"])
-					#MakeTargets(["-fwin32/Makefile.gcc","DESTDIR=../../usr/","INCLUDE_PATH=include","LIBRARY_PATH=lib","SHARED_MODE=1","install"])
-				end
-		steps |= prepare_src(depsdir,"ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-1.5.14.tar.gz","libpng-1.5.13.tar.gz","libpng-1.5.13")
-		steps |= @build_steps begin
-					ChangeDirectory(pngbuilddir)
-					FileRule(joinpath(prefix,"lib","libpng15.dll"),@build_steps begin
-						`cmake -DCMAKE_INSTALL_PREFIX="$prefix" -G"MSYS Makefiles" $pngsrcdir`
-						`make`
-						`cp libpng*.dll $prefix/lib`
-						`cp libpng*.a $prefix/lib`
-						`cp libpng*.pc $prefix/lib/pkgconfig`
-						`cp pnglibconf.h $prefix/include`
-						`cp $pngsrcdir/png.h $prefix/include`
-						`cp $pngsrcdir/pngconf.h $prefix/include`
-					end)
-				end
-	end
+provides(Binaries, {URI("http://julialang.googlecode.com/files/Cairo.tar.gz") => deps}, os = :Windows)
+provides(Binaries, {URI("http://julialang.googlecode.com/files/OSX.tar.gz") => deps}, os = :Darwin)
 
-	## Unix Specific dependencies
-	@unix_only  steps |= @build_steps begin
-		autotools_install(depsdir,"ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-1.5.14.tar.gz","libpng-1.5.14.tar.gz",String[],"libpng-1.5.14","libpng-1.5.14",".libs/libpng15.la","libpng15.la")
-		autotools_install(depsdir,"http://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.2.tar.gz","gettext-0.18.2.tar.gz",String[],"gettext-0.18.2","gettext-0.18.2","gettext-tools/gnulib-lib/.libs/libgettextlib.la","libgettextlib.la")
-	end
+const png_version = "1.5.14"
 
-	## Common dependencies
-	steps |= @build_steps begin
-		autotools_install(depsdir,"http://www.cairographics.org/releases/pixman-0.28.2.tar.gz","pixman-0.28.2.tar.gz",String[],"pixman-0.28.2","pixman-0.28.2","pixman/libpixman-1.la",OS_NAME == :Windows ? "libpixman-1-0."*BinDeps.shlib_ext : (OS_NAME == :Linux ? "libpixman-1."*BinDeps.shlib_ext : "libpixman-1.0."*BinDeps.shlib_ext))
-		autotools_install(depsdir,"http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz","freetype-2.4.11.tar.gz",String[],"freetype-2.4.11","freetype-2.4.11",OS_NAME == :Windows ? "objs/.libs/libfreetype.la" : ".libs/libfreetype."*BinDeps.shlib_ext,"libfreetype.la",OS_NAME == :Windows ? "builds/unix" : "")
-		autotools_install(depsdir,"http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.10.2.tar.gz","fontconfig-2.10.2.tar.gz",String[],"fontconfig-2.10.2","fontconfig-2.10.2","src/libfontconfig.la","libfontconfig.la")
-		autotools_install(depsdir,"http://www.cairographics.org/releases/cairo-1.12.8.tar.xz","cairo-1.12.8.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include -D_SSIZE_T_DEFINED=1",OS_NAME != :Linux ? "--without-x" : "", OS_NAME != :Linux ? "--disable-xlib" : "", OS_NAME != :Linux ? "--disable-xcb" : "", OS_NAME == :Darwin ? "--enable-quartz" : "", OS_NAME == :Darwin ? "--enable-quartz-font" : "", OS_NAME == :Darwin ? "--enable-quartz-image" : "", OS_NAME == :Darwin ? "--disable-gl" : ""],"cairo-1.12.8","cairo-1.12.8","src/libcairo.la","libcairo.la")
-		autotools_install(depsdir,"ftp://sourceware.org/pub/libffi/libffi-3.0.11.tar.gz","libffi-3.0.11.tar.gz",String[],"libffi-3.0.11","libffi-3.0.11",OS_NAME == :Windows ? "i686-pc-mingw32/.libs/libffi.la" : ".libs/libffi.la","libffi.la",OS_NAME == :Windows ? "i686-pc-mingw32" : "")
-		autotools_install(depsdir,"http://ftp.gnome.org/pub/gnome/sources/glib/2.34/glib-2.34.3.tar.xz","glib-2.34.3.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include",OS_NAME == :Windows?"CFLAGS=-march=i686":""],"glib-2.34.3","glib-2.34.3","glib/libglib-2.0.la","libglib-2.0.la")
-		autotools_install(depsdir,"http://ftp.gnome.org/pub/GNOME/sources/pango/1.32/pango-1.32.6.tar.xz","pango-1.32.6.tar.xz",String["LDFLAGS=-L$uprefix/lib","CPPFLAGS=-I$uprefix/include","--with-included-modules=yes", OS_NAME != :Linux ? "--without-x" : ""],"pango-1.32.6","pango-1.32.6","pango/libpango-1.0.la","libpango-1.0.la")
-	end
-	push!(c,Choice(:source,"Install depdendency from source",steps))
-    end
-    run(s)
+provides(Sources,
+	{URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
+	 URI("http://www.cairographics.org/releases/cairo-1.12.8.tar.xz") => cairo,
+ 	 URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
+	 URI("http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.10.2.tar.gz") => fontconfig,
+	 URI("http://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.2.tar.gz") => gettext,
+	 URI("ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-$(png_version).tar.gz") => libpng,
+	 URI("ftp://sourceware.org/pub/libffi/libffi-3.0.11.tar.gz") => libffi,
+	 URI("http://ftp.gnome.org/pub/gnome/sources/glib/2.34/glib-2.34.3.tar.xz") => gobject,
+	 URI("http://ftp.gnome.org/pub/GNOME/sources/pango/1.32/pango-1.32.6.tar.xz") => [pango,pangocairo],
+	 URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib})
 
-end # build()
+xx(t...) = (OS_NAME == :Windows ? t[1] : (OS_NAME == :Linux || length(t) == 2) ? t[2] : t[3])
 
-alllibs = try
-    evalfile("ext.jl")
-    true
-catch
-    false
-end
+provides(BuildProcess,
+	{
+		Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*BinDeps.shlib_ext) => pixman,
+		Autotools(libtarget = xx("objs/.libs/libfreetype.la","libfreetype.la")) => freetype,
+		Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
+		Autotools(libtarget = "src/libcairo.la", configure_options = append!(append!(
+			String[],
+			OS_NAME != :Linux ? String["--without-x","--disable-xlib","--disable-xcb"] : String[]),
+			OS_NAME == :Darwin ? String["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : String[])) => cairo,
+		Autotools(libtarget = "gettext-tools/gnulib-lib/.libs/libgettextlib.la") => gettext,
+		Autotools() => libffi,
+		Autotools() => gobject,
+		Autotools() => pango
+	})
 
-if !alllibs; build(); end
+provides(BuildProcess,Autotools(libtarget = "libpng15.la"),libpng,os = :Unix)
 
+provides(SimpleBuild,
+	(@build_steps begin
+		GetSources(zlib)
+		@build_steps begin
+			ChangeDirectory(joinpath(BinDeps.depsdir(zlib),"src","zlib-1.2.7"))
+			MakeTargets(["-fwin32/Makefile.gcc"])
+			#MakeTargets(["-fwin32/Makefile.gcc","DESTDIR=../../usr/","INCLUDE_PATH=include","LIBRARY_PATH=lib","SHARED_MODE=1","install"])
+		end
+	end),zlib, os = :Windows)
+
+prefix=joinpath(BinDeps.depsdir(libpng),"usr")
+uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
+pngsrcdir = joinpath(BinDeps.depsdir(libpng),"src","libpng-$png_version")
+pngbuilddir = joinpath(BinDeps.depsdir(libpng),"builds","libpng-$png_version")
+provides(BuildProcess,
+	(@build_steps begin
+		GetSources(libpng)
+		CreateDirectory(pngbuilddir)
+		@build_steps begin
+			ChangeDirectory(pngbuilddir)
+			FileRule(joinpath(prefix,"lib","libpng15.dll"),@build_steps begin
+				`cmake -DCMAKE_INSTALL_PREFIX="$prefix" -G"MSYS Makefiles" $pngsrcdir`
+				`make`
+				`cp libpng*.dll $prefix/lib`
+				`cp libpng*.a $prefix/lib`
+				`cp libpng*.pc $prefix/lib/pkgconfig`
+				`cp pnglibconf.h $prefix/include`
+				`cp $pngsrcdir/png.h $prefix/include`
+				`cp $pngsrcdir/pngconf.h $prefix/include`
+			end)
+		end
+	end),libpng, os = :Windows)
+
+@BinDeps.install
