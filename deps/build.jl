@@ -74,7 +74,7 @@ provides(BuildProcess,
 		Autotools(libtarget = "gettext-tools/gnulib-lib/.libs/libgettextlib.la") => gettext,
 		Autotools() => libffi,
 		Autotools() => gobject,
-		Autotools() => pango
+		Autotools() => [pango,pangocairo]
 	})
 
 provides(BuildProcess,Autotools(libtarget = "libpng15.la"),libpng,os = :Unix)
