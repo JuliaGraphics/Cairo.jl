@@ -26,15 +26,24 @@ deps = [
 
 end
 
-# System Package Managers
-provides(Homebrew,
-	{"cairo" => cairo,
-	 "fontconfig" => fontconfig,
-	 "pango" => [pango,pangocairo],
-	 "glib" => gobject,
-	 "libpng" => libpng,
-	 "gettext" => gettext})
+@osx_only begin
+	Pkg.installed("Homebrew") === nothing && Pkg.add("Homebrew")
+	using Homebrew
+	provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
+	provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin )
+	provides( Homebrew.HB, "fontconfig", fontconfig, os = :Darwin )
+	provides( Homebrew.HB, "glib", gobject, os = :Darwin )
+	provides( Homebrew.HB, "libpng", libpng, os = :Darwin )
+	provides( Homebrew.HB, "gettext", gettext, os = :Darwin )
+	provides( Homebrew.HB, "freetype", freetype, os = :Darwin )
+	provides( Homebrew.HB, "libffi", libffi, os = :Darwin )
+	provides( Homebrew.HB, "pixman", pixman, os = :Darwin )
 
+	# NOTE: This should really only be run if Homebrew really is the provider
+	ENV["PANGO_SYSCONFDIR"] = joinpath(prefix, "etc")
+end
+
+# System Package Managers
 provides(AptGet,
 	{"libcairo2" => cairo,
 	 "libfontconfig1" => fontconfig,
