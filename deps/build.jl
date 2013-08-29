@@ -6,15 +6,16 @@ deps = [
 	libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], runtime = false)
 	pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false)
 	libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false)
-	gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0"])
+	gettext = library_dependency("gettext", aliases = ["libgettext", "libgettextlib"], os = :Unix)
+	gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0"], depends=[libffi, gettext])
 	freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false)
 	fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "ibfontconfig.so.1"], depends = [freetype], runtime = false)
 	cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng])
 	pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0"])
 	pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo])
-	gettext = library_dependency("gettext", aliases = ["libgettext", "libgettextlib"], os = :Unix)
 	zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows)
 ]
+
 
 @windows_only begin
 	Pkg.installed("RPMmd") === nothing && Pkg.add("RPMmd")
@@ -23,18 +24,26 @@ deps = [
 	provides(RPMmd.RPM,"glib2",gobject,os = :Windows)
 	provides(RPMmd.RPM,"zlib",zlib,os = :Windows)
 	provides(RPMmd.RPM,["libcairo2","libharfbuzz"],cairo,os = :Windows)
+end
 
+@osx_only begin
+	Pkg.installed("Homebrew") === nothing && Pkg.add("Homebrew")
+	using Homebrew
+	provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
+	provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin )
+	provides( Homebrew.HB, "fontconfig", fontconfig, os = :Darwin )
+	provides( Homebrew.HB, "glib", gobject, os = :Darwin )
+	provides( Homebrew.HB, "libpng", libpng, os = :Darwin )
+	provides( Homebrew.HB, "gettext", gettext, os = :Darwin )
+	provides( Homebrew.HB, "freetype", freetype, os = :Darwin )
+	provides( Homebrew.HB, "libffi", libffi, os = :Darwin )
+	provides( Homebrew.HB, "pixman", pixman, os = :Darwin )
+
+	# NOTE: This should really only be run if Homebrew is the provider that gets used
+	ENV["PANGO_SYSCONFDIR"] = joinpath(Homebrew.prefix, "etc")
 end
 
 # System Package Managers
-provides(Homebrew,
-	{"cairo" => cairo,
-	 "fontconfig" => fontconfig,
-	 "pango" => [pango,pangocairo],
-	 "glib" => gobject,
-	 "libpng" => libpng,
-	 "gettext" => gettext})
-
 provides(AptGet,
 	{"libcairo2" => cairo,
 	 "libfontconfig1" => fontconfig,
@@ -56,7 +65,6 @@ provides(Yum,
 if WORD_SIZE == 32
 	provides(Binaries, {URI("http://julialang.googlecode.com/files/Cairo.tar.gz") => deps}, os = :Windows)
 end
-provides(Binaries, {URI("http://julialang.googlecode.com/files/OSX.tar.gz") => deps}, os = :Darwin)
 
 const png_version = "1.5.14"
 
@@ -84,9 +92,9 @@ provides(BuildProcess,
 			OS_NAME != :Linux ? String["--without-x","--disable-xlib","--disable-xcb"] : String[]),
 			OS_NAME == :Darwin ? String["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : String[])) => cairo,
 		Autotools(libtarget = "gettext-tools/gnulib-lib/.libs/libgettextlib.la") => gettext,
-		Autotools() => libffi,
-		Autotools() => gobject,
-		Autotools() => [pango,pangocairo]
+		Autotools(libtarget = "libffi.la") => libffi,
+		Autotools(libtarget = "gobject/libgobject-2.0.la") => gobject,
+		Autotools(libtarget = "pango/libpango-1.0.la") => [pango,pangocairo]
 	})
 
 provides(BuildProcess,Autotools(libtarget = "libpng15.la"),libpng,os = :Unix)
