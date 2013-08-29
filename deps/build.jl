@@ -16,6 +16,7 @@ deps = [
 	zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows)
 ]
 
+
 @windows_only begin
 	Pkg.installed("RPMmd") === nothing && Pkg.add("RPMmd")
 	using RPMmd
@@ -23,7 +24,6 @@ deps = [
 	provides(RPMmd.RPM,"glib2",gobject,os = :Windows)
 	provides(RPMmd.RPM,"zlib",zlib,os = :Windows)
 	provides(RPMmd.RPM,["libcairo2","libharfbuzz"],cairo,os = :Windows)
-
 end
 
 @osx_only begin
@@ -39,8 +39,8 @@ end
 	provides( Homebrew.HB, "libffi", libffi, os = :Darwin )
 	provides( Homebrew.HB, "pixman", pixman, os = :Darwin )
 
-	# NOTE: This should really only be run if Homebrew really is the provider
-	ENV["PANGO_SYSCONFDIR"] = joinpath(prefix, "etc")
+	# NOTE: This should really only be run if Homebrew is the provider that gets used
+	ENV["PANGO_SYSCONFDIR"] = joinpath(Homebrew.prefix, "etc")
 end
 
 # System Package Managers
