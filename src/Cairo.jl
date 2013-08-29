@@ -280,7 +280,7 @@ function write_to_png(surface::CairoSurface, filename::String)
           (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
 end
 
-writemime(io::IO, ::@MIME("image/png"), surface::CairoSurface) =
+writemime(io::IO, ::MIME"image/png", surface::CairoSurface) =
    write_to_png(surface, io)
 
 ## Generic ##
