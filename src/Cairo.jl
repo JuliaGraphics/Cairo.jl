@@ -56,6 +56,16 @@ export
     # images
     write_to_png, image, read_from_png
 
+
+@osx_only begin
+    if Pkg.installed("Homebrew") != nothing
+        using Homebrew
+        if Homebrew.installed("pango")
+            ENV["PANGO_SYSCONFDIR"] = joinpath(Homebrew.prefix(), "etc")
+        end
+    end
+end
+
 function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
     int32((n == len) ? 0 : 11)
@@ -280,7 +290,7 @@ function write_to_png(surface::CairoSurface, filename::String)
           (Ptr{Uint8},Ptr{Uint8}), surface.ptr, bytestring(filename))
 end
 
-writemime(io::IO, ::@MIME("image/png"), surface::CairoSurface) =
+writemime(io::IO, ::MIME"image/png", surface::CairoSurface) =
    write_to_png(surface, io)
 
 ## Generic ##
