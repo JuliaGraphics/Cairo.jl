@@ -38,9 +38,6 @@ end
 	provides( Homebrew.HB, "freetype", freetype, os = :Darwin )
 	provides( Homebrew.HB, "libffi", libffi, os = :Darwin )
 	provides( Homebrew.HB, "pixman", pixman, os = :Darwin )
-
-	# NOTE: This should really only be run if Homebrew is the provider that gets used
-	ENV["PANGO_SYSCONFDIR"] = joinpath(Homebrew.prefix, "etc")
 end
 
 # System Package Managers
