@@ -27,7 +27,9 @@ deps = [
 end
 
 @osx_only begin
-	Pkg.installed("Homebrew") === nothing && Pkg.add("Homebrew")
+	if Pkg.installed("Homebrew") === nothing
+		error("Homebrew package not installed, please run Pkg.add(\"Homebrew\")")
+	end
 	using Homebrew
 	provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
 	provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin )
