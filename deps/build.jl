@@ -57,7 +57,7 @@ provides(Yum,
 	{"cairo" => cairo,
 	 "fontconfig" => fontconfig,
 	 "pango" => [pango,pangocairo],
-	 "glib" => gobject,
+	 "glib2" => gobject,
 	 "libpng" => libpng,
 	 "gettext" => gettext})
 
