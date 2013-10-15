@@ -24,6 +24,8 @@ deps = [
 	provides(RPMmd.RPM,"glib2",gobject,os = :Windows)
 	provides(RPMmd.RPM,"zlib",zlib,os = :Windows)
 	provides(RPMmd.RPM,["libcairo2","libharfbuzz"],cairo,os = :Windows)
+
+	unshift!(bindeps_context.deps, splice!(bindeps_context.deps, findfirst(bindeps_context.deps,pango)))
 end
 
 @osx_only begin
