@@ -61,10 +61,6 @@ provides(Yum,
 	 "libpng" => libpng,
 	 "gettext" => gettext})
 
-if WORD_SIZE == 32
-	provides(Binaries, {URI("http://julialang.googlecode.com/files/Cairo.tar.gz") => deps}, os = :Windows)
-end
-
 const png_version = "1.5.14"
 
 provides(Sources,
