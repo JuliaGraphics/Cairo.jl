@@ -1,8 +1,6 @@
 module Cairo
 
-using BinDeps
-@BinDeps.load_dependencies [:gobject => :_jl_libgobject, :cairo => :_jl_libcairo, 
-                            :pango => :_jl_libpango, :pangocairo => :_jl_libpangocairo]
+include("../deps/deps.jl")
 
 using Color
 

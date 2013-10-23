@@ -2,5 +2,6 @@ deps/builds
 deps/downloads
 deps/usr
 deps/src
+deps/deps.jl
 .DS_Store
 *~
