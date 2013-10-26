@@ -18,12 +18,11 @@ deps = [
 
 
 @windows_only begin
-	Pkg.installed("RPMmd") === nothing && Pkg.add("RPMmd")
-	using RPMmd
-	provides(RPMmd.RPM,"pango",[pango,pangocairo],os = :Windows)
-	provides(RPMmd.RPM,"glib2",gobject,os = :Windows)
-	provides(RPMmd.RPM,"zlib",zlib,os = :Windows)
-	provides(RPMmd.RPM,["libcairo2","libharfbuzz"],cairo,os = :Windows)
+	using WinRPM
+	provides(WinRPM.RPM,"pango",[pango,pangocairo],os = :Windows)
+	provides(WinRPM.RPM,"glib2",gobject,os = :Windows)
+	provides(WinRPM.RPM,"zlib",zlib,os = :Windows)
+	provides(WinRPM.RPM,["libcairo2","libharfbuzz"],cairo,os = :Windows)
 end
 
 @osx_only begin
