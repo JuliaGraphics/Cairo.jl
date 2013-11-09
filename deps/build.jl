@@ -6,7 +6,7 @@ deps = [
 	libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], runtime = false)
 	pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false)
 	libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false)
-	gettext = library_dependency("gettext", aliases = ["libgettext", "libgettextlib"], os = :Unix)
+	gettext = library_dependency("gettext", aliases = ["libgettext", "libgettextlib", "libgettextlib-0.18.1", "libgettextlib-0.18.2", "libgettextlib-0.18.3"], os = :Unix)
 	gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0"], depends=[libffi, gettext])
 	freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false)
 	fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "ibfontconfig.so.1"], depends = [freetype], runtime = false)
