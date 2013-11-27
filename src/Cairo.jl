@@ -24,7 +24,7 @@ export
     creategc, getgc, save, restore, show_page, width, height,
 
     # drawing attribute manipulation
-    pattern_set_filter, set_antialias, get_antialias,
+    pattern_set_filter, pattern_set_extend, set_antialias, get_antialias,
     set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_operator, set_source,
@@ -509,6 +509,28 @@ type CairoPattern
     ptr::Ptr{Void}
 end
 
+function CairoPattern(s::CairoSurface)
+    ptr = ccall((:cairo_pattern_create_for_surface, _jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},), s.ptr)
+    status = ccall((:cairo_pattern_status, _jl_libcairo),
+                    Cint, (Ptr{Void},), s.ptr)
+    if status != 0
+        error("Error creating Cairo pattern: ", bytestring(
+              ccall((:cairo_status_to_string, _jl_libcairo),
+                    Ptr{Uint8}, (Cint,), status)))
+    end
+    pattern = CairoPattern(ptr)
+    finalizer(pattern, CairoPatternDestroy)
+    pattern
+end
+
+CairoPatternDestroy(p::CairoPattern) = ccall((:cairo_pattern_destroy, _jl_libcairo),
+                                             Void, (Ptr{Void},), p.ptr)
+
+set_source(dest::CairoContext, src::CairoPattern) =
+    ccall((:cairo_set_source, _jl_libcairo),
+          Void, (Ptr{Void}, Ptr{Void}), dest.ptr, src.ptr)
+
 function get_source(ctx::CairoContext)
     CairoPattern(ccall((:cairo_get_source,_jl_libcairo),
                        Ptr{Void}, (Ptr{Void},), ctx.ptr))
@@ -517,6 +539,11 @@ end
 function pattern_set_filter(p::CairoPattern, f)
     ccall((:cairo_pattern_set_filter,_jl_libcairo), Void,
           (Ptr{Void},Int32), p.ptr, f)
+end
+
+function pattern_set_extend(p::CairoPattern, val)
+    ccall((:cairo_pattern_set_extend,_jl_libcairo), Void,
+          (Ptr{Void},Int32), p.ptr, val)
 end
 
 set_antialias(ctx::CairoContext, a) =
