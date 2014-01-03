@@ -26,6 +26,6 @@ Image test
 
 There should be an image right here.
 
-![image here](images/drawing.png "Logo Title Text 1")
+![image here](images/drawing.svg "Logo Title Text 1")
 
 
