@@ -26,6 +26,6 @@ Image test
 
 There should be an image right here.
 
-![alt text](https://github.com/lobingera/Cairo.jl/blob/master/images/drawing.svg "Logo Title Text 1")
+![alt text](https://github.com/lobingera/Cairo.jl/blob/master/images/drawing.png "Logo Title Text 1")
 
 
