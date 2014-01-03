@@ -1,3 +1,0 @@
-libcairo Julia API
-==================
-
