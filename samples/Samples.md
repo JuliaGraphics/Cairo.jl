@@ -103,11 +103,11 @@ Examples of text setting, one with show_text, second with text_path - creating a
 
 ![text .png](sample_text.png "text example")
 
-### text #
+### text extents#
 
-Example of text extent, text set with show_text, extent (size of the text in user coordinates) with help lines [sample_text_extent.jl](sample_text_extent.jl).
+Example of text extents, text set with show_text, extent (size of the text in user coordinates) with help lines [sample_text_extents.jl](sample_text_extents.jl).
 
-![text extent .png](sample_text_extent.png "text extent example")
+![text extent .png](sample_text_extents.png "text extent example")
 
 
 
