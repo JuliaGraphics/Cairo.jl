@@ -1,5 +1,5 @@
-Sample programs.
-################
+Sample programs
+###############
 
 This is mainly a copy of the sample code examples listed at [cairographics.org/samples](http://www.cairographics.org/samples/).
 The examples are C code and need a environment of a Cairo surface and Cairo Context.
@@ -63,18 +63,21 @@ missing.
 
 ### image #
 
-Example of painting with a Image Surface as source [sample_image.jl](sample_image.jl).
+Example of painting with an Image Surface as source [sample_image.jl](sample_image.jl).
 
 ![image .png](sample_image.png "image example")
 
 ### image pattern #
 
-Example of painting with a Image Surface as pattern [sample_imagepattern.jl _image.jl).
+Example of painting with an Image Surface as pattern (multiple) [sample_imagepattern.jl](sample_imagepattern.jl).
 
-![image .png](sample_image.png "image example")
+![imagepattern .png](sample_imagepattern.png "imagepattern example")
 
 ### multi segment caps #
-missing.
+
+Example of stroke for non connected paths [sample_multi_segment_caps.jl](sample_multi_segment_caps.jl).
+
+![multi segment caps .png](sample_multi_segment_caps.png "imagepattern example")
 
 ### rounded rectangle #
 
@@ -82,7 +85,33 @@ Example of more path operators, custom shape could be wrapped in a function [sam
 
 ![rounded rectangle .png](sample_rounded_rectangle.png "rounded rectangle example")
 
-### 
+### set line cap #
+
+Example of line cap styles [sample_set_line_cap.jl](sample_set_line_cap.jl).
+
+![set line cap .png](sample_set_line_cap.png "set line cap example")
+
+### set line join #
+
+Example of line join styles [sample_set_line_join.jl](sample_set_line_join.jl).
+
+![set line join .png](sample_set_line_join.png "set line join example")
+
+### text #
+
+Examples of text setting, one with show_text, second with text_path - creating a current path with the glyph/text outline and fill and stroke [sample_text.jl](sample_text.jl).
+
+![text .png](sample_text.png "text example")
+
+### text #
+
+Example of text extent, text set with show_text, extent (size of the text in user coordinates) with help lines [sample_text_extent.jl](sample_text_extent.jl).
+
+![text extent .png](sample_text_extent.png "text extent example")
+
+
+
+
 
 
 
