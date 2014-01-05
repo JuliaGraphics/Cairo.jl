@@ -58,6 +58,31 @@ Exmaple of using the different fill rules. The same path is filled and stroked [
 
 ![fill style .png](sample_fill_style.png "fill style example")
 
+### gradient #
+missing.
+
+### image #
+
+Example of painting with a Image Surface as source [sample_image.jl](sample_image.jl).
+
+![image .png](sample_image.png "image example")
+
+### image pattern #
+
+Example of painting with a Image Surface as pattern [sample_imagepattern.jl _image.jl).
+
+![image .png](sample_image.png "image example")
+
+### multi segment caps #
+missing.
+
+### rounded rectangle #
+
+Example of more path operators, custom shape could be wrapped in a function [sample_rounded_rectangle.jl](sample_rounded_rectangle.jl).
+
+![rounded rectangle .png](sample_rounded_rectangle.png "rounded rectangle example")
+
+### 
 
 
 
