@@ -11,6 +11,6 @@ This (samples) directory contains independend julia programms that prefixes the 
 Example of using the arc path operator (sample_arc.jl).
 Note: The path creation starts without current point, otherwise there would be a linesegment first, before starting of the arc.
 
-[!arc .png](sample_arc.png "arc example")
+![arc .png](sample_arc.png "arc example")
 
 ## arc_negative #
