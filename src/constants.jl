@@ -394,3 +394,13 @@ const _math_token_dict = [
     "\\arcmin"          => "\u2032",
     "\\arcsec"          => "\u2033",
 ]
+const CAIRO_FILL_RULE_WINDING = int32(0);
+const CAIRO_FILL_RULE_EVEN_ODD = int32(1);
+
+const CAIRO_LINE_CAP_BUTT = int32(0);
+const CAIRO_LINE_CAP_ROUND = int32(1);
+const CAIRO_LINE_CAP_SQUARE = int32(2);
+
+const CAIRO_LINE_JOIN_MITER = int32(0);
+const CAIRO_LINE_JOIN_ROUND = int32(1);
+const CAIRO_LINE_JOIN_BEVEL = int32(2);

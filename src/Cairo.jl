@@ -27,7 +27,9 @@ export
     pattern_set_filter, pattern_set_extend, set_antialias, get_antialias,
     set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
+    set_line_cap, set_line_join,
     set_operator, set_source,
+    CairoMatrix,
 
     # coordinate systems
     reset_transform, rotate, scale, translate, user_to_device!,
@@ -41,7 +43,9 @@ export
     fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
     stroke_preserve, stroke_transformed, stroke_transformed_preserve,
     move_to, line_to, rel_line_to, rel_move_to,
-    rectangle, circle, arc,
+    rectangle, circle, arc, arc_negative, 
+    curve_to, rel_curve_to,
+    path_extents,
 
     # text
     text,
@@ -49,7 +53,7 @@ export
     set_text, set_latex,
     set_font_face, set_font_size, select_font_face,
     textwidth, textheight, text_extents,
-    TeXLexer, tex2pango, show_text, 
+    TeXLexer, tex2pango, show_text, text_path,
 
     # images
     write_to_png, image, read_from_png
@@ -461,7 +465,9 @@ end
 
 
 for (NAME, FUNCTION) in {(:set_fill_type, :cairo_set_fill_rule),
-                         (:set_operator, :cairo_set_operator)}
+                         (:set_operator, :cairo_set_operator),
+                         (:set_line_cap, :cairo_set_line_cap),
+                         (:set_line_join, :cairo_set_line_join)}
     @eval begin
         $NAME(ctx::CairoContext, i0::Integer) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -492,6 +498,26 @@ for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
     end
 end
 
+for (NAME, FUNCTION) in {(:curve_to, :cairo_curve_to),
+                         (:rel_curve_to, :cairo_rel_curve_to)}
+    @eval begin
+        $NAME(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real, d5::Real) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+                  Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64,Float64), ctx.ptr, d0, d1, d2, d3, d4, d5)
+    end
+end
+
+for (NAME, FUNCTION) in {(:arc, :cairo_arc),
+                         (:arc_negative, :cairo_arc_negative)}
+    @eval begin
+        $NAME(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+                  Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64), 
+                  ctx.ptr, xc, yc, radius, angle1, angle2)
+    end
+end
+
+
 set_source_rgb(ctx::CairoContext, r::Real, g::Real, b::Real) =
     ccall((:cairo_set_source_rgb,_jl_libcairo),
           Void, (Ptr{Void},Float64,Float64,Float64), ctx.ptr, r, g, b)
@@ -515,10 +541,10 @@ rectangle(ctx::CairoContext, x::Real, y::Real, w::Real, h::Real) =
           (Ptr{Void},Float64,Float64,Float64,Float64),
           ctx.ptr, x, y, w, h)
 
-arc(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
-    ccall((:cairo_arc,_jl_libcairo), Void,
-          (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
-          ctx.ptr, xc, yc, radius, angle1, angle2)
+#arc(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
+#    ccall((:cairo_arc,_jl_libcairo), Void,
+#          (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
+#          ctx.ptr, xc, yc, radius, angle1, angle2)
 
 function set_dash(ctx::CairoContext, dashes::Vector{Float64}, offset::Real = 0.0)
     ccall((:cairo_set_dash,_jl_libcairo), Void,
@@ -647,6 +673,11 @@ function set_matrix(ctx::CairoContext, m::CairoMatrix)
     ccall((:cairo_set_matrix, _jl_libcairo), Void, (Ptr{Void}, Ptr{Void}), ctx.ptr, [m])
 end
 
+function set_matrix(p::CairoPattern, m::CairoMatrix)
+    ccall((:cairo_pattern_set_matrix, _jl_libcairo), Void, (Ptr{Void}, Ptr{Void}), p.ptr, [m])
+end
+
+
 # -----------------------------------------------------------------------------
 function set_line_type(ctx::CairoContext, nick::String)
     if nick == "solid"
@@ -709,17 +740,42 @@ function show_layout(ctx::CairoContext)
           (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
-function text_extents(ctx::CairoContext,value::String,extents)
+  
+function text_extents(ctx::CairoContext,value::String)
+    extents = Array(Float64,6,1)
     ccall((:cairo_text_extents, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{Uint8}, Ptr{Float64}),
           ctx.ptr, bytestring(value), extents)
+    return extents
 end
+
+function path_extents(ctx::CairoContext)
+    dx1 = Cdouble[0]
+    dx2 = Cdouble[0]
+    dy1 = Cdouble[0]
+    dy2 = Cdouble[0]
+    
+    ccall((:cairo_path_extents, _jl_libcairo),
+          Void, (Ptr{Void}, Ptr{Cdouble}, Ptr{Cdouble}, 
+          Ptr{Cdouble}, Ptr{Cdouble}),
+          ctx.ptr, dx1, dy1, dx2, dy2)
+          
+    return(dx1[1],dy1[1],dx2[1],dy2[1])
+end
+
 
 function show_text(ctx::CairoContext,value::String)
     ccall((:cairo_show_text, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{Uint8}),
           ctx.ptr, bytestring(value))
 end
+
+function text_path(ctx::CairoContext,value::String)
+    ccall((:cairo_text_path, _jl_libcairo),
+          Void, (Ptr{Void}, Ptr{Uint8}),
+          ctx.ptr, bytestring(value))
+end
+
 
 function select_font_face(ctx::CairoContext,family::String,slant,weight)
     ccall((:cairo_select_font_face, _jl_libcairo),
@@ -923,7 +979,6 @@ function tex2pango(str::String, fontsize::Real)
 
         output = string(output, more_output)
     end
-
     return output
 end
 
