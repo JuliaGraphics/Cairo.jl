@@ -1,7 +1,6 @@
-Sample programs
-###############
+## Sample programs #
 
-This is mainly a copy of the sample code examples listed at [cairographics.org/samples](http://www.cairographics.org/samples/).
+This is roughly a copy of the sample code examples listed at [cairographics.org/samples](http://www.cairographics.org/samples/).
 The examples are C code and need a environment of a Cairo surface and Cairo Context.
 
 This (samples) directory contains independend julia programms that prefixes the orginal, ported code with the creation of a Surface and Context and an output routine to a .png file, rendering the current time into picture.
@@ -102,6 +101,13 @@ Example of line join styles [sample_set_line_join.jl](sample_set_line_join.jl).
 Examples of text setting, one with show_text, second with text_path - creating a current path with the glyph/text outline and fill and stroke [sample_text.jl](sample_text.jl).
 
 ![text .png](sample_text.png "text example")
+
+### text align center#
+
+Example of text alignment, text size by text_extents, the centered around the 128.0,128.0 point  [sample_text_align_center.jl](sample_text_align_center.jl).
+
+![text align center .png](sample_text_align_center.png "text align example")
+
 
 ### text extents#
 
