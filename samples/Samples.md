@@ -38,7 +38,27 @@ missing.
 
 Example of using the curve to path operator, which adds a cubic Bézier spline to the current path [sample_curve_to.jl](sample_curve_to.jl).
 
-![curve to .png](sample_curve_tp.png "curve to example")
+![curve to .png](sample_curve_to.png "curve to example")
+
+### dash #
+
+Example of using a dash line pattern for stroking a path. Note: the julia set_dash uses the length of the dash array to set the ndash internally [sample_dash.jl](sample_dash.jl).
+
+![dash .png](sample_dash.png "dash example")
+
+### fill and stroke 2 #
+
+Example of creating a path of non connected areas and fill - while preserving the path - and stroke [sample_fill_and_stroke2.jl](sample_fill_and_stroke2.jl).
+
+![fill and stroke2 .png](sample_fill_and_stroke2.png "fill and stroke2 example")
+
+### fill style #
+
+Exmaple of using the different fill rules. The same path is filled and stroked [sample_fill_style.jl](sample_fill_style.jl). Note: the julia function is called set_fill_type while the pure C cairo is called with set_fill_rule.
+
+![fill style .png](sample_fill_style.png "fill style example")
+
+
 
 
 
