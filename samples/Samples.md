@@ -8,12 +8,21 @@ This (samples) directory contains independend julia programms that prefixes the 
 
 ### arc #
 
-Example of using the arc path operator (sample_arc.jl).
+Example of using the arc path operator [sample_arc.jl](sample_arc.jl).
 Note: The path creation starts without current point, otherwise there would be a linesegment first, before starting of the arc.
 
 ![arc .png](sample_arc.png "arc example")
 
 ### arc_negative #
 
-Example of using the arc_negative path operator (sample_arc_negative.jl).
+Example of using the arc_negative path operator [sample_arc_negative.jl](sample_arc_negative.jl).
+
+![arc_negative .png](sample_arc_negative.png "arc negative example")
+
+### clip #
+
+A clip path, a circle is defined, then the drawing is done.
+
+![clip .png](sample_clip.png "clip example")
+
 
