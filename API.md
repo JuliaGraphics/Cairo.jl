@@ -28,4 +28,30 @@ There should be an image right here.
 
 ![image here](images/drawing.png "Logo Title Text 1")
 
+SCC test
+--------
+
+We learned recently, that code cannot be inlined.
+
+```julia
+
+
+arc(cr, 128.0, 128.0, 76.8, 0, 2 * pi);
+clip(cr);
+
+new_path(cr); # current path is not consumed by cairo_clip()
+rectangle(cr, 0, 0, 256, 256);
+fill(cr);
+set_source_rgb(cr, 0, 1, 0);
+move_to(cr, 0, 0);
+line_to(cr, 256, 256);
+move_to(cr, 256, 0);
+line_to(cr, 0, 256);
+set_line_width(cr, 10.0);
+stroke(cr);
+
+```
+
+Other text.
+
 
