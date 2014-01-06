@@ -1,8 +1,7 @@
-Sample programs.
-################
+## Sample programs #
 
-This is mainly a copy of the sample code examples listed at [cairographics.org/samples](http://www.cairographics.org/samples/).
-The examples are C code and need a environment of a Cairo surface and Cairo Context.
+This is roughly a copy of the sample code examples listed at [cairographics.org/samples](http://www.cairographics.org/samples/).
+These examples are C code and need a environment of a Cairo surface and Cairo Context.
 
 This (samples) directory contains independend julia programms that prefixes the orginal, ported code with the creation of a Surface and Context and an output routine to a .png file, rendering the current time into picture.
 
@@ -32,7 +31,7 @@ Like the previous, but now inserting a picture by reading a .png to an Image Sur
 ![clip image.png](sample_clip_image.png "clip image example")
 
 ### curve rectangle #
-missing.
+Missing.
 
 ### curve to #
 
@@ -71,10 +70,13 @@ Example of painting with a Image Surface as source [sample_image.jl](sample_imag
 
 Example of painting with a Image Surface as pattern [sample_imagepattern.jl _image.jl).
 
-![image .png](sample_image.png "image example")
+![imagepattern .png](sample_imagepattern.png "imagepattern example")
 
 ### multi segment caps #
-missing.
+
+Example of stroking a path with non connected segments [sample_multi_segment_caps.jl](sample_multi_segment_caps.jl).
+
+![multi segment caps .png](sample_multi_segment_caps.png "multi segment caps example")
 
 ### rounded rectangle #
 
@@ -82,11 +84,35 @@ Example of more path operators, custom shape could be wrapped in a function [sam
 
 ![rounded rectangle .png](sample_rounded_rectangle.png "rounded rectangle example")
 
-### 
+### set line caps
 
+Examples of the line cap settings [sample_set_line_cap.jl](sample_set_line_cap.jl).
 
+![set line cap .png](sample_set_line_cap.png "line caps example")
 
+### set line join
 
+Examples of the line join settings [sample_set_line_join.jl](sample_set_line_join.jl).
+
+![set line join .png](sample_set_line_join.png "line join example")
+
+### text
+
+Example of setting text, one with text_show, second with text_path extending the current path and fill and stroke the outline [sample_text.jl](sample_text.jl).
+
+![text .png](sample_text.png "text example")
+
+### text align center
+
+Example of getting the text extents, then centering the text around 128.0,128.0 [sample_text_align_center.jl](sample_text_align_center.jl).
+
+![text align center.png](sample_text_align_center.png "text align example")
+
+### text extents
+
+Example of getting the text extents, plotting the dimension [sample_text_extents.jl](sample_text_extents.jl).
+
+![text extents .png](sample_text_extents.png "text extents example")
 
 
 
