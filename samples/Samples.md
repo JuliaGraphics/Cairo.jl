@@ -68,7 +68,7 @@ Example of painting with a Image Surface as source [sample_image.jl](sample_imag
 
 ### image pattern #
 
-Example of painting with a Image Surface as pattern [sample_imagepattern.jl _image.jl).
+Example of painting with a Image Surface as pattern [sample_imagepattern.jl] (sample_imagepattern.jl).
 
 ![imagepattern .png](sample_imagepattern.png "imagepattern example")
 
