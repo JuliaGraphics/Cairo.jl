@@ -1,9 +1,9 @@
 ## Sample programs #
 
-This is roughly a copy of the sample code examples listed at [cairographics.org/samples](http://www.cairographics.org/samples/).
-These examples are C code and need a environment of a Cairo surface and Cairo Context.
+This is roughly a copy of the sample code listed at [cairographics.org/samples](http://www.cairographics.org/samples/).
+These examples are C code and assume that you've already set up a Cairo surface and Cairo Context.
 
-This (samples) directory contains independend julia programms that prefixes the orginal, ported code with the creation of a Surface and Context and an output routine to a .png file, rendering the current time into picture.
+This (samples) directory contains ports of these examples to julia, additionally creating the Surface and Context, adding a time-stamp to the image, and saving the result to a .png file.
 
 ### arc #
 
