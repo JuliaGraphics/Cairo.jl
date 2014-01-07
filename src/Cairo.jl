@@ -664,22 +664,14 @@ function show_layout(ctx::CairoContext)
           (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
-text_extents(ctx::CairoContext,value::String) = text_extents!(ctx::CairoContext,value::String,Array(Float64, 6, 1))
+text_extents(ctx::CairoContext,value::String) = text_extents!(ctx,value,Array(Float64, 6, 1))
 
 function text_extents!(ctx::CairoContext,value::String,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{Uint8}, Ptr{Float64}),
           ctx.ptr, bytestring(value), extents)
     extents
-end  
-
-#function text_extents(ctx::CairoContext,value::String)
-#    extents = Array(Float64,6,1)
-#    ccall((:cairo_text_extents, _jl_libcairo),
-#          Void, (Ptr{Void}, Ptr{Uint8}, Ptr{Float64}),
-#          ctx.ptr, bytestring(value), extents)
-#    return extents
-#end
+end
 
 function path_extents(ctx::CairoContext)
     dx1 = Cdouble[0]
