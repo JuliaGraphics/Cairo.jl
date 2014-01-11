@@ -906,6 +906,45 @@ function tex2pango(str::String, fontsize::Real)
     return output
 end
 
+## pattern 
+export pattern_create_radial, pattern_create_linear
+
+function pattern_create_radial(cx0::Real, cy0::Real, radius0::Real, cx1::Real, cy1::Real, radius1::Real)
+    ptr = ccall((:cairo_pattern_create_radial, _jl_libcairo),
+                    Ptr{Void}, (Float64,Float64,Float64,Float64,Float64,Float64),cx0,cy0,radius0,cx1,cy1,radius1)
+    pattern = CairoPattern(ptr)
+    finalizer(pattern, CairoPatternDestroy)
+    pattern
+end
+
+function pattern_create_linear(x0::Real, y0::Real, x1::Real, y1::Real)
+    ptr = ccall((:cairo_pattern_create_linear, _jl_libcairo),
+                    Ptr{Void}, (Float64,Float64,Float64,Float64),x0,y0,x1,y1)
+    pattern = CairoPattern(ptr)
+    finalizer(pattern, CairoPatternDestroy)
+    pattern
+end
+
+export pattern_add_color_stop_rgb, pattern_add_color_stop_rgba
+function pattern_add_color_stop_rgb(pat::CairoPattern, offset::Real, red::Real, green::Real, blue::Real)
+    ccall((:cairo_pattern_add_color_stop_rgb, _jl_libcairo),
+                    Void, (Ptr{Void},Float64,Float64,Float64,Float64),pat.ptr,offset,red,green,blue)
+end
+
+function pattern_add_color_stop_rgba(pat::CairoPattern, offset::Real, red::Real, green::Real, blue::Real, alpha::Real)
+    ccall((:cairo_pattern_add_color_stop_rgba, _jl_libcairo),
+                    Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64),pat.ptr,offset,red,green,blue,alpha)
+end
+
+function destroy(pat::CairoPattern)
+    if pat.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_pattern_destroy,_jl_libcairo), Void, (Ptr{Void},), pat.ptr)
+    pat.ptr = C_NULL
+    nothing
+end
+
 @deprecate text(ctx::CairoContext,x::Real,y::Real,str::String,fontsize::Real,halign::String,valign,angle)    text(ctx,x,y,set_latex(ctx,str,fontsize),halign=halign,valign=valign,angle=angle,markup=true)
 @deprecate layout_text(ctx::CairoContext, str::String, fontsize::Real)       set_latex(ctx, str, fontsize)
 @deprecate textwidth(ctx::CairoContext, str::String, fontsize::Real)         textwidth(ctx, tex2pango(str, fontsize), true)
