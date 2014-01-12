@@ -31,7 +31,10 @@ Like the previous, but now inserting a picture by reading a .png to an Image Sur
 ![clip image.png](sample_clip_image.png "clip image example")
 
 ### curve rectangle #
-Missing.
+
+Example of more complex path construction, here a rectangle constructed be four bezier segments. Note: Different as in the original example, this here now puts the path construction and stroke and fill operations into a function with coordinates and corner radius as arguments [sample_curve_rectangle.jl](sample_curve_rectangle.jl).
+
+![curve rectangle .png](sample_curve_rectangle.png "curve rectangle example")
 
 ### curve to #
 
@@ -58,7 +61,10 @@ Exmaple of using the different fill rules. The same path is filled and stroked [
 ![fill style .png](sample_fill_style.png "fill style example")
 
 ### gradient #
-missing.
+
+Example of gradients - both linear and radiant - as definition and used for filling [sample_gradient.jl](sample_gradient.jl).
+
+![gradient .png](sample_gradient.png "gradient example")
 
 ### image #
 

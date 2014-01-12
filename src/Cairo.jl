@@ -22,9 +22,14 @@ export
     # surface and context management
     finish, destroy, status, get_source,
     creategc, getgc, save, restore, show_page, width, height,
+    
+    # pattern 
+    pattern_create_radial, pattern_create_linear,
+    pattern_add_color_stop_rgb, pattern_add_color_stop_rgba,
+    pattern_set_filter, pattern_set_extend,
 
     # drawing attribute manipulation
-    pattern_set_filter, pattern_set_extend, set_antialias, get_antialias,
+    set_antialias, get_antialias,
     set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_line_cap, set_line_join,
@@ -540,12 +545,9 @@ function CairoPattern(s::CairoSurface)
                     Ptr{Uint8}, (Cint,), status)))
     end
     pattern = CairoPattern(ptr)
-    finalizer(pattern, CairoPatternDestroy)
+    finalizer(pattern, destroy)
     pattern
 end
-
-CairoPatternDestroy(p::CairoPattern) = ccall((:cairo_pattern_destroy, _jl_libcairo),
-                                             Void, (Ptr{Void},), p.ptr)
 
 set_source(dest::CairoContext, src::CairoPattern) =
     ccall((:cairo_set_source, _jl_libcairo),
@@ -565,6 +567,42 @@ function pattern_set_extend(p::CairoPattern, val)
     ccall((:cairo_pattern_set_extend,_jl_libcairo), Void,
           (Ptr{Void},Int32), p.ptr, val)
 end
+
+function pattern_create_radial(cx0::Real, cy0::Real, radius0::Real, cx1::Real, cy1::Real, radius1::Real)
+    ptr = ccall((:cairo_pattern_create_radial, _jl_libcairo),
+                    Ptr{Void}, (Float64,Float64,Float64,Float64,Float64,Float64),cx0,cy0,radius0,cx1,cy1,radius1)
+    pattern = CairoPattern(ptr)
+    finalizer(pattern, destroy)
+    pattern
+end
+
+function pattern_create_linear(x0::Real, y0::Real, x1::Real, y1::Real)
+    ptr = ccall((:cairo_pattern_create_linear, _jl_libcairo),
+                    Ptr{Void}, (Float64,Float64,Float64,Float64),x0,y0,x1,y1)
+    pattern = CairoPattern(ptr)
+    finalizer(pattern, destroy)
+    pattern
+end
+
+function pattern_add_color_stop_rgb(pat::CairoPattern, offset::Real, red::Real, green::Real, blue::Real)
+    ccall((:cairo_pattern_add_color_stop_rgb, _jl_libcairo),
+                    Void, (Ptr{Void},Float64,Float64,Float64,Float64),pat.ptr,offset,red,green,blue)
+end
+
+function pattern_add_color_stop_rgba(pat::CairoPattern, offset::Real, red::Real, green::Real, blue::Real, alpha::Real)
+    ccall((:cairo_pattern_add_color_stop_rgba, _jl_libcairo),
+                    Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64),pat.ptr,offset,red,green,blue,alpha)
+end
+
+function destroy(pat::CairoPattern)
+    if pat.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_pattern_destroy,_jl_libcairo), Void, (Ptr{Void},), pat.ptr)
+    pat.ptr = C_NULL
+    nothing
+end
+
 
 set_antialias(ctx::CairoContext, a) =
     ccall((:cairo_set_antialias,_jl_libcairo), Void,
@@ -905,6 +943,7 @@ function tex2pango(str::String, fontsize::Real)
     end
     return output
 end
+
 
 @deprecate text(ctx::CairoContext,x::Real,y::Real,str::String,fontsize::Real,halign::String,valign,angle)    text(ctx,x,y,set_latex(ctx,str,fontsize),halign=halign,valign=valign,angle=angle,markup=true)
 @deprecate layout_text(ctx::CairoContext, str::String, fontsize::Real)       set_latex(ctx, str, fontsize)
