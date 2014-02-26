@@ -466,6 +466,11 @@ function set_source(ctx::CairoContext, c::ColorValue)
     set_source_rgb(ctx, rgb.r, rgb.g, rgb.b)
 end
 
+function set_source(ctx::CairoContext, ac::AlphaColorValue)
+    rgba = convert(RGBA, ac)
+    set_source_rgba(ctx, rgba.c.r, rgba.c.g, rgba.c.b, rgba.alpha)
+end
+
 set_source(dest::CairoContext, src::CairoContext) = set_source_surface(dest, src.surface)
 
 set_source(dest::CairoContext, src::CairoSurface) = set_source_surface(dest, src)
