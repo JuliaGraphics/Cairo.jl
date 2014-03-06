@@ -61,7 +61,11 @@ export
     TeXLexer, tex2pango, show_text, text_path,
 
     # images
-    write_to_png, image, read_from_png
+    write_to_png, image, read_from_png,
+
+    # push+pop group
+    push_group, pop_group
+
 
 @osx_only begin
     if Pkg.installed("Homebrew") != nothing
@@ -532,6 +536,24 @@ end
 
 image(ctx::CairoContext, img::Array{Uint32,2}, x, y, w, h) =
     image(ctx, CairoRGBSurface(img), x, y, w, h)
+
+function push_group(ctx::CairoContext)
+    if ctx.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_push_group, _jl_libcairo), Void, (Ptr{Void},),ctx.ptr)
+    nothing
+end
+
+function pop_group(ctx::CairoContext)
+    if ctx.ptr == C_NULL
+        return
+    end
+    ptr = ccall((:cairo_pop_group, _jl_libcairo), Ptr{Void}, (Ptr{Void},),ctx.ptr)
+    pattern = CairoPattern(ptr)
+    finalizer(pattern, destroy)
+    pattern
+end
 
 # -----------------------------------------------------------------------------
 
