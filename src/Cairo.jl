@@ -71,7 +71,9 @@ export
     if Pkg.installed("Homebrew") != nothing
         using Homebrew
         if Homebrew.installed("pango")
-            ENV["PANGO_SYSCONFDIR"] = joinpath(Homebrew.prefix(), "etc")
+            function __init__()
+                ENV["PANGO_SYSCONFDIR"] = joinpath(Homebrew.prefix(), "etc")
+            end
         end
     end
 end
