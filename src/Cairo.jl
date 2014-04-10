@@ -822,25 +822,19 @@ end
 set_latex(ctx::CairoContext, str::String, fontsize::Real) = set_text(ctx, tex2pango(str, fontsize), true)
 
 type TeXLexer
-    str::String
+    str::ByteString
     len::Int
     pos::Int
-    token_stack::Array{String,1}
-    re_control_sequence::Regex
+    token_stack::Array{ByteString,1}
 
-    function TeXLexer( str::String )
-        self = new()
-        self.str = str
-        self.len = length(str)
-        self.pos = 1
-        self.token_stack = String[]
-        self.re_control_sequence = r"^\\[a-zA-Z]+[ ]?|^\\[^a-zA-Z][ ]?"
-        self
+    function TeXLexer(str::String)
+        s = bytestring(str)
+        new(s, endof(s), 1, ByteString[])
     end
 end
 
 function get_token(self::TeXLexer)
-    if self.pos == self.len+1
+    if self.pos > self.len
         return nothing
     end
 
@@ -849,17 +843,18 @@ function get_token(self::TeXLexer)
     end
 
     str = self.str[self.pos:end]
-    m = match(self.re_control_sequence, str)
-    if m != nothing
+    re_control_sequence = r"^\\[a-zA-Z]+[ ]?|^\\[^a-zA-Z][ ]?"
+    m = match(re_control_sequence, str)
+    if m !== nothing
         token = m.match
-        self.pos = self.pos + length(token)
+        self.pos = self.pos + sizeof(token)
         # consume trailing space
         if length(token) > 2 && token[end] == ' '
             token = token[1:end-1]
         end
     else
-        token = str[1:1]
-        self.pos = self.pos + 1
+        token, self.pos = next(self.str, self.pos)
+        token = string(token)
     end
 
     return token
