@@ -457,7 +457,6 @@ for (NAME, FUNCTION) in {(:arc, :cairo_arc),
     end
 end
 
-circle(ctx::CairoContext, xc::Real, yc::Real, radius::Real) = arc(ctx, xc, yc, radius, 0, 2pi)
 
 set_source_rgb(ctx::CairoContext, r::Real, g::Real, b::Real) =
     ccall((:cairo_set_source_rgb,_jl_libcairo),
