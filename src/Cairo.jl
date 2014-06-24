@@ -566,13 +566,15 @@ end
 function CairoPattern(s::CairoSurface)
     ptr = ccall((:cairo_pattern_create_for_surface, _jl_libcairo),
                     Ptr{Void}, (Ptr{Void},), s.ptr)
-    status = ccall((:cairo_pattern_status, _jl_libcairo),
-                    Cint, (Ptr{Void},), s.ptr)
-    if status != 0
-        error("Error creating Cairo pattern: ", bytestring(
-              ccall((:cairo_status_to_string, _jl_libcairo),
-                    Ptr{Uint8}, (Cint,), status)))
-    end
+    # Ideally we'd check the status, but at least for certain releases of the library
+    # the return value seems not to be set properly (random values are returned)
+#     status = ccall((:cairo_pattern_status, _jl_libcairo),
+#                     Cint, (Ptr{Void},), s.ptr)
+#     if status != 0
+#         error("Error creating Cairo pattern: ", bytestring(
+#               ccall((:cairo_status_to_string, _jl_libcairo),
+#                     Ptr{Uint8}, (Cint,), status)))
+#     end
     pattern = CairoPattern(ptr)
     finalizer(pattern, destroy)
     pattern
