@@ -357,6 +357,18 @@ function copy(ctx::CairoContext)
     c
 end
 
+# Copy a rectangular region
+function copy(ctx::CairoContext, bb::BoundingBox)
+    w = width(bb)
+    h = height(bb)
+    surf = surface_create_similar(ctx.surface, iceil(w), iceil(h))
+    c = creategc(surf)
+    set_source_surface(c, ctx.surface, -bb.xmin, -bb.ymin)
+    rectangle(c, 0, 0, w, h)
+    fill(c)
+    set_matrix(c, get_matrix(ctx))
+    c
+end
 
 for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
                          (:save, :cairo_save),
