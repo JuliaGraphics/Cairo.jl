@@ -144,17 +144,14 @@ function status(surface::CairoSurface)
           Int32, (Ptr{Void},), surface.ptr)
 end
 
-function CairoRGBSurface(w::Real, h::Real)
+function CairoImageSurface(w::Real, h::Real, format::Integer)
     ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-                Ptr{Void}, (Int32,Int32,Int32), FORMAT_RGB24, w, h)
+                Ptr{Void}, (Int32,Int32,Int32), format, w, h)
     CairoSurface(ptr, w, h)
 end
 
-function CairoARGBSurface(w::Real, h::Real)
-    ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
-                Ptr{Void}, (Int32,Int32,Int32), FORMAT_ARGB32, w, h)
-    CairoSurface(ptr, w, h)
-end
+CairoRGBSurface(w::Real, h::Real) = CairoImageSurface(w, h, FORMAT_RGB24)
+CairoARGBSurface(w::Real, h::Real) = CairoImageSurface(w, h, FORMAT_ARGB32)
 
 function CairoImageSurface(img::Array{Uint32,2}, format::Integer; flipxy::Bool = true)
     if flipxy
