@@ -7,11 +7,11 @@ deps = [
 	pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false)
 	libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false)
 	gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl"], os = :Unix)
-	gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0"], depends=[libffi, gettext])
+	gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0"], depends=[libffi, gettext])
 	freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false)
-	fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "ibfontconfig.so.1"], depends = [freetype], runtime = false)
+	fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], runtime = false)
 	cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng])
-	pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0"])
+	pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"])
 	pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo])
 	zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows)
 ]
@@ -19,10 +19,10 @@ deps = [
 
 @windows_only begin
 	using WinRPM
-	provides(WinRPM.RPM,"pango",[pango,pangocairo],os = :Windows)
-	provides(WinRPM.RPM,"glib2",gobject,os = :Windows)
+	provides(WinRPM.RPM,"libpango-1_0-0",[pango,pangocairo],os = :Windows)
+	provides(WinRPM.RPM,["glib2", "libgobject-2_0-0"],gobject,os = :Windows)
 	provides(WinRPM.RPM,"zlib",zlib,os = :Windows)
-	provides(WinRPM.RPM,["libcairo2","libharfbuzz"],cairo,os = :Windows)
+	provides(WinRPM.RPM,["libcairo2","libharfbuzz0"],cairo,os = :Windows)
 end
 
 @osx_only begin
