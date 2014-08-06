@@ -33,7 +33,11 @@ end
 	end
 	using Homebrew
 	provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
-	provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin )
+	provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin, onload = """
+		function __init__()
+            ENV["PANGO_SYSCONFDIR"] = joinpath($(Homebrew.prefix()), "etc")
+        end
+	""" )
 	provides( Homebrew.HB, "fontconfig", fontconfig, os = :Darwin )
 	provides( Homebrew.HB, "glib", gobject, os = :Darwin )
 	provides( Homebrew.HB, "libpng", libpng, os = :Darwin )
