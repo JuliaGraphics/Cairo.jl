@@ -66,18 +66,6 @@ export
     # push+pop group
     push_group, pop_group
 
-
-@osx_only begin
-    if Pkg.installed("Homebrew") != nothing
-        using Homebrew
-        if Homebrew.installed("pango")
-            function __init__()
-                ENV["PANGO_SYSCONFDIR"] = joinpath(Homebrew.prefix(), "etc")
-            end
-        end
-    end
-end
-
 function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
     int32((n == len) ? 0 : 11)
