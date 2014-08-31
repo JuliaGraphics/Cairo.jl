@@ -120,5 +120,10 @@ Example of getting the text extents, plotting the dimension [sample_text_extents
 
 ![text extents .png](sample_text_extents.png "text extents example")
 
+### mesh pattern
 
+Example of creating and using a mesh pattern [sample_meshpattern.jl](sample_meshpattern.jl). 
+Mesh patterns are tensor-product patch meshes (type 7 shadings in PDF), read more in [http://www.cairographics.org/manual/cairo-cairo-pattern-t.html#cairo-pattern-create-mesh] or [http://www.w3.org/TR/SVG2/pservers.html#MeshGradients].
+
+![mesh pattern .png](sample_meshpattern.png "mesh pattern example")
 

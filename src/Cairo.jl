@@ -9,6 +9,15 @@ import Base: copy, writemime
 
 include("constants.jl")
 
+# check library version, error message if too low
+cairo_version = ccall((:cairo_version,Cairo._jl_libcairo),Int32,())
+
+if cairo_version < 11200
+    error("cairo version " * string(cairo_version) * ", less then 1.12.00")
+end
+
+
+
 export
     # drawing surface and context types
     CairoSurface, CairoContext, CairoPattern,
@@ -16,7 +25,7 @@ export
     # surface constructors
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
     CairoARGBSurface, CairoSVGSurface, CairoImageSurface, CairoQuartzSurface,
-    CairoWin32Surface,
+    CairoWin32Surface, CairoScriptSurface,
     surface_create_similar,
 
     # surface and context management
@@ -27,6 +36,14 @@ export
     pattern_create_radial, pattern_create_linear,
     pattern_add_color_stop_rgb, pattern_add_color_stop_rgba,
     pattern_set_filter, pattern_set_extend,
+
+    # mesh patterns (version > 1.12)
+    CairoPatternMesh,
+    mesh_pattern_begin_patch, mesh_pattern_end_patch,
+    mesh_pattern_move_to, mesh_pattern_line_to,
+    mesh_pattern_curve_to,
+    mesh_pattern_set_corner_color_rgb,
+    mesh_pattern_set_corner_color_rgba,
 
     # drawing attribute manipulation
     set_antialias, get_antialias,
@@ -65,6 +82,8 @@ export
 
     # push+pop group
     push_group, pop_group
+
+
 
 
 @osx_only begin
@@ -316,6 +335,44 @@ end
 function format_stride_for_width(format::Integer, width::Integer)
     ccall((:cairo_format_stride_for_width,_jl_libcairo), Int32,
           (Int32,Int32), format, width)
+end
+
+
+## Scripting
+
+type CairoScript <: GraphicsDevice
+    ptr::Ptr{Void}
+
+    function CairoScript(filename::String)
+        ptr = ccall((:cairo_script_create,_jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},), bytestring(filename))
+        self = new(ptr)
+        finalizer(self, destroy)
+        self
+    end
+end
+
+function destroy(s::CairoScript)
+    if s.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_device_destroy,_jl_libcairo), Void, (Ptr{Void},), s.ptr)
+    s.ptr = C_NULL
+    nothing
+end
+
+function CairoScriptSurface(filename::String, w::Real, h::Real)
+    s = CairoScript(filename)
+    ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Void},
+                (Ptr{Void},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
+    CairoSurface(ptr, w, h)
+end
+
+function CairoScriptSurface(filename::String,sc::CairoSurface)
+    s = CairoScript(filename)
+    ptr = ccall((:cairo_script_surface_create_for_target,_jl_libcairo), Ptr{Void},
+                (Ptr{Void},Ptr{Void}),s.ptr, sc.ptr)
+    CairoSurface(ptr, sc.width, sc.height)
 end
 
 # -----------------------------------------------------------------------------
@@ -643,6 +700,64 @@ function destroy(pat::CairoPattern)
     nothing
 end
 
+# mesh pattern
+
+# create mesh pattern
+function CairoPatternMesh()
+    pattern = ccall((:cairo_pattern_create_mesh, _jl_libcairo),
+                    Ptr{Void}, ())
+    pattern = CairoPattern(pattern)                    
+    status = ccall((:cairo_pattern_status, _jl_libcairo),
+                    Cint, (Ptr{Void},), pattern.ptr)
+    if status != 0
+        error("Error creating Cairo pattern: ", bytestring(
+              ccall((:cairo_status_to_string, _jl_libcairo),
+                    Ptr{Uint8}, (Cint,), status)))
+    end
+    finalizer(pattern, destroy)
+    pattern
+end
+
+
+for (NAME, FUNCTION) in {(:mesh_pattern_begin_patch, :cairo_mesh_pattern_begin_patch),
+                         (:mesh_pattern_end_patch, :cairo_mesh_pattern_end_patch)}
+    @eval begin
+        $NAME(pattern::CairoPattern) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+                  Void, (Ptr{Void},), pattern.ptr)
+    end
+end
+
+for (NAME, FUNCTION) in {(:mesh_pattern_line_to, :cairo_mesh_pattern_line_to),
+                         (:mesh_pattern_move_to, :cairo_mesh_pattern_move_to)}
+    @eval begin
+        $NAME(pattern::CairoPattern, d0::Real, d1::Real) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+                  Void, (Ptr{Void},Float64,Float64), pattern.ptr, d0, d1)
+    end
+end
+
+for (NAME, FUNCTION) in {(:mesh_pattern_curve_to, :cairo_mesh_pattern_curve_to)}
+
+    @eval begin
+        $NAME(pattern::CairoPattern, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real, d5::Real) =
+            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+                  Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64,Float64), pattern.ptr, d0, d1, d2, d3, d4, d5)
+    end
+end
+
+
+function mesh_pattern_set_corner_color_rgb(pat::CairoPattern, corner_num::Int32, red::Real, green::Real, blue::Real)
+    ccall((:cairo_mesh_pattern_set_corner_color_rgb, _jl_libcairo),
+                    Void, (Ptr{Void},Int32,Float64,Float64,Float64),pat.ptr,corner_num,red,green,blue)
+end
+
+function mesh_pattern_set_corner_color_rgba(pat::CairoPattern, corner_num::Int32, red::Real, green::Real, blue::Real, alpha::Real)
+    ccall((:cairo_mesh_pattern_set_corner_color_rgb, _jl_libcairo),
+                    Void, (Ptr{Void},Int32,Float64,Float64,Float64,Float64),pat.ptr,corner_num,red,green,blue,alpha)
+end
+
+# ----
 
 set_antialias(ctx::CairoContext, a) =
     ccall((:cairo_set_antialias,_jl_libcairo), Void,
