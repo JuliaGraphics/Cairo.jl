@@ -23,7 +23,7 @@ deps = [
     using WinRPM
     provides(WinRPM.RPM,"libpango-1_0-0",[pango,pangocairo],os = :Windows)
     provides(WinRPM.RPM,["glib2", "libgobject-2_0-0"],gobject,os = :Windows)
-    provides(WinRPM.RPM,"zlib",zlib,os = :Windows)
+    provides(WinRPM.RPM,"zlib1",zlib,os = :Windows)
     provides(WinRPM.RPM,["libcairo2","libharfbuzz0"],cairo,os = :Windows)
 end
 
