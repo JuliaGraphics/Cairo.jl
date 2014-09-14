@@ -8,7 +8,7 @@ deps = [
     libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], runtime = false, group = group)
     pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false, group = group)
     libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false, group = group)
-    gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl"], os = :Unix, group = group)
+    gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl", "libgettextpo"], os = :Unix, group = group)
     gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi, gettext], group = group)
     freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false, group = group)
     fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], runtime = false, group = group)
@@ -65,7 +65,7 @@ provides(Yum,
      "pango" => [pango,pangocairo],
      "glib2" => gobject,
      "libpng" => libpng,
-     "gettext-devel" => gettext})
+     "gettext-libs" => gettext})
 
 const png_version = "1.5.14"
 
