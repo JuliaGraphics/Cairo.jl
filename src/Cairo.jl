@@ -1,5 +1,7 @@
 module Cairo
 
+include("compatibility.jl")
+
 include("../deps/deps.jl")
 
 using Color
@@ -22,8 +24,8 @@ export
     # surface and context management
     finish, destroy, status, get_source,
     creategc, getgc, save, restore, show_page, width, height,
-    
-    # pattern 
+
+    # pattern
     pattern_create_radial, pattern_create_linear,
     pattern_add_color_stop_rgb, pattern_add_color_stop_rgba,
     pattern_set_filter, pattern_set_extend,
@@ -48,7 +50,7 @@ export
     fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
     stroke_preserve, stroke_transformed, stroke_transformed_preserve,
     move_to, line_to, rel_line_to, rel_move_to,
-    rectangle, circle, arc, arc_negative, 
+    rectangle, circle, arc, arc_negative,
     curve_to, rel_curve_to,
     path_extents,
 
@@ -449,7 +451,7 @@ for (NAME, FUNCTION) in {(:arc, :cairo_arc),
     @eval begin
         $NAME(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
-                  Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64), 
+                  Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
                   ctx.ptr, xc, yc, radius, angle1, angle2)
     end
 end
@@ -636,7 +638,7 @@ set_antialias(ctx::CairoContext, a) =
     ccall((:cairo_set_antialias,_jl_libcairo), Void,
           (Ptr{Void},Cint), ctx.ptr, a)
 
-get_antialias(ctx::CairoContext) = 
+get_antialias(ctx::CairoContext) =
     ccall((:cairo_get_antialias,_jl_libcairo), Cint,
           (Ptr{Void},), ctx.ptr)
 
@@ -744,12 +746,12 @@ function path_extents(ctx::CairoContext)
     dx2 = Cdouble[0]
     dy1 = Cdouble[0]
     dy2 = Cdouble[0]
-    
+
     ccall((:cairo_path_extents, _jl_libcairo),
-          Void, (Ptr{Void}, Ptr{Cdouble}, Ptr{Cdouble}, 
+          Void, (Ptr{Void}, Ptr{Cdouble}, Ptr{Cdouble},
           Ptr{Cdouble}, Ptr{Cdouble}),
           ctx.ptr, dx1, dy1, dx2, dy2)
-          
+
     return(dx1[1],dy1[1],dx2[1],dy2[1])
 end
 

@@ -122,7 +122,7 @@ const OPERATOR_LIGHTEN = 18
 
 
 ## LaTex Token Dicts ##
-const _common_token_dict = [
+const _common_token_dict = @Dict(
     "\\{"              => "{",
     "\\}"              => "}",
     "\\_"              => "_",
@@ -131,18 +131,18 @@ const _common_token_dict = [
 
     ## ignore stray brackets
     "{"                => "",
-    "}"                => "",
-]
+    "}"                => ""
+)
 
-const _text_token_dict = [
+const _text_token_dict = @Dict(
     ## non-math symbols (p438)
     "\\S"              => "\ua7",
     "\\P"              => "\ub6",
     "\\dag"            => "\u2020",
-    "\\ddag"           => "\u2021",
-]
+    "\\ddag"           => "\u2021"
+)
 
-const _math_token_dict = [
+const _math_token_dict = @Dict(
 
     "-"                => "\u2212", # minus sign
 
@@ -392,8 +392,9 @@ const _math_token_dict = [
     "\\degrees"         => "\ub0",
     "\\arcdeg"          => "\ub0",
     "\\arcmin"          => "\u2032",
-    "\\arcsec"          => "\u2033",
-]
+    "\\arcsec"          => "\u2033"
+)
+
 const CAIRO_FILL_RULE_WINDING = int32(0);
 const CAIRO_FILL_RULE_EVEN_ODD = int32(1);
 
