@@ -2,6 +2,8 @@ using BinDeps
 
 @BinDeps.setup
 
+include("../src/compatibility.jl")
+
 group = library_group("cairo")
 
 deps = [
@@ -50,41 +52,47 @@ end
 
 # System Package Managers
 provides(AptGet,
-    {"libcairo2" => cairo,
-     "libfontconfig1" => fontconfig,
-     "libpango1.0-0" => [pango,pangocairo],
-     "libglib2.0-0" => gobject,
-     "libpng12-0" => libpng,
-     "libpixman-1-0" => pixman,
-     "gettext" => gettext})
+    @Dict(
+        "libcairo2" => cairo,
+        "libfontconfig1" => fontconfig,
+        "libpango1.0-0" => [pango,pangocairo],
+        "libglib2.0-0" => gobject,
+        "libpng12-0" => libpng,
+        "libpixman-1-0" => pixman,
+        "gettext" => gettext
+    ))
 
 # TODO: check whether these are accurate
 provides(Yum,
-    {"cairo" => cairo,
-     "fontconfig" => fontconfig,
-     "pango" => [pango,pangocairo],
-     "glib2" => gobject,
-     "libpng" => libpng,
-     "gettext-libs" => gettext})
+    @Dict(
+        "cairo" => cairo,
+        "fontconfig" => fontconfig,
+        "pango" => [pango,pangocairo],
+        "glib2" => gobject,
+        "libpng" => libpng,
+        "gettext-devel" => gettext
+    ))
 
 const png_version = "1.5.14"
 
 provides(Sources,
-    {URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
-     URI("http://www.cairographics.org/releases/cairo-1.12.16.tar.xz") => cairo,
-     URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
-     URI("http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.10.2.tar.gz") => fontconfig,
-     URI("http://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.2.tar.gz") => gettext,
-     URI("ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-$(png_version).tar.gz") => libpng,
-     URI("ftp://sourceware.org/pub/libffi/libffi-3.0.11.tar.gz") => libffi,
-     URI("http://ftp.gnome.org/pub/gnome/sources/glib/2.34/glib-2.34.3.tar.xz") => gobject,
-     URI("http://ftp.gnome.org/pub/GNOME/sources/pango/1.32/pango-1.32.6.tar.xz") => [pango,pangocairo],
-     URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib})
+    @Dict(
+        URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
+        URI("http://www.cairographics.org/releases/cairo-1.12.16.tar.xz") => cairo,
+        URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
+        URI("http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.10.2.tar.gz") => fontconfig,
+        URI("http://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.2.tar.gz") => gettext,
+        URI("ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-$(png_version).tar.gz") => libpng,
+        URI("ftp://sourceware.org/pub/libffi/libffi-3.0.11.tar.gz") => libffi,
+        URI("http://ftp.gnome.org/pub/gnome/sources/glib/2.34/glib-2.34.3.tar.xz") => gobject,
+        URI("http://ftp.gnome.org/pub/GNOME/sources/pango/1.32/pango-1.32.6.tar.xz") => [pango,pangocairo],
+        URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib
+    ))
 
 xx(t...) = (OS_NAME == :Windows ? t[1] : (OS_NAME == :Linux || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
-    {
+    @Dict(
         Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*BinDeps.shlib_ext) => pixman,
         Autotools(libtarget = xx("objs/.libs/libfreetype.la","libfreetype.la")) => freetype,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
@@ -96,7 +104,7 @@ provides(BuildProcess,
         Autotools(libtarget = "libffi.la") => libffi,
         Autotools(libtarget = "gobject/libgobject-2.0.la") => gobject,
         Autotools(libtarget = "pango/libpango-1.0.la") => [pango,pangocairo]
-    })
+    ))
 
 provides(BuildProcess,Autotools(libtarget = "libpng15.la"),libpng,os = :Unix)
 
@@ -133,6 +141,7 @@ provides(BuildProcess,
         end
     end),libpng, os = :Windows)
 
-@BinDeps.install [:gobject => :_jl_libgobject, :cairo => :_jl_libcairo, 
-                  :pango => :_jl_libpango, :pangocairo => :_jl_libpangocairo]
-
+@BinDeps.install Dict([(:gobject, :_jl_libgobject),
+                       (:cairo, :_jl_libcairo),
+                       (:pango, :_jl_libpango),
+                       (:pangocairo, :_jl_libpangocairo)])
