@@ -360,7 +360,7 @@ function copy(ctx::CairoContext, bb::BoundingBox)
     c
 end
 
-for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
+for (NAME, FUNCTION) in Any[(:_destroy, :cairo_destroy),
                          (:save, :cairo_save),
                          (:restore, :cairo_restore),
                          (:show_page, :cairo_show_page),
@@ -375,7 +375,7 @@ for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
                          (:close_path, :cairo_close_path),
                          (:paint, :cairo_paint),
                          (:stroke_transformed, :cairo_stroke),
-                         (:stroke_transformed_preserve, :cairo_stroke_preserve)}
+                         (:stroke_transformed_preserve, :cairo_stroke_preserve)]
     @eval begin
         $NAME(ctx::CairoContext) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -403,10 +403,10 @@ function get_operator(ctx::CairoContext)
 end
 
 
-for (NAME, FUNCTION) in {(:set_fill_type, :cairo_set_fill_rule),
+for (NAME, FUNCTION) in Any[(:set_fill_type, :cairo_set_fill_rule),
                          (:set_operator, :cairo_set_operator),
                          (:set_line_cap, :cairo_set_line_cap),
-                         (:set_line_join, :cairo_set_line_join)}
+                         (:set_line_join, :cairo_set_line_join)]
     @eval begin
         $NAME(ctx::CairoContext, i0::Integer) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -414,9 +414,9 @@ for (NAME, FUNCTION) in {(:set_fill_type, :cairo_set_fill_rule),
     end
 end
 
-for (NAME, FUNCTION) in {(:set_line_width, :cairo_set_line_width),
+for (NAME, FUNCTION) in Any[(:set_line_width, :cairo_set_line_width),
                          (:rotate, :cairo_rotate),
-                         (:set_font_size, :cairo_set_font_size)}
+                         (:set_font_size, :cairo_set_font_size)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -424,12 +424,12 @@ for (NAME, FUNCTION) in {(:set_line_width, :cairo_set_line_width),
     end
 end
 
-for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
+for (NAME, FUNCTION) in Any[(:line_to, :cairo_line_to),
                          (:move_to, :cairo_move_to),
                          (:rel_line_to, :cairo_rel_line_to),
                          (:rel_move_to, :cairo_rel_move_to),
                          (:scale, :cairo_scale),
-                         (:translate, :cairo_translate)}
+                         (:translate, :cairo_translate)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real, d1::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -437,8 +437,8 @@ for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
     end
 end
 
-for (NAME, FUNCTION) in {(:curve_to, :cairo_curve_to),
-                         (:rel_curve_to, :cairo_rel_curve_to)}
+for (NAME, FUNCTION) in Any[(:curve_to, :cairo_curve_to),
+                         (:rel_curve_to, :cairo_rel_curve_to)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real, d5::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -446,8 +446,8 @@ for (NAME, FUNCTION) in {(:curve_to, :cairo_curve_to),
     end
 end
 
-for (NAME, FUNCTION) in {(:arc, :cairo_arc),
-                         (:arc_negative, :cairo_arc_negative)}
+for (NAME, FUNCTION) in Any[(:arc, :cairo_arc),
+                         (:arc_negative, :cairo_arc_negative)]
     @eval begin
         $NAME(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -915,7 +915,7 @@ end
 function tex2pango(str::String, fontsize::Real)
     output = ""
     mathmode = true
-    font_stack = {}
+    font_stack = []
     font = 1
     script_size = fontsize/1.618034
 
