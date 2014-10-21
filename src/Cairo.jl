@@ -915,7 +915,7 @@ end
 function tex2pango(str::String, fontsize::Real)
     output = ""
     mathmode = true
-    font_stack = []
+    font_stack = Any[]
     font = 1
     script_size = fontsize/1.618034
 
