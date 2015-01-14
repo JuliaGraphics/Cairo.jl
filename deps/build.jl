@@ -70,7 +70,7 @@ provides(Yum,
         "pango" => [pango,pangocairo],
         "glib2" => gobject,
         "libpng" => libpng,
-        "gettext-devel" => gettext
+        "gettext-libs" => gettext
     ))
 
 const png_version = "1.5.14"
