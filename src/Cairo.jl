@@ -6,7 +6,7 @@ include("../deps/deps.jl")
 
 using Color
 
-importall Base.Graphics
+importall Graphics
 import Base: copy, writemime
 
 include("constants.jl")
