@@ -804,7 +804,7 @@ function text(ctx::CairoContext, x::Real, y::Real, str::String;
 
     show_layout(ctx)
     restore(ctx)
-    w, h = Base.Graphics.device_to_user(ctx, extents[1], extents[2])
+    w, h = Graphics.device_to_user(ctx, extents[1], extents[2])
     BoundingBox(x+dxrel*w, x+(dxrel+1)*w, y-dyrel*h, y+(1-dyrel)*h)
 end
 
