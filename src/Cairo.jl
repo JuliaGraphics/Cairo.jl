@@ -6,7 +6,11 @@ include("../deps/deps.jl")
 
 using Color
 
-importall Graphics
+if VERSION < v"0.4.0-dev+3275"
+    importall Base.Graphics
+else
+    importall Graphics
+end
 import Base: copy, writemime
 
 include("constants.jl")
