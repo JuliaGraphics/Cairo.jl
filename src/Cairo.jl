@@ -1,6 +1,6 @@
 module Cairo
 
-include("compatibility.jl")
+using Compat
 
 include("../deps/deps.jl")
 
@@ -74,12 +74,12 @@ export
 
 function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
-    int32((n == len) ? 0 : 11)
+    @compat Int32((n == len) ? 0 : 11)
 end
 
 function write_to_stream_callback(s::IO, buf::Ptr{Uint8}, len::Uint32)
     n = write(s,buf,len)
-    int32((n == len) ? 0 : 11)
+    @compat Int32((n == len) ? 0 : 11)
 end
 
 type CairoSurface <: GraphicsDevice
@@ -403,7 +403,7 @@ function stroke_preserve(ctx::CairoContext)
 end
 
 function get_operator(ctx::CairoContext)
-    int(ccall((:cairo_get_operator,_jl_libcairo), Int32, (Ptr{Void},), ctx.ptr))
+    @compat Int(ccall((:cairo_get_operator,_jl_libcairo), Int32, (Ptr{Void},), ctx.ptr))
 end
 
 

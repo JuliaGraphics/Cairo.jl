@@ -2,7 +2,7 @@ using BinDeps
 
 @BinDeps.setup
 
-include("../src/compatibility.jl")
+using Compat
 
 group = library_group("cairo")
 
@@ -52,7 +52,7 @@ end
 
 # System Package Managers
 provides(AptGet,
-    @Dict(
+    @compat Dict(
         "libcairo2" => cairo,
         "libfontconfig1" => fontconfig,
         "libpango1.0-0" => [pango,pangocairo],
@@ -64,7 +64,7 @@ provides(AptGet,
 
 # TODO: check whether these are accurate
 provides(Yum,
-    @Dict(
+    @compat Dict(
         "cairo" => cairo,
         "fontconfig" => fontconfig,
         "pango" => [pango,pangocairo],
@@ -76,7 +76,7 @@ provides(Yum,
 const png_version = "1.5.14"
 
 provides(Sources,
-    @Dict(
+    @compat Dict(
         URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
         URI("http://www.cairographics.org/releases/cairo-1.12.16.tar.xz") => cairo,
         URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
@@ -92,7 +92,7 @@ provides(Sources,
 xx(t...) = (OS_NAME == :Windows ? t[1] : (OS_NAME == :Linux || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
-    @Dict(
+    @compat Dict(
         Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*BinDeps.shlib_ext) => pixman,
         Autotools(libtarget = xx("objs/.libs/libfreetype.la","libfreetype.la")) => freetype,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
