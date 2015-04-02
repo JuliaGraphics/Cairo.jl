@@ -17,67 +17,67 @@ export CAIRO_FORMAT_ARGB32,
     CAIRO_FILTER_GAUSSIAN
 
 typealias format_t Int32
-const FORMAT_INVALID   = int32(-1)
-const FORMAT_ARGB32    = int32(0)
-const FORMAT_RGB24     = int32(1)
-const FORMAT_A8        = int32(2)
-const FORMAT_A1        = int32(3)
-const FORMAT_RGB16_565 = int32(4)
-const FORMAT_RGB30     = int32(5)
+const FORMAT_INVALID   = @compat Int32(-1)
+const FORMAT_ARGB32    = @compat Int32(0)
+const FORMAT_RGB24     = @compat Int32(1)
+const FORMAT_A8        = @compat Int32(2)
+const FORMAT_A1        = @compat Int32(3)
+const FORMAT_RGB16_565 = @compat Int32(4)
+const FORMAT_RGB30     = @compat Int32(5)
 
 typealias status_t Int32
-const STATUS_SUCCESS                   = int32(0)
-const STATUS_NO_MEMORY                 = int32(1)
-const STATUS_INVALID_RESTORE           = int32(2)
-const STATUS_INVALID_POP_GROUP         = int32(3)
-const STATUS_NO_CURRENT_POINT          = int32(4)
-const STATUS_INVALID_MATRIX            = int32(5)
-const STATUS_INVALID_STATUS            = int32(6)
-const STATUS_NULL_POINTER              = int32(7)
-const STATUS_INVALID_STRING            = int32(8)
-const STATUS_INVALID_PATH_DATA         = int32(9)
-const STATUS_READ_ERROR                = int32(10)
-const STATUS_WRITE_ERROR               = int32(11)
-const STATUS_SURFACE_FINISHED          = int32(12)
-const STATUS_SURFACE_TYPE_MISMATCH     = int32(13)
-const STATUS_PATTERN_TYPE_MISMATCH     = int32(14)
-const STATUS_INVALID_CONTENT           = int32(15)
-const STATUS_INVALID_FORMAT            = int32(16)
-const STATUS_INVALID_VISUAL            = int32(17)
-const STATUS_FILE_NOT_FOUND            = int32(17)
-const STATUS_INVALID_DASH              = int32(18)
-const STATUS_INVALID_DSC_COMMENT       = int32(19)
-const STATUS_INVALID_INDEX             = int32(20)
-const STATUS_CLIP_NOT_REPRESENTABLE    = int32(21)
-const STATUS_TEMP_FILE_ERROR           = int32(22)
-const STATUS_INVALID_STRIDE            = int32(23)
-const STATUS_FONT_TYPE_MISMATCH        = int32(24)
-const STATUS_USER_FONT_IMMUTABLE       = int32(25)
-const STATUS_USER_FONT_ERROR           = int32(26)
-const STATUS_NEGATIVE_COUNT            = int32(27)
-const STATUS_INVALID_CLUSTERS          = int32(28)
-const STATUS_INVALID_SLANT             = int32(29)
-const STATUS_INVALID_WEIGHT            = int32(30)
-const STATUS_INVALID_SIZE              = int32(31)
-const STATUS_USER_FONT_NOT_IMPLEMENTED = int32(32)
-const STATUS_DEVICE_TYPE_MISMATCH      = int32(33)
-const STATUS_DEVICE_ERROR              = int32(34)
-const STATUS_INVALID_MESH_CONSTRUCTION = int32(35)
-const STATUS_DEVICE_FINISHED           = int32(36)
-const STATUS_LAST_STATUS               = int32(37)
+const STATUS_SUCCESS                   = @compat Int32(0)
+const STATUS_NO_MEMORY                 = @compat Int32(1)
+const STATUS_INVALID_RESTORE           = @compat Int32(2)
+const STATUS_INVALID_POP_GROUP         = @compat Int32(3)
+const STATUS_NO_CURRENT_POINT          = @compat Int32(4)
+const STATUS_INVALID_MATRIX            = @compat Int32(5)
+const STATUS_INVALID_STATUS            = @compat Int32(6)
+const STATUS_NULL_POINTER              = @compat Int32(7)
+const STATUS_INVALID_STRING            = @compat Int32(8)
+const STATUS_INVALID_PATH_DATA         = @compat Int32(9)
+const STATUS_READ_ERROR                = @compat Int32(10)
+const STATUS_WRITE_ERROR               = @compat Int32(11)
+const STATUS_SURFACE_FINISHED          = @compat Int32(12)
+const STATUS_SURFACE_TYPE_MISMATCH     = @compat Int32(13)
+const STATUS_PATTERN_TYPE_MISMATCH     = @compat Int32(14)
+const STATUS_INVALID_CONTENT           = @compat Int32(15)
+const STATUS_INVALID_FORMAT            = @compat Int32(16)
+const STATUS_INVALID_VISUAL            = @compat Int32(17)
+const STATUS_FILE_NOT_FOUND            = @compat Int32(17)
+const STATUS_INVALID_DASH              = @compat Int32(18)
+const STATUS_INVALID_DSC_COMMENT       = @compat Int32(19)
+const STATUS_INVALID_INDEX             = @compat Int32(20)
+const STATUS_CLIP_NOT_REPRESENTABLE    = @compat Int32(21)
+const STATUS_TEMP_FILE_ERROR           = @compat Int32(22)
+const STATUS_INVALID_STRIDE            = @compat Int32(23)
+const STATUS_FONT_TYPE_MISMATCH        = @compat Int32(24)
+const STATUS_USER_FONT_IMMUTABLE       = @compat Int32(25)
+const STATUS_USER_FONT_ERROR           = @compat Int32(26)
+const STATUS_NEGATIVE_COUNT            = @compat Int32(27)
+const STATUS_INVALID_CLUSTERS          = @compat Int32(28)
+const STATUS_INVALID_SLANT             = @compat Int32(29)
+const STATUS_INVALID_WEIGHT            = @compat Int32(30)
+const STATUS_INVALID_SIZE              = @compat Int32(31)
+const STATUS_USER_FONT_NOT_IMPLEMENTED = @compat Int32(32)
+const STATUS_DEVICE_TYPE_MISMATCH      = @compat Int32(33)
+const STATUS_DEVICE_ERROR              = @compat Int32(34)
+const STATUS_INVALID_MESH_CONSTRUCTION = @compat Int32(35)
+const STATUS_DEVICE_FINISHED           = @compat Int32(36)
+const STATUS_LAST_STATUS               = @compat Int32(37)
 
 typealias font_slant_t Int32
-const FONT_SLANT_NORMAL  = int32(0)
-const FONT_SLANT_ITALIC  = int32(1)
-const FONT_SLANT_OBLIQUE = int32(2)
+const FONT_SLANT_NORMAL  = @compat Int32(0)
+const FONT_SLANT_ITALIC  = @compat Int32(1)
+const FONT_SLANT_OBLIQUE = @compat Int32(2)
 
 typealias font_weight_t Int32
-const FONT_WEIGHT_NORMAL = int32(0)
-const FONT_WEIGHT_BOLD = int32(1)
+const FONT_WEIGHT_NORMAL = @compat Int32(0)
+const FONT_WEIGHT_BOLD = @compat Int32(1)
 
-const CONTENT_COLOR = int(0x1000)
-const CONTENT_ALPHA = int(0x2000)
-const CONTENT_COLOR_ALPHA = int(0x3000)
+const CONTENT_COLOR = @compat Int(0x1000)
+const CONTENT_ALPHA = @compat Int(0x2000)
+const CONTENT_COLOR_ALPHA = @compat Int(0x3000)
 
 const FILTER_FAST = 0
 const FILTER_GOOD = 1
@@ -122,7 +122,7 @@ const OPERATOR_LIGHTEN = 18
 
 
 ## LaTex Token Dicts ##
-const _common_token_dict = @Dict(
+const _common_token_dict = @compat Dict(
     "\\{"              => "{",
     "\\}"              => "}",
     "\\_"              => "_",
@@ -134,7 +134,7 @@ const _common_token_dict = @Dict(
     "}"                => ""
 )
 
-const _text_token_dict = @Dict(
+const _text_token_dict = @compat Dict(
     ## non-math symbols (p438)
     "\\S"              => "\ua7",
     "\\P"              => "\ub6",
@@ -142,7 +142,7 @@ const _text_token_dict = @Dict(
     "\\ddag"           => "\u2021"
 )
 
-const _math_token_dict = @Dict(
+const _math_token_dict = @compat Dict(
 
     "-"                => "\u2212", # minus sign
 
@@ -395,13 +395,13 @@ const _math_token_dict = @Dict(
     "\\arcsec"          => "\u2033"
 )
 
-const CAIRO_FILL_RULE_WINDING = int32(0);
-const CAIRO_FILL_RULE_EVEN_ODD = int32(1);
+const CAIRO_FILL_RULE_WINDING = @compat Int32(0);
+const CAIRO_FILL_RULE_EVEN_ODD = @compat Int32(1);
 
-const CAIRO_LINE_CAP_BUTT = int32(0);
-const CAIRO_LINE_CAP_ROUND = int32(1);
-const CAIRO_LINE_CAP_SQUARE = int32(2);
+const CAIRO_LINE_CAP_BUTT = @compat Int32(0);
+const CAIRO_LINE_CAP_ROUND = @compat Int32(1);
+const CAIRO_LINE_CAP_SQUARE = @compat Int32(2);
 
-const CAIRO_LINE_JOIN_MITER = int32(0);
-const CAIRO_LINE_JOIN_ROUND = int32(1);
-const CAIRO_LINE_JOIN_BEVEL = int32(2);
+const CAIRO_LINE_JOIN_MITER = @compat Int32(0);
+const CAIRO_LINE_JOIN_ROUND = @compat Int32(1);
+const CAIRO_LINE_JOIN_BEVEL = @compat Int32(2);
