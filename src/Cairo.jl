@@ -82,6 +82,12 @@ function write_to_stream_callback(s::IO, buf::Ptr{Uint8}, len::Uint32)
     @compat Int32((n == len) ? 0 : 11)
 end
 
+if VERSION < v"0.4-"
+    get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (T, Ptr{Uint8}, Uint32))
+else
+    get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr{Uint8}, Uint32))
+end
+
 type CairoSurface <: GraphicsDevice
     ptr::Ptr{Void}
     width::Float64
@@ -173,7 +179,7 @@ function CairoPDFSurface(stream::IOStream, w::Real, h::Real)
 end
 
 function CairoPDFSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
@@ -197,7 +203,7 @@ function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
 end
 
 function CairoEPSSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
@@ -252,7 +258,7 @@ function CairoSVGSurface(stream::IOStream, w::Real, h::Real)
 end
 
 function CairoSVGSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
@@ -283,7 +289,7 @@ function write_to_png(surface::CairoSurface, stream::IOStream)
 end
 
 function write_to_png{T<:IO}(surface::CairoSurface, stream::T)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Void,
           (Ptr{Uint8},Ptr{Void},Any), surface.ptr, callback, stream)
 end
