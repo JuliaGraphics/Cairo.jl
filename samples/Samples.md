@@ -120,5 +120,12 @@ Example of getting the text extents, plotting the dimension [sample_text_extents
 
 ![text extents .png](sample_text_extents.png "text extents example")
 
+### copy path
+
+Example of getting the path to a single character via text_path, copy_path and convert to an Array of CairoPathEntry [sample_copy_path.jl](sample_copy_path.jl). 
+
+![copy path .png](sample_copy_path.png "copy path example")
+
+
 
 

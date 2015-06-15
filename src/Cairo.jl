@@ -58,6 +58,9 @@ export
     curve_to, rel_curve_to,
     path_extents,
 
+    # path copy
+    copy_path, copy_path_flat, convert_cairo_path_data,
+
     # text
     text,
     update_layout, show_layout, get_layout_size, layout_text,
@@ -510,6 +513,86 @@ function set_source(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
 end
 set_source(ctx::CairoContext, s::CairoSurface) = set_source_surface(ctx, s, 0, 0)
 
+
+# cairo_path data and functions
+
+type CairoPath_t 
+    status::Cairo.status_t  
+    data::Ptr{Float64}
+    num_data::Uint32
+end
+
+type CairoPath <: GraphicsDevice
+    ptr::Ptr{CairoPath_t}
+
+    function CairoPath(ptr::Ptr{Void})
+        self = new(ptr)
+        finalizer(self, destroy)
+        self
+    end
+end
+
+# Abstract, contains type (moveto,lineto,curveto,closepath) and points
+type CairoPathEntry 
+    element_type::Uint32
+    points::Array{Float64,1}
+end
+
+
+function destroy(path::CairoPath)
+    if path.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_path_destroy,_jl_libcairo), Void, (Ptr{Void},), path.ptr)
+    path.ptr = C_NULL
+    nothing
+end
+
+function copy_path(ctx::CairoContext)
+    ptr = ccall((:cairo_copy_path, _jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},),ctx.ptr)
+    path = CairoPath(ptr)
+    finalizer(path, destroy)
+    path
+end    
+
+function copy_path_flat(ctx::CairoContext)
+    ptr = ccall((:cairo_copy_path_flat, _jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},),ctx.ptr)
+    path = CairoPath(ptr)
+    finalizer(path, destroy)
+    path
+end    
+
+function convert_cairo_path_data(p::CairoPath)
+    c = unsafe_load(p.ptr)
+
+    # As you already can guess from the unsafe_load, we do here some pointer
+    # arithmetic and lowlevel data type stuff. In a better world, julia would
+    # provide a straight-forward counterpart to c structs...
+
+    path_data = CairoPathEntry[]
+    data_index = 1
+    while data_index <= ((c.num_data)*2) 
+
+        # read header
+        element_length = reinterpret(Uint64,unsafe_load(c.data,data_index)) >> 32
+        element_type = reinterpret(Uint64,unsafe_load(c.data,data_index)) & 0xffffffff
+
+        # read points
+        points = Array(Float64,(element_length-1)*2)
+        for i=1:(element_length-1)*2
+            points[i] = unsafe_load(c.data,data_index+i+1)
+        end
+
+        g = CairoPathEntry(element_type,points)
+        push!(path_data,g)
+
+        # goto next element
+        data_index += (element_length*2)
+    end
+    path_data
+end
 
 
 # user<->device coordinate translation
