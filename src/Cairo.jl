@@ -567,22 +567,23 @@ end
 function convert_cairo_path_data(p::CairoPath)
     c = unsafe_load(p.ptr)
 
-    # As you already can guess from the unsafe_load, we do here some pointer
-    # arithmetic and lowlevel data type stuff. In a better world, julia would
-    # provide a straight-forward counterpart to c structs...
+    # The original data (pointed by c.data) is an array of Unions. We
+    # define here by Float64 (most data is) and reinterpret in the header.
 
     path_data = CairoPathEntry[]
+    c_data = pointer_to_array(c.data,(c.num_data*2,1),true)
+
     data_index = 1
     while data_index <= ((c.num_data)*2) 
 
-        # read header
-        element_length = reinterpret(Uint64,unsafe_load(c.data,data_index)) >> 32
-        element_type = reinterpret(Uint64,unsafe_load(c.data,data_index)) & 0xffffffff
+        # read header (reinterpret a Float64 to Uint64 and split to Uint32 x 2)
+        element_length = reinterpret(Uint64,c_data[data_index]) >> 32
+        element_type = reinterpret(Uint64,c_data[data_index]) & 0xffffffff
 
-        # read points
+        # copy points x,y
         points = Array(Float64,(element_length-1)*2)
         for i=1:(element_length-1)*2
-            points[i] = unsafe_load(c.data,data_index+i+1)
+            points[i] = c_data[data_index+i+1]
         end
 
         g = CairoPathEntry(element_type,points)
@@ -590,6 +591,7 @@ function convert_cairo_path_data(p::CairoPath)
 
         # goto next element
         data_index += (element_length*2)
+        
     end
     path_data
 end
