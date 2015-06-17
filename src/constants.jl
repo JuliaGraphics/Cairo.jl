@@ -405,3 +405,17 @@ const CAIRO_LINE_CAP_SQUARE = @compat Int32(2);
 const CAIRO_LINE_JOIN_MITER = @compat Int32(0);
 const CAIRO_LINE_JOIN_ROUND = @compat Int32(1);
 const CAIRO_LINE_JOIN_BEVEL = @compat Int32(2);
+
+#typedef enum _cairo_path_data_type {
+#    CAIRO_PATH_MOVE_TO,
+#    CAIRO_PATH_LINE_TO,
+#    CAIRO_PATH_CURVE_TO,
+#    CAIRO_PATH_CLOSE_PATH
+#} cairo_path_data_type_t;
+
+const CAIRO_PATH_MOVE_TO = @compat Int32(0);
+const CAIRO_PATH_LINE_TO = @compat Int32(1);
+const CAIRO_PATH_CURVE_TO = @compat Int32(2);
+const CAIRO_PATH_CLOSE_PATH = @compat Int32(3);
+
+
