@@ -1,10 +1,16 @@
 module Cairo
 
+using Compat
+
 include("../deps/deps.jl")
 
 using Color
 
-importall Base.Graphics
+if VERSION < v"0.4.0-dev+3275"
+    importall Base.Graphics
+else
+    importall Graphics
+end
 import Base: copy, writemime
 
 include("constants.jl")
@@ -31,8 +37,8 @@ export
     # surface and context management
     finish, destroy, status, get_source,
     creategc, getgc, save, restore, show_page, width, height,
-    
-    # pattern 
+
+    # pattern
     pattern_create_radial, pattern_create_linear,
     pattern_add_color_stop_rgb, pattern_add_color_stop_rgba,
     pattern_set_filter, pattern_set_extend,
@@ -65,9 +71,12 @@ export
     fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
     stroke_preserve, stroke_transformed, stroke_transformed_preserve,
     move_to, line_to, rel_line_to, rel_move_to,
-    rectangle, circle, arc, arc_negative, 
+    rectangle, circle, arc, arc_negative,
     curve_to, rel_curve_to,
     path_extents,
+
+    # path copy
+    copy_path, copy_path_flat, convert_cairo_path_data,
 
     # text
     text,
@@ -84,8 +93,6 @@ export
     push_group, pop_group
 
 
-
-
 @osx_only begin
     if Pkg.installed("Homebrew") != nothing
         using Homebrew
@@ -99,12 +106,18 @@ end
 
 function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{Uint8}, len::Uint32)
     n = ccall(:ios_write, Uint, (Ptr{Void}, Ptr{Void}, Uint), s, buf, len)
-    int32((n == len) ? 0 : 11)
+    @compat Int32((n == len) ? 0 : 11)
 end
 
 function write_to_stream_callback(s::IO, buf::Ptr{Uint8}, len::Uint32)
     n = write(s,buf,len)
-    int32((n == len) ? 0 : 11)
+    @compat Int32((n == len) ? 0 : 11)
+end
+
+if VERSION < v"0.4-"
+    get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (T, Ptr{Uint8}, Uint32))
+else
+    get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr{Uint8}, Uint32))
 end
 
 type CairoSurface <: GraphicsDevice
@@ -198,7 +211,7 @@ function CairoPDFSurface(stream::IOStream, w::Real, h::Real)
 end
 
 function CairoPDFSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
@@ -222,7 +235,7 @@ function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
 end
 
 function CairoEPSSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
@@ -277,7 +290,7 @@ function CairoSVGSurface(stream::IOStream, w::Real, h::Real)
 end
 
 function CairoSVGSurface{T<:IO}(stream::T, w::Real, h::Real)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
@@ -308,7 +321,7 @@ function write_to_png(surface::CairoSurface, stream::IOStream)
 end
 
 function write_to_png{T<:IO}(surface::CairoSurface, stream::T)
-    callback = cfunction(write_to_stream_callback, Int32, (T,Ptr{Uint8},Uint32))
+    callback = get_stream_callback(T)
     ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Void,
           (Ptr{Uint8},Ptr{Void},Any), surface.ptr, callback, stream)
 end
@@ -427,7 +440,7 @@ function copy(ctx::CairoContext, bb::BoundingBox)
     c
 end
 
-for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
+for (NAME, FUNCTION) in Any[(:_destroy, :cairo_destroy),
                          (:save, :cairo_save),
                          (:restore, :cairo_restore),
                          (:show_page, :cairo_show_page),
@@ -442,7 +455,7 @@ for (NAME, FUNCTION) in {(:_destroy, :cairo_destroy),
                          (:close_path, :cairo_close_path),
                          (:paint, :cairo_paint),
                          (:stroke_transformed, :cairo_stroke),
-                         (:stroke_transformed_preserve, :cairo_stroke_preserve)}
+                         (:stroke_transformed_preserve, :cairo_stroke_preserve)]
     @eval begin
         $NAME(ctx::CairoContext) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -466,14 +479,14 @@ function stroke_preserve(ctx::CairoContext)
 end
 
 function get_operator(ctx::CairoContext)
-    int(ccall((:cairo_get_operator,_jl_libcairo), Int32, (Ptr{Void},), ctx.ptr))
+    @compat Int(ccall((:cairo_get_operator,_jl_libcairo), Int32, (Ptr{Void},), ctx.ptr))
 end
 
 
-for (NAME, FUNCTION) in {(:set_fill_type, :cairo_set_fill_rule),
+for (NAME, FUNCTION) in Any[(:set_fill_type, :cairo_set_fill_rule),
                          (:set_operator, :cairo_set_operator),
                          (:set_line_cap, :cairo_set_line_cap),
-                         (:set_line_join, :cairo_set_line_join)}
+                         (:set_line_join, :cairo_set_line_join)]
     @eval begin
         $NAME(ctx::CairoContext, i0::Integer) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -481,9 +494,9 @@ for (NAME, FUNCTION) in {(:set_fill_type, :cairo_set_fill_rule),
     end
 end
 
-for (NAME, FUNCTION) in {(:set_line_width, :cairo_set_line_width),
+for (NAME, FUNCTION) in Any[(:set_line_width, :cairo_set_line_width),
                          (:rotate, :cairo_rotate),
-                         (:set_font_size, :cairo_set_font_size)}
+                         (:set_font_size, :cairo_set_font_size)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -491,12 +504,12 @@ for (NAME, FUNCTION) in {(:set_line_width, :cairo_set_line_width),
     end
 end
 
-for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
+for (NAME, FUNCTION) in Any[(:line_to, :cairo_line_to),
                          (:move_to, :cairo_move_to),
                          (:rel_line_to, :cairo_rel_line_to),
                          (:rel_move_to, :cairo_rel_move_to),
                          (:scale, :cairo_scale),
-                         (:translate, :cairo_translate)}
+                         (:translate, :cairo_translate)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real, d1::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -504,8 +517,8 @@ for (NAME, FUNCTION) in {(:line_to, :cairo_line_to),
     end
 end
 
-for (NAME, FUNCTION) in {(:curve_to, :cairo_curve_to),
-                         (:rel_curve_to, :cairo_rel_curve_to)}
+for (NAME, FUNCTION) in Any[(:curve_to, :cairo_curve_to),
+                         (:rel_curve_to, :cairo_rel_curve_to)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real, d5::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
@@ -513,12 +526,12 @@ for (NAME, FUNCTION) in {(:curve_to, :cairo_curve_to),
     end
 end
 
-for (NAME, FUNCTION) in {(:arc, :cairo_arc),
-                         (:arc_negative, :cairo_arc_negative)}
+for (NAME, FUNCTION) in Any[(:arc, :cairo_arc),
+                         (:arc_negative, :cairo_arc_negative)]
     @eval begin
         $NAME(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
             ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
-                  Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64), 
+                  Void, (Ptr{Void},Float64,Float64,Float64,Float64,Float64),
                   ctx.ptr, xc, yc, radius, angle1, angle2)
     end
 end
@@ -567,6 +580,88 @@ function set_source(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
 end
 set_source(ctx::CairoContext, s::CairoSurface) = set_source_surface(ctx, s, 0, 0)
 
+
+# cairo_path data and functions
+
+type CairoPath_t 
+    status::Cairo.status_t  
+    data::Ptr{Float64}
+    num_data::Uint32
+end
+
+type CairoPath <: GraphicsDevice
+    ptr::Ptr{CairoPath_t}
+
+    function CairoPath(ptr::Ptr{Void})
+        self = new(ptr)
+        finalizer(self, destroy)
+        self
+    end
+end
+
+# Abstract, contains type (moveto,lineto,curveto,closepath) and points
+type CairoPathEntry 
+    element_type::Uint32
+    points::Array{Float64,1}
+end
+
+
+function destroy(path::CairoPath)
+    if path.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_path_destroy,_jl_libcairo), Void, (Ptr{Void},), path.ptr)
+    path.ptr = C_NULL
+    nothing
+end
+
+function copy_path(ctx::CairoContext)
+    ptr = ccall((:cairo_copy_path, _jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},),ctx.ptr)
+    path = CairoPath(ptr)
+    finalizer(path, destroy)
+    path
+end    
+
+function copy_path_flat(ctx::CairoContext)
+    ptr = ccall((:cairo_copy_path_flat, _jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},),ctx.ptr)
+    path = CairoPath(ptr)
+    finalizer(path, destroy)
+    path
+end    
+
+function convert_cairo_path_data(p::CairoPath)
+    c = unsafe_load(p.ptr)
+
+    # The original data (pointed by c.data) is an array of Unions. We
+    # define here by Float64 (most data is) and reinterpret in the header.
+
+    path_data = CairoPathEntry[]
+    c_data = pointer_to_array(c.data,(c.num_data*2,1),true)
+
+    data_index = 1
+    while data_index <= ((c.num_data)*2) 
+
+        # read header (reinterpret a Float64 to Uint64 and split to Uint32 x 2)
+        element_length = reinterpret(Uint64,c_data[data_index]) >> 32
+        element_type = reinterpret(Uint64,c_data[data_index]) & 0xffffffff
+
+        # copy points x,y
+        points = Array(Float64,(element_length-1)*2)
+        for i=1:(element_length-1)*2
+            points[i] = c_data[data_index+i+1]
+        end
+
+        g = CairoPathEntry(element_type,points)
+        push!(path_data,g)
+
+        # goto next element
+        data_index += (element_length*2)
+        
+    end
+    path_data
+end
 
 
 # user<->device coordinate translation
@@ -763,7 +858,7 @@ set_antialias(ctx::CairoContext, a) =
     ccall((:cairo_set_antialias,_jl_libcairo), Void,
           (Ptr{Void},Cint), ctx.ptr, a)
 
-get_antialias(ctx::CairoContext) = 
+get_antialias(ctx::CairoContext) =
     ccall((:cairo_get_antialias,_jl_libcairo), Cint,
           (Ptr{Void},), ctx.ptr)
 
@@ -871,12 +966,12 @@ function path_extents(ctx::CairoContext)
     dx2 = Cdouble[0]
     dy1 = Cdouble[0]
     dy2 = Cdouble[0]
-    
+
     ccall((:cairo_path_extents, _jl_libcairo),
-          Void, (Ptr{Void}, Ptr{Cdouble}, Ptr{Cdouble}, 
+          Void, (Ptr{Void}, Ptr{Cdouble}, Ptr{Cdouble},
           Ptr{Cdouble}, Ptr{Cdouble}),
           ctx.ptr, dx1, dy1, dx2, dy2)
-          
+
     return(dx1[1],dy1[1],dx2[1],dy2[1])
 end
 
@@ -929,7 +1024,7 @@ function text(ctx::CairoContext, x::Real, y::Real, str::String;
 
     show_layout(ctx)
     restore(ctx)
-    w, h = Base.Graphics.device_to_user(ctx, extents[1], extents[2])
+    w, h = Graphics.device_to_user(ctx, extents[1], extents[2])
     BoundingBox(x+dxrel*w, x+(dxrel+1)*w, y-dyrel*h, y+(1-dyrel)*h)
 end
 
@@ -1040,7 +1135,7 @@ end
 function tex2pango(str::String, fontsize::Real)
     output = ""
     mathmode = true
-    font_stack = {}
+    font_stack = Any[]
     font = 1
     script_size = fontsize/1.618034
 

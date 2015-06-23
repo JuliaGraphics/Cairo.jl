@@ -127,3 +127,10 @@ Mesh patterns are tensor-product patch meshes (type 7 shadings in PDF), read mor
 
 ![mesh pattern .png](sample_meshpattern.png "mesh pattern example")
 
+### copy path
+
+Example of getting the path to a single character via text_path, copy_path and convert to an Array of CairoPathEntry [sample_copy_path.jl](sample_copy_path.jl). 
+
+![copy path .png](sample_copy_path.png "copy path example")
+
+
