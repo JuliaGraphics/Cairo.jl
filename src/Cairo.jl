@@ -22,8 +22,8 @@ export
     # surface constructors
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
     CairoARGBSurface, CairoSVGSurface, CairoImageSurface, CairoQuartzSurface,
-    CairoWin32Surface,
-    surface_create_similar,
+    CairoWin32Surface, CairoScriptSurface,
+    surface_create_similar, 
 
     # surface and context management
     finish, destroy, status, get_source,
@@ -319,6 +319,43 @@ end
 function format_stride_for_width(format::Integer, width::Integer)
     ccall((:cairo_format_stride_for_width,_jl_libcairo), Int32,
           (Int32,Int32), format, width)
+end
+
+## Scripting
+
+type CairoScript <: GraphicsDevice
+    ptr::Ptr{Void}
+
+    function CairoScript(filename::String)
+        ptr = ccall((:cairo_script_create,_jl_libcairo),
+                    Ptr{Void}, (Ptr{Void},), bytestring(filename))
+        self = new(ptr)
+        finalizer(self, destroy)
+        self
+    end
+end
+
+function destroy(s::CairoScript)
+    if s.ptr == C_NULL
+        return
+    end
+    ccall((:cairo_device_destroy,_jl_libcairo), Void, (Ptr{Void},), s.ptr)
+    s.ptr = C_NULL
+    nothing
+end
+
+function CairoScriptSurface(filename::String, w::Real, h::Real)
+    s = CairoScript(filename)
+    ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Void},
+                (Ptr{Void},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
+    CairoSurface(ptr, w, h)
+end
+
+function CairoScriptSurface(filename::String,sc::CairoSurface)
+    s = CairoScript(filename)
+    ptr = ccall((:cairo_script_surface_create_for_target,_jl_libcairo), Ptr{Void},
+                (Ptr{Void},Ptr{Void}),s.ptr, sc.ptr)
+    CairoSurface(ptr, sc.width, sc.height)
 end
 
 # -----------------------------------------------------------------------------
