@@ -328,7 +328,7 @@ type CairoScript <: GraphicsDevice
 
     function CairoScript(filename::String)
         ptr = ccall((:cairo_script_create,_jl_libcairo),
-                    Ptr{Void}, (Ptr{Void},), bytestring(filename))
+                    Ptr{Void}, (Ptr{Uint8},), bytestring(filename))
         self = new(ptr)
         finalizer(self, destroy)
         self
