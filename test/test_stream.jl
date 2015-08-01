@@ -11,3 +11,6 @@ ddots4(cr,256,246,1.0,3000)
 buf = IOBuffer()
 pipe = Base64Pipe(buf)
 write_to_png(c,pipe)
+close(pipe)
+# Catch short writes
+@assert length(takebuf_array(buf)) > 200
