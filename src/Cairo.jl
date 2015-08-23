@@ -4,7 +4,7 @@ using Compat
 
 include("../deps/deps.jl")
 
-using Color
+using Colors
 
 if VERSION < v"0.4.0-dev+3275"
     importall Base.Graphics
@@ -479,14 +479,14 @@ set_source_rgba(ctx::CairoContext, r::Real, g::Real, b::Real, a::Real) =
           (Ptr{Void},Float64,Float64,Float64,Float64),
           ctx.ptr, r, g, b, a)
 
-function set_source(ctx::CairoContext, c::ColorValue)
+function set_source(ctx::CairoContext, c::Color)
     rgb = convert(RGB, c)
     set_source_rgb(ctx, rgb.r, rgb.g, rgb.b)
 end
 
-function set_source(ctx::CairoContext, ac::AlphaColorValue)
+function set_source(ctx::CairoContext, ac::TransparentColor)
     rgba = convert(RGBA, ac)
-    set_source_rgba(ctx, rgba.c.r, rgba.c.g, rgba.c.b, rgba.alpha)
+    set_source_rgba(ctx, rgba.r, rgba.g, rgba.b, rgba.alpha)
 end
 
 set_source(dest::CairoContext, src::CairoContext) = set_source_surface(dest, src.surface)
