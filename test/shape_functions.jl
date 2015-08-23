@@ -1,6 +1,6 @@
 using Cairo
 
-# shape functions, 
+# shape functions,
 
 
 function randpos(n,w::Real,h::Real)
@@ -20,10 +20,10 @@ end
 
 # ddotsx: fill random dots with different methods, disc only (no ring)
 function ddots1(cr::CairoContext, rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     new_path(cr)
     for i=1:n
        move_to(cr,px[i],py[i])
@@ -54,29 +54,29 @@ end
 
 
 function ddots3(cr::CairoContext, rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     new_path(cr)
 
     set_source_rgb(cr, 0, 0, 1.0)
     set_line_cap(cr,Cairo.CAIRO_LINE_CAP_ROUND)
     set_line_width(cr,radius*2.0)
-    
+
     for i=1:n
        move_to(cr,px[i],py[i])
        rel_line_to(cr,0,0)
        stroke(cr)
     end
-       
-    close_path (cr)
+
+    close_path(cr)
 
 end
 
 function ddots4(cr::CairoContext,
     rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
 
@@ -90,7 +90,7 @@ function ddots4(cr::CairoContext,
     fill(cr)
     p = pop_group(cr)
     reset_clip(cr)
-        
+
     for i=1:n
         save(cr)
         translate(cr,px[i]-cc,py[i]-cc)
@@ -102,7 +102,7 @@ end
 
 function ddots5(cr::CairoContext,
     rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
 
@@ -119,7 +119,7 @@ function ddots5(cr::CairoContext,
     fill(c1)
 
     p = Cairo.CairoPattern(s1)
-        
+
     for i=1:n
         save(cr)
         translate(cr,px[i]-cc,py[i]-cc)
@@ -131,10 +131,10 @@ end
 
 # rdotsx: fill random dots with different methods
 function rdots1(cr::CairoContext, rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     new_path(cr)
     for i=1:n
        move_to(cr,px[i],py[i])
@@ -171,10 +171,10 @@ end
 
 
 function rdots3(cr::CairoContext, rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     new_path(cr)
 
     set_line_cap(cr,Cairo.CAIRO_LINE_CAP_ROUND)
@@ -195,12 +195,12 @@ function rdots3(cr::CairoContext, rect_width::Real, rect_height::Real, radius::R
        stroke(cr)
     end
 
-       
+
 end
 
 function rdots4(cr::CairoContext,
     rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
 
@@ -217,7 +217,7 @@ function rdots4(cr::CairoContext,
     stroke(cr)
     p = pop_group(cr)
     reset_clip(cr)
-        
+
     for i=1:n
         save(cr)
         translate(cr,px[i]-cc,py[i]-cc)
@@ -229,7 +229,7 @@ end
 
 function rdots5(cr::CairoContext,
     rect_width::Real, rect_height::Real, radius::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
 
@@ -249,7 +249,7 @@ function rdots5(cr::CairoContext,
     stroke(c1)
 
     p = Cairo.CairoPattern(s1)
-        
+
     for i=1:n
         save(cr)
         translate(cr,px[i]-cc,py[i]-cc)
@@ -262,15 +262,15 @@ end
 
 # lines0, random x,y lines
 function lines0(cr::CairoContext, rect_width::Real, rect_height::Real, width::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     new_path(cr)
 
     set_source_rgb(cr, 0, 0, 1.0)
     set_line_width(cr,width)
-    
+
     new_path(cr)
     move_to(cr,px[1],py[1])
     for i=2:n
@@ -281,15 +281,15 @@ end
 
 # lines1, x sorted, line a plot
 function lines1(cr::CairoContext, rect_width::Real, rect_height::Real, width::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     px = sort(px)
 
     set_source_rgb(cr, 0, 0, 1.0)
     set_line_width(cr,width)
-    
+
     new_path(cr)
     move_to(cr,px[1],py[1])
     for i=2:n
@@ -300,10 +300,10 @@ end
 
 # lines2, x sorted, independent lines per coord
 function lines2(cr::CairoContext, rect_width::Real, rect_height::Real, width::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     px = sort(px)
 
     set_source_rgb(cr, 0, 0, 1.0)
@@ -314,15 +314,15 @@ function lines2(cr::CairoContext, rect_width::Real, rect_height::Real, width::Re
         move_to(cr,px[i],py[i])
         line_to(cr,px[i+1],py[i+1])
         stroke(cr)
-    end      
+    end
 end
 
 # lines3, x sorted, in clusters of 100
 function lines3(cr::CairoContext, rect_width::Real, rect_height::Real, width::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     px = sort(px)
 
     set_source_rgb(cr, 0, 0, 1.0)
@@ -334,15 +334,15 @@ function lines3(cr::CairoContext, rect_width::Real, rect_height::Real, width::Re
             line_to(cr,px[i],py[i])
         end
         stroke(cr)
-    end      
+    end
 end
 
 # lines4, x sorted, in clusters of 1000
 function lines4(cr::CairoContext, rect_width::Real, rect_height::Real, width::Real, n::Int)
-    
+
     clear_bg(cr,rect_width,rect_height)
     px,py = randpos(n,rect_width,rect_height)
-    
+
     px = sort(px)
 
     set_source_rgb(cr, 0, 0, 1.0)
@@ -354,5 +354,5 @@ function lines4(cr::CairoContext, rect_width::Real, rect_height::Real, width::Re
             line_to(cr,px[i],py[i])
         end
         stroke(cr)
-    end      
+    end
 end
