@@ -1,3 +1,5 @@
+VERSION >= v"0.4.0-dev+6521" && __precompile__()
+
 module Cairo
 
 using Compat
@@ -516,8 +518,8 @@ set_source(ctx::CairoContext, s::CairoSurface) = set_source_surface(ctx, s, 0, 0
 
 # cairo_path data and functions
 
-type CairoPath_t 
-    status::Cairo.status_t  
+type CairoPath_t
+    status::Cairo.status_t
     data::Ptr{Float64}
     num_data::Uint32
 end
@@ -533,7 +535,7 @@ type CairoPath <: GraphicsDevice
 end
 
 # Abstract, contains type (moveto,lineto,curveto,closepath) and points
-type CairoPathEntry 
+type CairoPathEntry
     element_type::Uint32
     points::Array{Float64,1}
 end
@@ -554,7 +556,7 @@ function copy_path(ctx::CairoContext)
     path = CairoPath(ptr)
     finalizer(path, destroy)
     path
-end    
+end
 
 function copy_path_flat(ctx::CairoContext)
     ptr = ccall((:cairo_copy_path_flat, _jl_libcairo),
@@ -562,7 +564,7 @@ function copy_path_flat(ctx::CairoContext)
     path = CairoPath(ptr)
     finalizer(path, destroy)
     path
-end    
+end
 
 function convert_cairo_path_data(p::CairoPath)
     c = unsafe_load(p.ptr)
@@ -574,7 +576,7 @@ function convert_cairo_path_data(p::CairoPath)
     c_data = pointer_to_array(c.data,(c.num_data*2,1),true)
 
     data_index = 1
-    while data_index <= ((c.num_data)*2) 
+    while data_index <= ((c.num_data)*2)
 
         # read header (reinterpret a Float64 to Uint64 and split to Uint32 x 2)
         element_length = reinterpret(Uint64,c_data[data_index]) >> 32
@@ -591,7 +593,7 @@ function convert_cairo_path_data(p::CairoPath)
 
         # goto next element
         data_index += (element_length*2)
-        
+
     end
     path_data
 end
