@@ -353,6 +353,9 @@ function destroy(ctx::CairoContext)
     nothing
 end
 
+ width(ctx::CairoContext) =  width(ctx.surface)
+height(ctx::CairoContext) = height(ctx.surface)
+
 function copy(ctx::CairoContext)
     surf = surface_create_similar(ctx.surface)
     c = creategc(surf)

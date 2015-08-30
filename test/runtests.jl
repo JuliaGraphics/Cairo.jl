@@ -1,9 +1,16 @@
+using Cairo
+using Base.Test: @test, @test_throws
+
+surf = CairoImageSurface(100, 200, Cairo.FORMAT_ARGB32)
+@test width(surf) == 100
+@test height(surf) == 200
+ctx = CairoContext(surf)
+@test width(ctx) == 100
+@test height(ctx) == 200
+
 include("shape_functions.jl")
 include("test_stream.jl")
 include("tex.jl")
-
-using Base.Test: @test, @test_throws
-
 
 function test_pattern_get_surface()
     # test getting a surface from a surface pattern
