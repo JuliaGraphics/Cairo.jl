@@ -110,6 +110,14 @@ type CairoSurface <: GraphicsDevice
         finalizer(self, destroy)
         self
     end
+    function CairoSurface(ptr::Ptr{Void})
+        self = new(ptr)
+        #finalizer(self, destroy)
+        self
+    end
+
+
+
 end
 
 width(surface::CairoSurface) = surface.width
@@ -339,6 +347,18 @@ type CairoContext <: GraphicsContext
         finalizer(self, destroy)
         self
     end
+    function CairoContext(ptr::Ptr{Void})
+        surface_p = ccall((:cairo_get_target,_jl_libcairo),
+                   Ptr{Void}, (Ptr{Void},), ptr)
+        surface = CairoSurface(surface_p)
+        layout = ccall((:pango_cairo_create_layout,_jl_libpangocairo),
+                  Ptr{Void}, (Ptr{Void},), ptr)
+        self = new(ptr,surface,layout)
+        #finalizer(self, destroy)
+        self
+    end
+
+
 end
 
 creategc(s::CairoSurface) = CairoContext(s)
