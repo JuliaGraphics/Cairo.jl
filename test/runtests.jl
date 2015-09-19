@@ -1,4 +1,5 @@
 using Cairo
+using Compat
 using Base.Test: @test, @test_throws
 
 surf = CairoImageSurface(100, 200, Cairo.FORMAT_ARGB32)

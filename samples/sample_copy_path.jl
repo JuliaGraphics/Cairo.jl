@@ -1,4 +1,4 @@
-
+using Compat
 using Cairo
 
 function common_header()
@@ -15,12 +15,12 @@ function common_header()
     return c,cr
 end
 
-function write_out_picture(filename::String,c::CairoSurface)
+function write_out_picture(filename::AbstractString,c::CairoSurface)
     ## mark picture with current date
     move_to(cr,0.0,12.0);
     set_source_rgb (cr, 0,0,0);
     show_text(cr,strftime(time()));
-    ## 
+    ##
     write_to_png(c,filename);
     nothing
 end
