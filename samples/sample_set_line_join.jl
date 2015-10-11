@@ -11,28 +11,28 @@ restore(cr);
 
 save(cr);
 ## original example, following here
-set_line_width (cr, 40.96);
-move_to (cr, 76.8, 84.48);
-rel_line_to (cr, 51.2, -51.2);
-rel_line_to (cr, 51.2, 51.2);
-set_line_join (cr, Cairo.CAIRO_LINE_JOIN_MITER); # default 
-stroke (cr);
+set_line_width(cr, 40.96);
+move_to(cr, 76.8, 84.48);
+rel_line_to(cr, 51.2, -51.2);
+rel_line_to(cr, 51.2, 51.2);
+set_line_join(cr, Cairo.CAIRO_LINE_JOIN_MITER); # default 
+stroke(cr);
 
-move_to (cr, 76.8, 161.28);
-rel_line_to (cr, 51.2, -51.2);
-rel_line_to (cr, 51.2, 51.2);
-set_line_join (cr, Cairo.CAIRO_LINE_JOIN_BEVEL);
-stroke (cr);
+move_to(cr, 76.8, 161.28);
+rel_line_to(cr, 51.2, -51.2);
+rel_line_to(cr, 51.2, 51.2);
+set_line_join(cr, Cairo.CAIRO_LINE_JOIN_BEVEL);
+stroke(cr);
 
-move_to (cr, 76.8, 238.08);
-rel_line_to (cr, 51.2, -51.2);
-rel_line_to (cr, 51.2, 51.2);
-set_line_join (cr, Cairo.CAIRO_LINE_JOIN_ROUND);
-stroke (cr);
+move_to(cr, 76.8, 238.08);
+rel_line_to(cr, 51.2, -51.2);
+rel_line_to(cr, 51.2, 51.2);
+set_line_join(cr, Cairo.CAIRO_LINE_JOIN_ROUND);
+stroke(cr);
 
 ## mark picture with current date
 restore(cr);
 move_to(cr,0.0,12.0);
-set_source_rgb (cr, 0,0,0);
-show_text(cr,strftime(time()));
+set_source_rgb(cr, 0,0,0);
+show_text(cr,Libc.strftime(time()));
 write_to_png(c,"sample_set_line_join.png");

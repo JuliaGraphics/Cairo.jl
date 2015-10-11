@@ -12,22 +12,22 @@ restore(cr);
 save(cr);
 ## original example, following here
 
-move_to (cr, 50.0, 75.0);
-line_to (cr, 200.0, 75.0);
+move_to(cr, 50.0, 75.0);
+line_to(cr, 200.0, 75.0);
 
-move_to (cr, 50.0, 125.0);
-line_to (cr, 200.0, 125.0);
+move_to(cr, 50.0, 125.0);
+line_to(cr, 200.0, 125.0);
 
-move_to (cr, 50.0, 175.0);
-line_to (cr, 200.0, 175.0);
+move_to(cr, 50.0, 175.0);
+line_to(cr, 200.0, 175.0);
 
-set_line_width (cr, 30.0);
-set_line_cap (cr, Cairo.CAIRO_LINE_CAP_ROUND);
-stroke (cr);
+set_line_width(cr, 30.0);
+set_line_cap(cr, Cairo.CAIRO_LINE_CAP_ROUND);
+stroke(cr);
 
 ## mark picture with current date
 restore(cr);
 move_to(cr,0.0,12.0);
-set_source_rgb (cr, 0,0,0);
-show_text(cr,strftime(time()));
+set_source_rgb(cr, 0,0,0);
+show_text(cr,Libc.strftime(time()));
 write_to_png(c,"sample_multi_segment_caps.png");
