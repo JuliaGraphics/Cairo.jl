@@ -18,8 +18,8 @@ end
 function write_out_picture(filename::AbstractString,c::CairoSurface)
     ## mark picture with current date
     move_to(cr,0.0,12.0);
-    set_source_rgb (cr, 0,0,0);
-    show_text(cr,strftime(time()));
+    set_source_rgb(cr, 0,0,0);
+    show_text(cr,Libc.strftime(time()));
     ##
     write_to_png(c,filename);
     nothing
@@ -29,11 +29,11 @@ function example_copy_path(cr)
 
     save(cr);
     # single (large) character set with text_path+stroke
-    select_font_face (cr, "Sans", Cairo.FONT_SLANT_NORMAL,
+    select_font_face(cr, "Sans", Cairo.FONT_SLANT_NORMAL,
                         Cairo.FONT_WEIGHT_BOLD);
-    set_font_size (cr, 100.0);
+    set_font_size(cr, 100.0);
     translate(cr, 10.0, 100.0);
-    text_path (cr, "J");
+    text_path(cr, "J");
     stroke_preserve(cr);
 
     # copied and converted

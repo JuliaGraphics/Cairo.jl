@@ -29,6 +29,6 @@ stroke(cr);
 ## mark picture with current date
 restore(cr);
 move_to(cr,0.0,12.0);
-set_source_rgb (cr, 0,0,0);
-show_text(cr,strftime(time()));
+set_source_rgb(cr, 0,0,0);
+show_text(cr,Libc.strftime(time()));
 write_to_png(c,"sample_clip.png");
