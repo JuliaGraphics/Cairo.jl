@@ -4,7 +4,9 @@ module Cairo
 
 using Compat
 
-include("../deps/deps.jl")
+depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
+isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
+    "installed. Please run\nPkg.build(\"Cairo\")")
 
 using Colors
 
