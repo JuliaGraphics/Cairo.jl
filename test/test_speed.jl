@@ -6,7 +6,7 @@ function test_all(;tmax = 2.0, save_flag = false)
     size_surface = [512];#,512,1024]; #three sizes of a surface
     paint_width = [0.5,1.0,3.0,5.0];
     shapes = [ddots1, ddots2, ddots3, ddots4, ddots5,
-              rdots1, rdots2, rdots3, rdots4, rdots5,
+              rdots1, rdots2, rdots3, rdots4, rdots5, rdots6,
               lines0, lines1, lines2, lines3, lines4];
     n_elements = [100,300,1000,3000,10000,30000,100000];
 

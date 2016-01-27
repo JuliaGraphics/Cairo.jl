@@ -438,11 +438,9 @@ function stroke_preserve(ctx::CairoContext)
     restore(ctx)
 end
 
-function paint_with_alpha(ctx::CairoContext, a = 0.5)
+function paint_with_alpha(ctx::CairoContext, a)
     ccall((:cairo_paint_with_alpha, _jl_libcairo),
-        Void,
-        (Ptr{Void}, Float64),
-        ctx.ptr, a)
+          Void, (Ptr{Void}, Float64), ctx.ptr, a)
 end
 
 function get_operator(ctx::CairoContext)
