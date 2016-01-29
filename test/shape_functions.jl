@@ -259,6 +259,38 @@ function rdots5(cr::CairoContext,
     end
 end
 
+# alpha transparency using paint_with_alpha
+function rdots6(cr::CairoContext,
+    rect_width::Real, rect_height::Real, radius::Real, n::Int)
+
+    clear_bg(cr,rect_width,rect_height)
+    px,py = randpos(n,rect_width,rect_height)
+
+    cc = radius + 3.0
+
+    s1 = Cairo.CairoARGBSurface(cc*2,cc*2)
+    c1 = Cairo.CairoContext(s1)
+    rectangle(c1,0,0,2*cc,2*cc)
+    set_source_rgba(c1,0,0,0,0)
+    paint_with_alpha(c1, 0.5)
+    new_path(c1)
+    arc(c1,radius+1,radius+1,radius,0,2*pi)
+    set_source_rgb(c1,0,0,1.0)
+    fill_preserve(c1)
+    set_source_rgb(c1,0,0,0)
+    set_line_width(c1,1.0)
+    stroke(c1)
+
+    p = Cairo.CairoPattern(s1)
+
+    for i=1:n
+        save(cr)
+        translate(cr,px[i]-cc,py[i]-cc)
+        set_source(cr,p)
+        paint_with_alpha(cr, 1 - i/n)
+        restore(cr)
+    end
+end
 
 # lines0, random x,y lines
 function lines0(cr::CairoContext, rect_width::Real, rect_height::Real, width::Real, n::Int)

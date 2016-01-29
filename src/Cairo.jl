@@ -55,7 +55,7 @@ export
     clip, clip_preserve, reset_clip,
 
     # fill, stroke, path, and shape commands
-    fill, fill_preserve, new_path, new_sub_path, close_path, paint, stroke,
+    fill, fill_preserve, new_path, new_sub_path, close_path, paint, paint_with_alpha, stroke,
     stroke_preserve, stroke_transformed, stroke_transformed_preserve,
     move_to, line_to, rel_line_to, rel_move_to,
     rectangle, circle, arc, arc_negative,
@@ -436,6 +436,11 @@ function stroke_preserve(ctx::CairoContext)
     reset_transform(ctx)
     ccall((:cairo_stroke_preserve, _jl_libcairo), Void, (Ptr{Void},), ctx.ptr)
     restore(ctx)
+end
+
+function paint_with_alpha(ctx::CairoContext, a)
+    ccall((:cairo_paint_with_alpha, _jl_libcairo),
+          Void, (Ptr{Void}, Float64), ctx.ptr, a)
 end
 
 function get_operator(ctx::CairoContext)
