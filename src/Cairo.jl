@@ -85,7 +85,7 @@ function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{UInt8}, len::UInt32)
 end
 
 function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
-    n = VERSION < v"0.5-dev+2292" ? write(s,buf,len) : unsafe_write(s,buf,len)
+    n = VERSION < v"0.5-dev+2301" ? write(s,buf,len) : unsafe_write(s,buf,len)
     @compat Int32((n == len) ? 0 : 11)
 end
 
