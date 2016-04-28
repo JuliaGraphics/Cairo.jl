@@ -10,8 +10,7 @@ deps = [
     libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], group = group)
     pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], group = group)
     libffi = library_dependency("ffi", aliases = ["libffi"], group = group)
-    gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl", "libgettextpo"], os = :Unix, group = group)
-    gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi, gettext], group = group)
+    gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi], group = group)
     freetype = library_dependency("freetype", aliases = ["libfreetype"], group = group)
     fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], group = group)
     cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng], group = group)
@@ -45,7 +44,6 @@ end
     provides( Homebrew.HB, "fontconfig", fontconfig, os = :Darwin )
     provides( Homebrew.HB, "glib", gobject, os = :Darwin )
     provides( Homebrew.HB, "libpng", libpng, os = :Darwin )
-    provides( Homebrew.HB, "gettext", gettext, os = :Darwin )
     provides( Homebrew.HB, "freetype", freetype, os = :Darwin )
     provides( Homebrew.HB, "libffi", libffi, os = :Darwin )
     provides( Homebrew.HB, "pixman", pixman, os = :Darwin )
@@ -61,8 +59,7 @@ provides(AptGet,
         "libpango1.0-0" => [pango,pangocairo],
         "libglib2.0-0" => gobject,
         "libpng12-0" => libpng,
-        "libpixman-1-0" => pixman,
-        "gettext" => gettext
+        "libpixman-1-0" => pixman
     ))
 
 # TODO: check whether these are accurate
@@ -72,8 +69,7 @@ provides(Yum,
         "fontconfig" => fontconfig,
         "pango" => [pango,pangocairo],
         "glib2" => gobject,
-        "libpng" => libpng,
-        "gettext-libs" => gettext
+        "libpng" => libpng
     ))
 
 end
@@ -87,7 +83,6 @@ provides(Sources,
         URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
         URI("https://www.freedesktop.org/software/harfbuzz/release/harfbuzz-1.2.6.tar.bz2") => harfbuzz,
         URI("http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.11.1.tar.gz") => fontconfig,
-        URI("http://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.2.tar.gz") => gettext,
         URI("ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-$(png_version).tar.gz") => libpng,
         URI("ftp://sourceware.org/pub/libffi/libffi-3.0.11.tar.gz") => libffi,
         URI("http://ftp.gnome.org/pub/gnome/sources/glib/2.34/glib-2.34.3.tar.xz") => gobject,
@@ -107,7 +102,6 @@ provides(BuildProcess,
                 AbstractString[],
                 OS_NAME != :Linux ? AbstractString["--without-x","--disable-xlib","--disable-xcb"] : AbstractString[]),
                 OS_NAME == :Darwin ? AbstractString["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : AbstractString[])) => cairo,
-        Autotools(libtarget = "gettext-tools/gnulib-lib/.libs/libgettextlib.la") => gettext,
         Autotools(libtarget = "libffi.la") => libffi,
         Autotools(libtarget = "gobject/libgobject-2.0.la") => gobject,
         Autotools(libtarget = "pango/libpango-1.0.la") => [pango,pangocairo]
