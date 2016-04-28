@@ -4,23 +4,24 @@ using BinDeps
 
 using Compat
 
-group = library_group("cairo")
-
+group1 = library_group("cairo1")
+group2 = library_group("cairo2")
 
 ignore_system_font_libs(n, h) = !(haskey(ENV, "JULIA_BINDEPS_IGNORE_SYSTEM_FONT_LIBS") && ismatch(r"^/usr/lib", n))
 
 deps = [
-    libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], group = group)
-    pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], group = group)
-    libffi = library_dependency("ffi", aliases = ["libffi"], group = group)
-    gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi], group = group)
-    freetype = library_dependency("freetype", aliases = ["libfreetype"], group = group, validate = ignore_system_font_libs)
-    fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], group = group, validate = ignore_system_font_libs)
-    cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng], group = group)
-    harfbuzz = library_dependency("harfbuzz", aliases = ["libharfbuzz", "libharfbuzz.so.0"], depends = [cairo,freetype], os = :Unix, group = group, validate = ignore_system_font_libs)
-    pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], depends = [harfbuzz], group = group)
-    pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group)
-    zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
+    libffi = library_dependency("ffi", aliases = ["libffi"], group = group1)
+    gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi], group = group1)
+    zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group1)
+    libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], group = group1)
+    pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], group = group1)
+
+    freetype = library_dependency("freetype", aliases = ["libfreetype"], group = group2, validate = ignore_system_font_libs)
+    fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], group = group2, validate = ignore_system_font_libs)
+    cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng], group = group2)
+    harfbuzz = library_dependency("harfbuzz", aliases = ["libharfbuzz", "libharfbuzz.so.0"], depends = [cairo,freetype], os = :Unix, group = group2, validate = ignore_system_font_libs)
+    pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], depends = [harfbuzz], group = group2)
+    pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group2)
 ]
 
 
