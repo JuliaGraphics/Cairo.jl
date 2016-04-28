@@ -7,13 +7,13 @@ using Compat
 group = library_group("cairo")
 
 deps = [
-    libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], runtime = false, group = group)
-    pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false, group = group)
-    libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false, group = group)
+    libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], group = group)
+    pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], group = group)
+    libffi = library_dependency("ffi", aliases = ["libffi"], group = group)
     gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl", "libgettextpo"], os = :Unix, group = group)
     gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi, gettext], group = group)
-    freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false, group = group)
-    fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], runtime = false, group = group)
+    freetype = library_dependency("freetype", aliases = ["libfreetype"], group = group)
+    fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], group = group)
     cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng], group = group)
     pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], group = group)
     pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group)
