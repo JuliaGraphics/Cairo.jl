@@ -11,7 +11,7 @@ ignore_system_font_libs(n, h) = !(haskey(ENV, "JULIA_BINDEPS_IGNORE_SYSTEM_FONT_
 
 deps = [
     libffi = library_dependency("ffi", aliases = ["libffi"], group = group1)
-    gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi], group = group1)
+    gobject = library_dependency("gobject", aliases = ["libgobject-2.0.so.0", "libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0"], depends=[libffi], group = group1)
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group1)
     libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0"], group = group1)
     pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], group = group1)
