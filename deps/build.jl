@@ -13,9 +13,10 @@ deps = [
     gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl", "libgettextpo"], os = :Unix, group = group)
     gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi, gettext], group = group)
     freetype = library_dependency("freetype", aliases = ["libfreetype"], group = group)
+    harfbuzz = library_dependency("harfbuzz", aliases = ["libharfbuzz", "libharfbuzz.so.0"], depends = [cairo,freetype], os = :Unix, group = group)
     fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], group = group)
     cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2"], depends = [gobject,fontconfig,libpng], group = group)
-    pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], group = group)
+    pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], depends = [harfbuzz], group = group)
     pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group)
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
 ]
@@ -80,6 +81,7 @@ provides(Sources,
         URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
         URI("http://www.cairographics.org/releases/cairo-1.12.16.tar.xz") => cairo,
         URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
+        URI("https://www.freedesktop.org/software/harfbuzz/release/harfbuzz-1.2.6.tar.bz2") => harfbuzz,
         URI("http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.10.2.tar.gz") => fontconfig,
         URI("http://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.2.tar.gz") => gettext,
         URI("ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng15/libpng-$(png_version).tar.gz") => libpng,
@@ -95,6 +97,7 @@ provides(BuildProcess,
     @compat Dict(
         Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*BinDeps.shlib_ext) => pixman,
         Autotools(libtarget = xx("objs/.libs/libfreetype.la","libfreetype.la")) => freetype,
+        Autotools(libtarget = "src/libharfbuzz.la") => harfbuzz,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
         Autotools(libtarget = "src/libcairo.la", configure_options = append!(append!(
                 AbstractString[],
