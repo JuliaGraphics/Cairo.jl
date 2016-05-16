@@ -2,7 +2,7 @@ VERSION >= v"0.4.0-dev+6521" && __precompile__()
 
 module Cairo
 
-using Compat
+using Compat; import Compat.String
 
 depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
 isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
@@ -982,14 +982,14 @@ end
 set_latex(ctx::CairoContext, str::AbstractString, fontsize::Real) = set_text(ctx, tex2pango(str, fontsize), true)
 
 type TeXLexer
-    str::ByteString
+    str::String
     len::Int
     pos::Int
-    token_stack::Array{ByteString,1}
+    token_stack::Array{String,1}
 
     function TeXLexer(str::AbstractString)
         s = bytestring(str)
-        new(s, endof(s), 1, ByteString[])
+        new(s, endof(s), 1, String[])
     end
 end
 
