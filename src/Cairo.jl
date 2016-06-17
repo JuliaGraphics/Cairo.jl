@@ -95,18 +95,17 @@ else
     get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
 end
 
-type CairoSurface <: GraphicsDevice
+type CairoSurface{T<:@compat(Union{UInt32,RGB24,ARGB32})} <: GraphicsDevice
     ptr::Ptr{Void}
     width::Float64
     height::Float64
-    data::Array{UInt32,2}
+    data::Matrix{T}
 
     function CairoSurface(ptr::Ptr{Void}, w, h)
         self = new(ptr, w, h)
         finalizer(self, destroy)
         self
     end
-
     function CairoSurface(ptr::Ptr{Void}, w, h, data)
         self = new(ptr, w, h, data)
         finalizer(self, destroy)
@@ -117,10 +116,10 @@ type CairoSurface <: GraphicsDevice
         #finalizer(self, destroy)
         self
     end
-
-
-
 end
+
+CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
+CairoSurface{T}(ptr, w, h, data::Matrix{T}) = CairoSurface{T}(ptr, w, h, data)
 
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
@@ -167,6 +166,8 @@ end
 
 CairoRGBSurface(w::Real, h::Real) = CairoImageSurface(w, h, FORMAT_RGB24)
 CairoARGBSurface(w::Real, h::Real) = CairoImageSurface(w, h, FORMAT_ARGB32)
+CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
+CairoRGBSurface(img) = CairoImageSurface(img, FORMAT_RGB24)
 
 function CairoImageSurface(img::Array{UInt32,2}, format::Integer; flipxy::Bool = true)
     if flipxy
@@ -181,8 +182,19 @@ function CairoImageSurface(img::Array{UInt32,2}, format::Integer; flipxy::Bool =
     CairoSurface(ptr, w, h, img)
 end
 
-CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
-CairoRGBSurface(img) = CairoImageSurface(img, FORMAT_RGB24)
+function CairoImageSurface{T<:@compat(Union{RGB24,ARGB32})}(img::Matrix{T})
+    w,h = size(img)
+    stride = format_stride_for_width(format(T), w)
+    @assert stride == 4w
+    ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
+                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                img, format(T), w, h, stride)
+    CairoSurface(ptr, w, h, img)
+end
+
+format(::Type{RGB24}) = FORMAT_RGB24
+format(::Type{ARGB32}) = FORMAT_ARGB32
+format{T<:@compat(Union{RGB24,ARGB32})}(surf::CairoSurface{T}) = T
 
 ## PDF ##
 
