@@ -1,5 +1,5 @@
 using Cairo
-using Compat
+using Compat, Colors
 using Base.Test: @test, @test_throws
 
 surf = CairoImageSurface(100, 200, Cairo.FORMAT_ARGB32)
@@ -8,6 +8,11 @@ surf = CairoImageSurface(100, 200, Cairo.FORMAT_ARGB32)
 ctx = CairoContext(surf)
 @test width(ctx) == 100
 @test height(ctx) == 200
+
+surf = CairoImageSurface(fill(RGB24(0), 10, 10))
+@test Cairo.format(surf) == RGB24
+surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
+@test Cairo.format(surf) == ARGB32
 
 include("shape_functions.jl")
 include("test_stream.jl")
@@ -29,3 +34,16 @@ function test_pattern_get_surface()
 end
 
 test_pattern_get_surface()
+
+# Run all the samples
+pth = joinpath(dirname(dirname(@__FILE__)), "samples")
+fls = filter(str->endswith(str,".jl"), readdir(pth))
+for fl in fls
+    include(joinpath(pth, fl))
+end
+pngfiles = filter(str->endswith(str,".png"), readdir())
+for fl in pngfiles
+    rm(fl)
+end
+
+nothing

@@ -95,18 +95,17 @@ else
     get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
 end
 
-type CairoSurface <: GraphicsDevice
+type CairoSurface{T<:@compat(Union{UInt32,RGB24,ARGB32})} <: GraphicsDevice
     ptr::Ptr{Void}
     width::Float64
     height::Float64
-    data::Array{UInt32,2}
+    data::Matrix{T}
 
     function CairoSurface(ptr::Ptr{Void}, w, h)
         self = new(ptr, w, h)
         finalizer(self, destroy)
         self
     end
-
     function CairoSurface(ptr::Ptr{Void}, w, h, data)
         self = new(ptr, w, h, data)
         finalizer(self, destroy)
@@ -117,10 +116,10 @@ type CairoSurface <: GraphicsDevice
         #finalizer(self, destroy)
         self
     end
-
-
-
 end
+
+CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
+CairoSurface{T}(ptr, w, h, data::Matrix{T}) = CairoSurface{T}(ptr, w, h, data)
 
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
@@ -167,6 +166,8 @@ end
 
 CairoRGBSurface(w::Real, h::Real) = CairoImageSurface(w, h, FORMAT_RGB24)
 CairoARGBSurface(w::Real, h::Real) = CairoImageSurface(w, h, FORMAT_ARGB32)
+CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
+CairoRGBSurface(img) = CairoImageSurface(img, FORMAT_RGB24)
 
 function CairoImageSurface(img::Array{UInt32,2}, format::Integer; flipxy::Bool = true)
     if flipxy
@@ -181,8 +182,19 @@ function CairoImageSurface(img::Array{UInt32,2}, format::Integer; flipxy::Bool =
     CairoSurface(ptr, w, h, img)
 end
 
-CairoARGBSurface(img) = CairoImageSurface(img, FORMAT_ARGB32)
-CairoRGBSurface(img) = CairoImageSurface(img, FORMAT_RGB24)
+function CairoImageSurface{T<:@compat(Union{RGB24,ARGB32})}(img::Matrix{T})
+    w,h = size(img)
+    stride = format_stride_for_width(format(T), w)
+    @assert stride == 4w
+    ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
+                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                img, format(T), w, h, stride)
+    CairoSurface(ptr, w, h, img)
+end
+
+format(::Type{RGB24}) = FORMAT_RGB24
+format(::Type{ARGB32}) = FORMAT_ARGB32
+format{T<:@compat(Union{RGB24,ARGB32})}(surf::CairoSurface{T}) = T
 
 ## PDF ##
 
@@ -202,7 +214,7 @@ end
 
 function CairoPDFSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
     ptr = ccall((:cairo_pdf_surface_create,_jl_libcairo), Ptr{Void},
-                (Ptr{UInt8},Float64,Float64), bytestring(filename), w_pts, h_pts)
+                (Ptr{UInt8},Float64,Float64), @compat(String(filename)), w_pts, h_pts)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
@@ -228,7 +240,7 @@ end
 
 function CairoEPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
     ptr = ccall((:cairo_ps_surface_create,_jl_libcairo), Ptr{Void},
-                (Ptr{UInt8},Float64,Float64), bytestring(filename), w_pts, h_pts)
+                (Ptr{UInt8},Float64,Float64), @compat(String(filename)), w_pts, h_pts)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
           (Ptr{Void},Int32), ptr, 1)
     CairoSurface(ptr, w_pts, h_pts)
@@ -281,7 +293,7 @@ end
 
 function CairoSVGSurface(filename::AbstractString, w::Real, h::Real)
     ptr = ccall((:cairo_svg_surface_create,_jl_libcairo), Ptr{Void},
-                (Ptr{UInt8},Float64,Float64), bytestring(filename), w, h)
+                (Ptr{UInt8},Float64,Float64), @compat(String(filename)), w, h)
     CairoSurface(ptr, w, h)
 end
 
@@ -289,7 +301,7 @@ end
 
 function read_from_png(filename::AbstractString)
     ptr = ccall((:cairo_image_surface_create_from_png,_jl_libcairo),
-                Ptr{Void}, (Ptr{UInt8},), bytestring(filename))
+                Ptr{Void}, (Ptr{UInt8},), @compat(String(filename)))
     w = ccall((:cairo_image_surface_get_width,_jl_libcairo),
               Int32, (Ptr{Void},), ptr)
     h = ccall((:cairo_image_surface_get_height,_jl_libcairo),
@@ -311,10 +323,10 @@ end
 
 function write_to_png(surface::CairoSurface, filename::AbstractString)
     ccall((:cairo_surface_write_to_png,_jl_libcairo), Void,
-          (Ptr{UInt8},Ptr{UInt8}), surface.ptr, bytestring(filename))
+          (Ptr{UInt8},Ptr{UInt8}), surface.ptr, @compat(String(filename)))
 end
 
-writemime(io::IO, ::MIME"image/png", surface::CairoSurface) =
+@compat Base.show(io::IO, ::MIME"image/png", surface::CairoSurface) =
    write_to_png(surface, io)
 
 ## Generic ##
@@ -543,7 +555,6 @@ end
 function set_source(ctx::CairoContext, s::CairoSurface, x::Real, y::Real)
     set_source_surface(ctx, s, x, y)
 end
-set_source(ctx::CairoContext, s::CairoSurface) = set_source_surface(ctx, s, 0, 0)
 
 
 # cairo_path data and functions
@@ -603,7 +614,7 @@ function convert_cairo_path_data(p::CairoPath)
     # define here by Float64 (most data is) and reinterpret in the header.
 
     path_data = CairoPathEntry[]
-    c_data = pointer_to_array(c.data,(c.num_data*2,1),true)
+    c_data = @compat unsafe_wrap(Array,c.data,(c.num_data*2,1),true)
 
     data_index = 1
     while data_index <= ((c.num_data)*2)
@@ -856,7 +867,7 @@ end
 
 function set_font_face(ctx::CairoContext, str::AbstractString)
     fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
-                     Ptr{Void}, (Ptr{UInt8},), bytestring(str))
+                     Ptr{Void}, (Ptr{UInt8},), @compat(String(str)))
     ccall((:pango_layout_set_font_description,_jl_libpango), Void,
           (Ptr{Void},Ptr{Void}), ctx.layout, fontdesc)
     ccall((:pango_font_description_free,_jl_libpango), Void,
@@ -866,10 +877,10 @@ end
 function set_text(ctx::CairoContext, text::AbstractString, markup::Bool = false)
     if markup
         ccall((:pango_layout_set_markup,_jl_libpango), Void,
-            (Ptr{Void},Ptr{UInt8},Int32), ctx.layout, bytestring(text), -1)
+            (Ptr{Void},Ptr{UInt8},Int32), ctx.layout, @compat(String(text)), -1)
     else
         ccall((:pango_layout_set_text,_jl_libpango), Void,
-            (Ptr{Void},Ptr{UInt8},Int32), ctx.layout, bytestring(text), -1)
+            (Ptr{Void},Ptr{UInt8},Int32), ctx.layout, @compat(String(text)), -1)
     end
     text
 end
@@ -896,7 +907,7 @@ text_extents(ctx::CairoContext,value::AbstractString) = text_extents!(ctx,value,
 function text_extents!(ctx::CairoContext,value::AbstractString,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{UInt8}, Ptr{Float64}),
-          ctx.ptr, bytestring(value), extents)
+          ctx.ptr, @compat(String(value)), extents)
     extents
 end
 
@@ -918,13 +929,13 @@ end
 function show_text(ctx::CairoContext,value::AbstractString)
     ccall((:cairo_show_text, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{UInt8}),
-          ctx.ptr, bytestring(value))
+          ctx.ptr, @compat(String(value)))
 end
 
 function text_path(ctx::CairoContext,value::AbstractString)
     ccall((:cairo_text_path, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{UInt8}),
-          ctx.ptr, bytestring(value))
+          ctx.ptr, @compat(String(value)))
 end
 
 
@@ -932,7 +943,7 @@ function select_font_face(ctx::CairoContext,family::AbstractString,slant,weight)
     ccall((:cairo_select_font_face, _jl_libcairo),
           Void, (Ptr{Void}, Ptr{UInt8},
                  font_slant_t, font_weight_t),
-          ctx.ptr, bytestring(family),
+          ctx.ptr, @compat(String(family)),
           slant, weight)
 end
 
@@ -988,7 +999,7 @@ type TeXLexer
     token_stack::Array{String,1}
 
     function TeXLexer(str::AbstractString)
-        s = bytestring(str)
+        s = @compat String(str)
         new(s, endof(s), 1, String[])
     end
 end
