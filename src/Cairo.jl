@@ -614,7 +614,7 @@ function convert_cairo_path_data(p::CairoPath)
     # define here by Float64 (most data is) and reinterpret in the header.
 
     path_data = CairoPathEntry[]
-    c_data = pointer_to_array(c.data,(c.num_data*2,1),true)
+    c_data = @compat unsafe_wrap(Array,c.data,(c.num_data*2,1),true)
 
     data_index = 1
     while data_index <= ((c.num_data)*2)
