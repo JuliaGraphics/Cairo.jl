@@ -34,4 +34,16 @@ function test_pattern_get_surface()
 end
 
 test_pattern_get_surface()
+
+# Run all the samples
+pth = joinpath(dirname(dirname(@__FILE__)), "samples")
+fls = filter(str->endswith(str,".jl"), readdir(pth))
+for fl in fls
+    include(joinpath(pth, fl))
+end
+pngfiles = filter(str->endswith(str,".png"), readdir())
+for fl in pngfiles
+    rm(fl)
+end
+
 nothing
