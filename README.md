@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/JuliaLang/Cairo.jl.svg)](https://travis-ci.org/JuliaLang/Cairo.jl)
+[![Build Status](https://travis-ci.org/JuliaGraphics/Cairo.jl.svg)](https://travis-ci.org/JuliaGraphics/Cairo.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/mpuhyoy9ew187f08/branch/master?svg=true)](https://ci.appveyor.com/project/tkelman/cairo-jl/branch/master)
 
 [![Cairo](http://pkg.julialang.org/badges/Cairo_0.3.svg)](http://pkg.julialang.org/?pkg=Cairo&ver=0.3)
