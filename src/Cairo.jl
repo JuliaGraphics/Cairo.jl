@@ -112,14 +112,18 @@ type CairoSurface{T<:@compat(Union{UInt32,RGB24,ARGB32})} <: GraphicsDevice
         self
     end
     function CairoSurface(ptr::Ptr{Void})
+        ccall(
+          (:cairo_surface_reference,_jl_libcairo),
+          Ptr{Void}, (Ptr{Void}, ), ptr)
         self = new(ptr)
-        #finalizer(self, destroy)
+        finalizer(self, destroy)
         self
     end
 end
 
 CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
 CairoSurface{T}(ptr, w, h, data::Matrix{T}) = CairoSurface{T}(ptr, w, h, data)
+CairoSurface(ptr) = CairoSurface{UInt32}(ptr)
 
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
@@ -362,13 +366,15 @@ type CairoContext <: GraphicsContext
         self
     end
     function CairoContext(ptr::Ptr{Void})
+        ccall((:cairo_reference,_jl_libcairo),
+                   Ptr{Void}, (Ptr{Void},), ptr)
         surface_p = ccall((:cairo_get_target,_jl_libcairo),
                    Ptr{Void}, (Ptr{Void},), ptr)
         surface = CairoSurface(surface_p)
         layout = ccall((:pango_cairo_create_layout,_jl_libpangocairo),
                   Ptr{Void}, (Ptr{Void},), ptr)
         self = new(ptr,surface,layout)
-        #finalizer(self, destroy)
+        finalizer(self, destroy)
         self
     end
 

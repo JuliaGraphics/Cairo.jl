@@ -46,4 +46,19 @@ for fl in pngfiles
     rm(fl)
 end
 
+# Test creating a CairoContext from a cairo_t pointer
+surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
+ctx_ptr = ccall(
+    (:cairo_create, Cairo._jl_libcairo), 
+    Ptr{Void}, (Ptr{Void}, ), surf.ptr)
+ctx = CairoContext(ctx_ptr)
+@test isa(ctx, CairoContext)
+ccall(
+    (:cairo_destroy,Cairo._jl_libcairo),
+    Void, (Ptr{Void}, ), ctx_ptr)
+finalize(ctx)
+@test ccall(
+    (:cairo_get_reference_count,Cairo._jl_libcairo),
+    Cuint, (Ptr{Void},), ctx_ptr) == 0
+
 nothing
