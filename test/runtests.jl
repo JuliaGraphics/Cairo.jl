@@ -11,6 +11,10 @@ ctx = CairoContext(surf)
 
 surf = CairoImageSurface(fill(RGB24(0), 10, 10))
 @test Cairo.format(surf) == RGB24
+io = IOBuffer()
+@compat Base.show(io, MIME("image/png"), surf)
+str = takebuf_string(io)
+@test length(str.data) > 8 && str.data[1:8] == [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]
 surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
 @test Cairo.format(surf) == ARGB32
 

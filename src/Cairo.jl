@@ -15,7 +15,7 @@ if VERSION < v"0.4.0-dev+3275"
 else
     importall Graphics
 end
-import Base: copy, writemime
+import Base: copy
 
 include("constants.jl")
 
