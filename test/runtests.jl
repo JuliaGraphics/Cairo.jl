@@ -1,6 +1,7 @@
 using Cairo
 using Compat, Colors
 using Base.Test: @test, @test_throws
+@compat import Base.show
 
 surf = CairoImageSurface(100, 200, Cairo.FORMAT_ARGB32)
 @test width(surf) == 100
@@ -12,7 +13,7 @@ ctx = CairoContext(surf)
 surf = CairoImageSurface(fill(RGB24(0), 10, 10))
 @test Cairo.format(surf) == RGB24
 io = IOBuffer()
-@compat Base.show(io, MIME("image/png"), surf)
+@compat show(io, MIME("image/png"), surf)
 str = takebuf_string(io)
 @test length(str.data) > 8 && str.data[1:8] == [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]
 surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
@@ -53,7 +54,7 @@ end
 # Test creating a CairoContext from a cairo_t pointer
 surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
 ctx_ptr = ccall(
-    (:cairo_create, Cairo._jl_libcairo), 
+    (:cairo_create, Cairo._jl_libcairo),
     Ptr{Void}, (Ptr{Void}, ), surf.ptr)
 ctx = CairoContext(ctx_ptr)
 ccall(

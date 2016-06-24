@@ -17,6 +17,8 @@ else
 end
 import Base: copy
 
+@compat import Base.show
+
 include("constants.jl")
 
 export
@@ -330,7 +332,7 @@ function write_to_png(surface::CairoSurface, filename::AbstractString)
           (Ptr{UInt8},Ptr{UInt8}), surface.ptr, @compat(String(filename)))
 end
 
-@compat Base.show(io::IO, ::MIME"image/png", surface::CairoSurface) =
+@compat show(io::IO, ::MIME"image/png", surface::CairoSurface) =
    write_to_png(surface, io)
 
 ## Generic ##
