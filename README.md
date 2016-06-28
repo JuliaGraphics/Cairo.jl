@@ -11,3 +11,5 @@ Some of the functions implemented by this wrapper may be documented in [Base.Gra
 There is an extensive set of [examples](samples/Samples.md).
 
 On install, libraries will be compiled from source if not present.  [Diagnostics from BinDeps](https://github.com/JuliaLang/BinDeps.jl#diagnostics) may help avoid a lengthy compilation.
+
+**Note** : If you already have Cairo installed on your system, `Pkg.test("Cairo")` might fail. Uninstall your system's Cairo, or unlink it from your path (On Mac OSX, the command to do that with Homebrew is `brew unlink cairo`). That way, `Pkg.build("Cairo")` would download the binaries to your `deps/usr`, and `Pkg.build("Cairo")` and `Pkg.test("Cairo")` would work again. 
