@@ -20,7 +20,7 @@ deps = [
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
 ]
 
-@windows_only begin
+if is_windows()
     using WinRPM
     provides(WinRPM.RPM,"libpango-1_0-0",[pango,pangocairo],os = :Windows)
     provides(WinRPM.RPM,["glib2", "libgobject-2_0-0"],gobject,os = :Windows)
@@ -28,7 +28,7 @@ deps = [
     provides(WinRPM.RPM,["libcairo2","libharfbuzz0"],cairo,os = :Windows)
 end
 
-@osx_only begin
+if is_apple()
     if Pkg.installed("Homebrew") === nothing
         error("Homebrew package not installed, please run Pkg.add(\"Homebrew\")")
     end
@@ -99,7 +99,7 @@ provides(Sources,
         URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib
     ))
 
-xx(t...) = (OS_NAME == :Windows ? t[1] : (OS_NAME == :Linux || length(t) == 2) ? t[2] : t[3])
+xx(t...) = (is_windows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
     @compat Dict(
@@ -108,8 +108,8 @@ provides(BuildProcess,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
         Autotools(libtarget = "src/libcairo.la", configure_options = append!(append!(
                 AbstractString[],
-                OS_NAME != :Linux ? AbstractString["--without-x","--disable-xlib","--disable-xcb"] : AbstractString[]),
-                OS_NAME == :Darwin ? AbstractString["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : AbstractString[])) => cairo,
+                !is_linux() ? AbstractString["--without-x","--disable-xlib","--disable-xcb"] : AbstractString[]),
+                is_apple() ? AbstractString["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : AbstractString[])) => cairo,
         Autotools(libtarget = "gettext-tools/gnulib-lib/.libs/libgettextlib.la") => gettext,
         Autotools(libtarget = "libffi.la") => libffi,
         Autotools(libtarget = "gobject/libgobject-2.0.la") => gobject,
