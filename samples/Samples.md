@@ -126,6 +126,8 @@ Example of getting the path to a single character via text_path, copy_path and c
 
 ![copy path .png](sample_copy_path.png "copy path example")
 
+### image (from stream)
 
+Example of painting with a Image Surface as source that was created by reading from a stream. The example reads the png data from an inline string [sample_imagestream.jl](sample_imagestream.jl).
 
-
+![image .png](sample_imagestream.png "imagestream example")

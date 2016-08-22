@@ -89,6 +89,33 @@ end
 
 get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
 
+
+function read_from_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
+    # wrap the provided buf into a julia Array
+
+    if VERSION < v"0.5.0-rc"
+        b1 = pointer_to_array(buf,len); #pre-v0.5
+    else
+        b1 = unsafe_wrap(Array{UInt8,1},buf,len);
+    end
+    # read from stream
+    nb = readbytes!(s,b1,len)
+
+    # provide a return status
+    if nb == len
+        r = @compat(Int32(0)) # CAIRO_STATUS_SUCCESS
+    else
+        r = @compat(Int32(10)) # CAIRO_STATUS_READ_ERROR
+    end
+    r
+end
+
+
+get_readstream_callback(T) = cfunction(read_from_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
+
+
+
+
 type CairoSurface{T<:@compat(Union{UInt32,RGB24,ARGB32})} <: GraphicsDevice
     ptr::Ptr{Void}
     width::Float64
@@ -326,6 +353,18 @@ end
 
 @compat show(io::IO, ::MIME"image/png", surface::CairoSurface) =
    write_to_png(surface, io)
+
+function read_from_png{T<:IO}(stream::T)
+    callback = get_readstream_callback(T)
+    ptr = ccall((:cairo_image_surface_create_from_png_stream, Cairo._jl_libcairo),
+                Ptr{Void}, (Ptr{Void},Ref{T}), callback, stream)
+    w = ccall((:cairo_image_surface_get_width,Cairo._jl_libcairo),
+              Int32, (Ptr{Void},), ptr)
+    h = ccall((:cairo_image_surface_get_height,Cairo._jl_libcairo),
+              Int32, (Ptr{Void},), ptr)
+    Cairo.CairoSurface(ptr, w, h)
+end
+
 
 ## Generic ##
 
