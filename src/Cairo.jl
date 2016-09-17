@@ -1,4 +1,4 @@
-VERSION >= v"0.4.0-dev+6521" && __precompile__()
+__precompile__()
 
 module Cairo
 
@@ -10,11 +10,7 @@ isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
 
 using Colors
 
-if VERSION < v"0.4.0-dev+3275"
-    importall Base.Graphics
-else
-    importall Graphics
-end
+importall Graphics
 import Base: copy
 
 @compat import Base.show
@@ -91,11 +87,7 @@ function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     @compat Int32((n == len) ? 0 : 11)
 end
 
-if VERSION < v"0.4-"
-    get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (T, Ptr{UInt8}, UInt32))
-else
-    get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
-end
+get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
 
 type CairoSurface{T<:@compat(Union{UInt32,RGB24,ARGB32})} <: GraphicsDevice
     ptr::Ptr{Void}
@@ -771,22 +763,13 @@ function pattern_add_color_stop_rgba(pat::CairoPattern, offset::Real, red::Real,
 end
 
 function pattern_get_surface(pat::CairoPattern)
-    # TODO: use this version when julia 0.3 compatibility is dropped
-    #ptrref = Ref{Ptr{Void}}()
-    #status = ccall((:cairo_pattern_get_surface, _jl_libcairo), Cint,
-                   #(Ptr{Void}, Ref{Ptr{Void}}), pat.ptr, ptrref)
-    #if status == STATUS_PATTERN_TYPE_MISMATCH
-        #error("Cannot get surface from a non-surface pattern.")
-    #end
-    #ptr = ptrref.x
-
-    ptrref = Array(Ptr{Void}, 1)
+    ptrref = Ref{Ptr{Void}}()
     status = ccall((:cairo_pattern_get_surface, _jl_libcairo), Cint,
-                   (Ptr{Void}, Ptr{Ptr{Void}}), pat.ptr, ptrref)
+                   (Ptr{Void}, Ref{Ptr{Void}}), pat.ptr, ptrref)
     if status == STATUS_PATTERN_TYPE_MISMATCH
         error("Cannot get surface from a non-surface pattern.")
     end
-    ptr = ptrref[1]
+    ptr = ptrref.x
 
     ccall((:cairo_surface_reference, _jl_libcairo), Ptr{Void}, (Ptr{Void},), ptr)
     typ = ccall((:cairo_surface_get_type, _jl_libcairo), Cint, (Ptr{Void},), ptr)
