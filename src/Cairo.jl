@@ -92,28 +92,16 @@ get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr
 
 function read_from_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     # wrap the provided buf into a julia Array
-
-    if VERSION < v"0.5.0-rc"
-        b1 = pointer_to_array(buf,len); #pre-v0.5
-    else
-        b1 = unsafe_wrap(Array{UInt8,1},buf,len);
-    end
+    b1 = unsafe_wrap(Array,buf,len)
+    
     # read from stream
     nb = readbytes!(s,b1,len)
 
     # provide a return status
-    if nb == len
-        r = @compat(Int32(0)) # CAIRO_STATUS_SUCCESS
-    else
-        r = @compat(Int32(10)) # CAIRO_STATUS_READ_ERROR
-    end
-    r
+    (nb == len) ? STATUS_SUCCESS : STATUS_READ_ERROR
 end
 
-
 get_readstream_callback(T) = cfunction(read_from_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
-
-
 
 
 type CairoSurface{T<:@compat(Union{UInt32,RGB24,ARGB32})} <: GraphicsDevice
