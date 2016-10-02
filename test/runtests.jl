@@ -63,4 +63,47 @@ ccall(
 
 @test isa(ctx, CairoContext)
 
+# Run some painting, check the colored pixels by counting them
+
+include("test_painting.jl")
+
+# fill all
+z = zeros(UInt32,512,512);
+surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+# fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of 
+# dimension 64 (scaled by 8 -> 512) and a linewidth of 8
+hdraw(surf,64,8) 
+
+d = simple_hist(surf.data)
+
+@test length(d) == 1 
+@test collect(keys(d))[1] == 0x80000080
+
+# fill 1/4 (upper quarter)
+z = zeros(UInt32,512,512);
+surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+# fills a 256x256 pixel area with blue,0.5 by using a hilbert curve of 
+# dimension 32 (scaled by 8 -> 256) and a linewidth of 8
+hdraw(surf,32,8) 
+
+d = simple_hist(surf.data)
+
+@test length(d) == 2 
+@test d[0x80000080] == 256*256
+
+# fill 1/4 full, 
+z = zeros(UInt32,512,512);
+surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+# fills a 256x256 pixel area with blue,0.5 by using a hilbert curve of 
+# dimension 32 (scaled by 8 -> 256) and a linewidth of 8
+hdraw(surf,64,4) 
+
+d = simple_hist(surf.data)
+
+@test length(d) == 2 
+@test d[0x80000080] == 256*256
+
+# fill 
+
+
 nothing
