@@ -132,27 +132,17 @@ function hdrawr()
     write_to_png(s,"a.png")
 end
 
-""" function hdraw(s,dim,zscale)
+""" function hdraw(s,dim,zscale,linewidth)
 draws a hilbert curve with dimension dim (power of 2) and scales the drawing with
-zscale. Also the linewidth is set to zscale. So the area is filled exactly with color.
+zscale. 
 """
-function hdraw(s,dim,zscale)
+function hdraw(s,dim,zscale,linewidth)
 
-    #dim = 64
-    #zscale = 8
-
-    #s_length = dim * zscale
-    #s = CairoImageSurface(s_length,s_length,Cairo.FORMAT_ARGB32)
     cr = CairoContext(s)
-
-    #save(cr)
-    #set_source_rgb(cr,1.0,1.0,1.0)
-    #paint(cr)
-    #restore(cr)
 
     set_source_rgba(cr,0.0,0.0,1.0,0.5)
 
-    set_line_width(cr,zscale)
+    set_line_width(cr,linewidth)
     set_line_cap(cr,Cairo.CAIRO_LINE_CAP_SQUARE)
     translate(cr,zscale/2,zscale/2)
     
@@ -171,7 +161,6 @@ function hdraw(s,dim,zscale)
     stroke(cr)
     restore(cr)
     
-    #write_to_png(s,"a.png")
 end
 
 """

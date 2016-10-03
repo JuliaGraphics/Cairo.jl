@@ -72,7 +72,7 @@ z = zeros(UInt32,512,512);
 surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
 # fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of 
 # dimension 64 (scaled by 8 -> 512) and a linewidth of 8
-hdraw(surf,64,8) 
+hdraw(surf,64,8,8) 
 
 d = simple_hist(surf.data)
 
@@ -84,26 +84,42 @@ z = zeros(UInt32,512,512);
 surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
 # fills a 256x256 pixel area with blue,0.5 by using a hilbert curve of 
 # dimension 32 (scaled by 8 -> 256) and a linewidth of 8
-hdraw(surf,32,8) 
+hdraw(surf,32,8,8) 
 
 d = simple_hist(surf.data)
 
 @test length(d) == 2 
 @test d[0x80000080] == 256*256
 
-# fill 1/4 full, 
+# fill ~1/2 full, 
 z = zeros(UInt32,512,512);
 surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
-# fills a 256x256 pixel area with blue,0.5 by using a hilbert curve of 
-# dimension 32 (scaled by 8 -> 256) and a linewidth of 8
-hdraw(surf,64,4) 
+# fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of 
+# dimension 64 (scaled by 8 -> 512) and a linewidth of 4 -> 1/4 of pixels -16
+hdraw(surf,64,8,4) 
 
 d = simple_hist(surf.data)
 
 @test length(d) == 2 
-@test d[0x80000080] == 256*256
+@test d[0x80000080] == ((512*256)-16)
 
-# fill 
+# surfaces
+
+fname = "a.svg"
+surf = CairoSVGSurface(fname,512,512)
+hdraw(surf,64,8,4) 
+finish(surf)
+
+@test isfile(fname)
+rm(fname)
+
+io = IOBuffer()
+surf = CairoSVGSurface(io,512,512)
+hdraw(surf,64,8,4) 
+finish(surf)
+str = takebuf_string(io)
+@test length(str.data) > 31000 && str.data[1:13] == [0x3c,0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e]
+
 
 
 nothing
