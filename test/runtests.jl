@@ -103,7 +103,7 @@ d = simple_hist(surf.data)
 @test length(d) == 2 
 @test d[0x80000080] == ((512*256)-16)
 
-# surfaces
+# vector surfaces
 
 fname = "a.svg"
 surf = CairoSVGSurface(fname,512,512)
@@ -120,6 +120,45 @@ finish(surf)
 str = takebuf_string(io)
 @test length(str.data) > 31000 && str.data[1:13] == [0x3c,0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e]
 
+fname = "a.pdf"
+surf = CairoPDFSurface(fname,512,512)
+hdraw(surf,64,8,4) 
+finish(surf)
 
+@test isfile(fname)
+rm(fname)
+
+io = IOBuffer()
+surf = CairoPDFSurface(io,512,512)
+hdraw(surf,64,8,4) 
+finish(surf)
+str = takebuf_string(io)
+@test length(str.data) > 3000 && str.data[1:7] == [0x25,0x50,0x44,0x46,0x2d,0x31,0x2e]
+
+fname = "a.eps"
+surf = CairoEPSSurface(fname,512,512)
+hdraw(surf,64,8,4) 
+finish(surf)
+
+@test isfile(fname)
+rm(fname)
+
+io = IOBuffer()
+surf = CairoEPSSurface(io,512,512)
+hdraw(surf,64,8,4) 
+finish(surf)
+str = takebuf_string(io)
+@test length(str.data) > 3000 && str.data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
+
+# pixel/bitmap surfaces
+
+z = zeros(UInt32,512,512);
+surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+
+hilbert_colored(surf)
+d1 = matrix_read(surf)
+d = simple_hist(d1)
+
+@test length(d) == 513
 
 nothing
