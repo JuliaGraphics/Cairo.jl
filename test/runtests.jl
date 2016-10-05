@@ -161,4 +161,14 @@ d = simple_hist(d1)
 
 @test length(d) == 513
 
+surf = CairoARGBSurface(z)
+
+hilbert_colored(surf)
+d1 = matrix_read(surf)
+d = simple_hist(d1)
+
+@test length(d) == 513
+
+
+
 nothing

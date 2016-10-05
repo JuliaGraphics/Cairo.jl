@@ -41,7 +41,7 @@ export
     set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_line_cap, set_line_join,
-    set_operator, set_source,
+    set_operator, get_operator, set_source,
     CairoMatrix,
 
     # coordinate systems

@@ -1,12 +1,12 @@
 # some collection of some painting plus support functions
 
 """
-function ngray(base::Int64,digits::Int64,value::Int64)
+function ngray(base::Int,digits::Int,value::Int)
 Convert a value to a graycode with the given base and digits
 """
-function ngray(base::Int64,digits::Int64,value::Int64)
-    baseN = zeros(Int64,digits)
-    gray = zeros(Int64,1,digits)
+function ngray(base::Int,digits::Int,value::Int)
+    baseN = zeros(Int,digits)
+    gray = zeros(Int,1,digits)
 
 	for i=1:digits
 		baseN[i] = value % base
@@ -58,7 +58,7 @@ function hilbert_colored(surf)
         move_to(cr,c[k[1]],c[k[1]+1])
         line_to(cr,c[k[1]+2],c[k[1]+3])
 
-        c1 = ngray(Int64(n1),3,k[2])
+        c1 = ngray(n1,3,k[2])
         set_source_rgb(cr,c1[1]/float(n1-1),c1[2]/float(n1-1),c1[3]/float(n1-1))
         stroke(cr)
         end
