@@ -159,7 +159,7 @@ hilbert_colored(surf)
 d1 = matrix_read(surf)
 d = simple_hist(d1)
 
-@test length(d) == 513
+@test length(d) == 513 # 512 colors and empty background
 
 surf = CairoARGBSurface(z)
 
@@ -169,6 +169,11 @@ d = simple_hist(d1)
 
 @test length(d) == 513
 
+surf = CairoRGBSurface(z)
 
+hilbert_colored(surf)
+d1 = matrix_read(surf)
+d = simple_hist(d1)
 
+@test length(d) == 512 # black is included
 nothing
