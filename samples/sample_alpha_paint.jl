@@ -18,6 +18,7 @@ z[2,2] = c1
 img = CairoRGBSurface(z)
 pattern = CairoPattern(img);
 pattern_set_extend(pattern, Cairo.EXTEND_REPEAT);
+pattern_set_filter(pattern, Cairo.FILTER_BILINEAR);
 
 m = CairoMatrix(1/8.0,0,0,1/8.0,0,0);
 
@@ -28,20 +29,35 @@ restore(cr);
 
 save(cr);
 
-## original example, following here
 
 save(cr)
-rectangle(cr,16,16,224,32)
+rectangle(cr,16,32,224,32)
 set_source(cr, colorant"red4")
 fill(cr)
 restore(cr)
 
 save(cr)
-rectangle(cr,16,64,224,32)
+rectangle(cr,16,80,224,32)
 set_source(cr, alphacolor(colorant"blue",0.5))
 fill(cr)
 restore(cr)
 
+save(cr)
+rectangle(cr,16,128,224,32)
+clip(cr)
+new_path(cr)
+s = read_from_png("data/mulberry.png")
+set_source(cr,s)
+paint_with_alpha(cr,0.6)
+restore(cr)
+
+save(cr)
+rectangle(cr,16,176,224,32)
+clip(cr)
+new_path(cr)
+set_source(cr,creategc(s))
+paint(cr)
+restore(cr)
 
 
 

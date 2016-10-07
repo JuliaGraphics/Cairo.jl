@@ -38,6 +38,9 @@ function operator_demo(operator_index)
         (Cairo.OPERATOR_LIGHTEN,"OPERATOR_LIGHTEN")]
 
     save(cr)
+    set_source_rgb(cr, 0.9, 0.9, 0.9)
+    paint(cr);
+
 
     save(cr)
     scale(cr,6,6)
@@ -55,7 +58,7 @@ function operator_demo(operator_index)
     restore(cr)
 
     move_to(cr,0,10)
-    
+    set_source_rgb(cr, 0,0,0)
     show_text(cr,operators[local_operator+1][2])
 
     restore(cr)
