@@ -1,5 +1,7 @@
 ## header to provide surface and context
 using Cairo
+using Graphics
+
 c = CairoRGBSurface(256,256);
 cr = CairoContext(c);
 
@@ -14,15 +16,26 @@ save(cr);
 s = read_from_png("data/mulberry.png"); 
 Cairo.image(cr,s,0,0,128,128)
 
+# copy inplace, so to apply copy as source, need coordinate translate
 c1 = copy(cr)
 
 save(cr)
-rectangle(cr,128,0,256,256)
-clip(cr)
-#set_source_rgb(cr,0.8,0.2,0.8)
-set_source(cr,c1)
+translate(cr,128,0)
+rectangle(cr,0,0,256,256)
+set_source_surface(cr,c1.surface)
 paint(cr)
 restore(cr)
+
+c2 = copy(cr,Graphics.BoundingBox(0,0,64,128))
+
+save(cr)
+translate(cr,0,128)
+rectangle(cr,0,0,256,256)
+set_source_surface(cr,c2.surface)
+paint(cr)
+restore(cr)
+
+
 
 ## mark picture with current date
 restore(cr); 

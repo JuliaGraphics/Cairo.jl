@@ -403,7 +403,7 @@ end
 function copy(ctx::CairoContext, bb::BoundingBox)
     w = width(bb)
     h = height(bb)
-    surf = surface_create_similar(ctx.surface, iceil(w), iceil(h))
+    surf = surface_create_similar(ctx.surface, ceil(Int,w), ceil(Int,h))
     c = creategc(surf)
     set_source_surface(c, ctx.surface, -bb.xmin, -bb.ymin)
     rectangle(c, 0, 0, w, h)
