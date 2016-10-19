@@ -26,12 +26,12 @@ set_source_surface(cr,c1.surface)
 paint(cr)
 restore(cr)
 
-c2 = copy(cr,Graphics.BoundingBox(0,0,64,128))
+c2 = copy(cr,Graphics.BoundingBox(64,192,0,128))
 
 save(cr)
-translate(cr,0,128)
+
 rectangle(cr,0,0,256,256)
-set_source_surface(cr,c2.surface)
+set_source_surface(cr,c2.surface,64,128)
 paint(cr)
 restore(cr)
 
