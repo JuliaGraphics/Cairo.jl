@@ -215,6 +215,10 @@ end
 
 end
 
+#@testset "Zero/Status" begin
+#
+#    @test Cairo.status() == 0
+#end
 
 nothing
 

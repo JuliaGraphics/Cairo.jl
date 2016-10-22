@@ -1,8 +1,1 @@
-julia 0.3
-Compat 0.8.0
-Colors
-BinDeps 0.3.21
-Graphics 0.1
 BaseTestNext
-@osx Homebrew
-@windows WinRPM
