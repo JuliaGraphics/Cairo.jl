@@ -13,6 +13,7 @@ restore(cr);
 
 save(cr);
 
+# put image top left
 s = read_from_png("data/mulberry.png"); 
 Cairo.image(cr,s,0,0,128,128)
 
@@ -26,6 +27,7 @@ set_source_surface(cr,c1.surface)
 paint(cr)
 restore(cr)
 
+# copy centered part 
 c2 = copy(cr,Graphics.BoundingBox(64,192,0,128))
 
 save(cr)

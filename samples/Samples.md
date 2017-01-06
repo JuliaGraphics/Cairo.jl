@@ -126,6 +126,37 @@ Example of getting the path to a single character via text_path, copy_path and c
 
 ![copy path .png](sample_copy_path.png "copy path example")
 
+## More Samples for Testing
 
+The following examples have been created to have more coverage in testing (all samples_X are executed).
 
+### alpha paint
 
+Example to use set_source with different input (for multiple dispatch). For better viewing the background is not plain gray anymore, but has structure
+[sample_alpha_paint.jl](sample_alpha_paint.jl).
+
+![alpha paint .png](sample_alpha_paint.png "set source example")
+
+### image copy
+
+Example to use copy(Image). You need to take care about coordinate transformation, as the copy is inplace [sample_image_copy.jl](sample_image_copy.jl).
+
+![image copy .png](sample_image_copy.png "image copy example")
+
+### operators
+
+Example to use the defined operators for set_operator with two filled rectangles [sample_operators.jl](sample_operators.jl).
+
+![operators .png](sample_operators.png "operators example")
+
+### copy path flat
+
+[sample_copy_path_flat.jl](sample_copy_path_flat.jl). 
+
+![copy path flat.png](sample_copy_path_flat.png "copy path flat example")
+
+### pango text
+
+Example of a few (but not all) pango text formating options [sample_pango_text.jl](sample_pango_text.jl).
+
+![pango text.png](sample_pango_text.png "pango text example")
