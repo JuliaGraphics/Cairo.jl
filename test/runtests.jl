@@ -235,6 +235,10 @@ end
 
     @test destroy(cr) == nothing
 
+    @test push_group(cr) == nothing
+    @test pop_group(cr) == nothing
+
+
     @test_throws AssertionError Cairo.align2offset("to")
 
 end
