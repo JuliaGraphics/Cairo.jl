@@ -215,10 +215,30 @@ end
 
 end
 
-#@testset "Zero/Status" begin
-#
-#    @test Cairo.status() == 0
-#end
+@testset "Assert/Status " begin
+
+    z = zeros(UInt32,512,512);
+    surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+
+    @test Cairo.status(surf) == 0
+
+    pa = surf.ptr
+    surf.ptr = C_NULL
+    
+    @test destroy(surf) == nothing
+
+    surf.ptr = pa
+    cr = Cairo.CairoContext(surf)    
+
+    pa = cr.ptr
+    cr.ptr = C_NULL
+
+    @test destroy(cr) == nothing
+
+    @test_throws AssertionError Cairo.align2offset("to")
+
+end
+
 
 nothing
 
