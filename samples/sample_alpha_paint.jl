@@ -7,7 +7,7 @@ cr = CairoContext(c);
 
 save(cr);
 
-z = zeros(UInt32,2,2)
+z = Array(RGB24,2,2)
 c1 = convert(RGB24,colorant"grey20")
 c2 = convert(RGB24,colorant"grey80")
 z[1,1] = c1
@@ -15,7 +15,7 @@ z[1,2] = c2
 z[2,1] = c2
 z[2,2] = c1
 
-img = CairoRGBSurface(z)
+img = CairoImageSurface(z)
 pattern = CairoPattern(img);
 pattern_set_extend(pattern, Cairo.EXTEND_REPEAT);
 pattern_set_filter(pattern, Cairo.FILTER_BILINEAR);
