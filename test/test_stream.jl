@@ -15,10 +15,10 @@ close(pipe)
 # Catch short writes
 
     if VERSION >= v"0.6.0-dev.1954"
-        str = String(take!(io))
+        str = String(take!(buf))
         str_data = Vector{UInt8}(str)
     else
-        str = takebuf_string(io)    
+        str = takebuf_string(buf)    
         str_data = str.data
     end        
 
