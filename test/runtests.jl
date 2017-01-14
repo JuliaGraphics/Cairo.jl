@@ -241,6 +241,8 @@ end
 
     @test_throws AssertionError Cairo.align2offset("to")
 
+    @test_throws ErrorException Cairo.set_line_type(cr,"nondef")
+
 end
 
 
