@@ -25,8 +25,16 @@ end
     @test Cairo.format(surf) == RGB24
     io = IOBuffer()
     @compat show(io, MIME("image/png"), surf)
-    str = takebuf_string(io)
-    @test length(str.data) > 8 && str.data[1:8] == [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]
+
+    if VERSION >= v"0.6.0-dev.1954"
+        str = String(take!(io))
+        str_data = Vector{UInt8}(str)
+    else
+        str = takebuf_string(io)    
+        str_data = str.data
+    end        
+
+    @test length(str_data) > 8 && str_data[1:8] == [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]
     surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
     @test Cairo.format(surf) == ARGB32
 
@@ -149,8 +157,16 @@ end
     surf = CairoSVGSurface(io,512,512)
     hdraw(surf,64,8,4) 
     finish(surf)
-    str = takebuf_string(io)
-    @test length(str.data) > 31000 && str.data[1:13] == [0x3c,0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e]
+    
+    if VERSION >= v"0.6.0-dev.1954"
+        str = String(take!(io))
+        str_data = Vector{UInt8}(str)
+    else
+        str = takebuf_string(io)    
+        str_data = str.data
+    end        
+
+    @test length(str_data) > 31000 && str_data[1:13] == [0x3c,0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e]
 
     output_file_name = "a.pdf"
     surf = CairoPDFSurface(output_file_name,512,512)
