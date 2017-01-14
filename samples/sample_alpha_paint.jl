@@ -29,21 +29,25 @@ restore(cr);
 
 save(cr);
 
+# 5 uses of set_source
 
+# color
 save(cr)
 rectangle(cr,16,32,224,32)
 set_source(cr, colorant"red4")
 fill(cr)
 restore(cr)
 
+# color with alpha
 save(cr)
-rectangle(cr,16,80,224,32)
+rectangle(cr,16,72,224,32)
 set_source(cr, alphacolor(colorant"blue",0.5))
 fill(cr)
 restore(cr)
 
+# image from surface
 save(cr)
-rectangle(cr,16,128,224,32)
+rectangle(cr,16,112,224,32)
 clip(cr)
 new_path(cr)
 s = read_from_png("data/mulberry.png")
@@ -51,11 +55,20 @@ set_source(cr,s)
 paint_with_alpha(cr,0.6)
 restore(cr)
 
+# image from context (from surface)
 save(cr)
-rectangle(cr,16,176,224,32)
+rectangle(cr,16,152,224,32)
 clip(cr)
 new_path(cr)
 set_source(cr,creategc(s))
+paint(cr)
+restore(cr)
+
+# image for surface with offset
+save(cr)
+rectangle(cr,16,192,224,32)
+clip(cr)
+set_source(cr,s,0.0,40.0)
 paint(cr)
 restore(cr)
 
