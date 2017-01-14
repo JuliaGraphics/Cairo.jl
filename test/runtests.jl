@@ -164,8 +164,16 @@ end
     surf = CairoPDFSurface(io,512,512)
     hdraw(surf,64,8,4) 
     finish(surf)
-    str = takebuf_string(io)
-    @test length(str.data) > 3000 && str.data[1:7] == [0x25,0x50,0x44,0x46,0x2d,0x31,0x2e]
+
+    if VERSION >= v"0.6.0-dev.1954"
+        str = String(take!(io))
+        str_data = Vector{UInt8}(str)
+    else
+        str = takebuf_string(io)    
+        str_data = str.data
+    end        
+
+    @test length(str_data) > 3000 && str_data[1:7] == [0x25,0x50,0x44,0x46,0x2d,0x31,0x2e]
 
     output_file_name = "a.eps"
     surf = CairoEPSSurface(output_file_name,512,512)
@@ -179,8 +187,16 @@ end
     surf = CairoEPSSurface(io,512,512)
     hdraw(surf,64,8,4) 
     finish(surf)
-    str = takebuf_string(io)
-    @test length(str.data) > 3000 && str.data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
+
+    if VERSION >= v"0.6.0-dev.1954"
+        str = String(take!(io))
+        str_data = Vector{UInt8}(str)
+    else
+        str = takebuf_string(io)    
+        str_data = str.data
+    end        
+    
+    @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
 
 end
 
