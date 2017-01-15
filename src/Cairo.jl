@@ -41,7 +41,7 @@ export
     set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_line_cap, set_line_join,
-    set_operator, set_source,
+    set_operator, get_operator, set_source,
     CairoMatrix,
 
     # coordinate systems
@@ -430,7 +430,7 @@ end
 function copy(ctx::CairoContext, bb::BoundingBox)
     w = width(bb)
     h = height(bb)
-    surf = surface_create_similar(ctx.surface, iceil(w), iceil(h))
+    surf = surface_create_similar(ctx.surface, ceil(Int,w), ceil(Int,h))
     c = creategc(surf)
     set_source_surface(c, ctx.surface, -bb.xmin, -bb.ymin)
     rectangle(c, 0, 0, w, h)
