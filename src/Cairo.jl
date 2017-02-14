@@ -13,6 +13,19 @@ using Colors
 importall Graphics
 import Base: copy
 
+libcairo_version = VersionNumber(unsafe_string(
+      ccall((:cairo_version_string,Cairo._jl_libcairo),Cstring,()) ))
+libpango_version = VersionNumber(unsafe_string(
+      ccall((:pango_version_string,Cairo._jl_libpango),Cstring,()) ))
+if !is_windows()
+    libpangocairo_version = VersionNumber(unsafe_string(
+          ccall((:pango_version_string,Cairo._jl_libpangocairo),Cstring,()) ))
+    libgobject_version = VersionNumber( 
+          unsafe_load(cglobal((:glib_major_version, Cairo._jl_libgobject), Cuint)),
+          unsafe_load(cglobal((:glib_minor_version, Cairo._jl_libgobject), Cuint)),
+          unsafe_load(cglobal((:glib_micro_version, Cairo._jl_libgobject), Cuint)))
+end
+
 @compat import Base.show
 
 include("constants.jl")
