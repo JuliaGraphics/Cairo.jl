@@ -7,7 +7,7 @@ cr = CairoContext(c);
 
 save(cr);
 
-z = Array{RGB24},2,2)
+z = Array{RGB24}(2,2)
 c1 = convert(RGB24,colorant"grey20")
 c2 = convert(RGB24,colorant"grey80")
 z[1,1] = c1
