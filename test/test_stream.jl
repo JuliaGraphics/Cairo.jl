@@ -13,4 +13,13 @@ pipe = Base64EncodePipe(buf)
 write_to_png(c,pipe)
 close(pipe)
 # Catch short writes
-@assert length(takebuf_array(buf)) > 200
+
+    if VERSION >= v"0.6.0-dev.1954"
+        str = String(take!(buf))
+        str_data = Vector{UInt8}(str)
+    else
+        str = takebuf_string(buf)    
+        str_data = str.data
+    end        
+
+@assert length(str_data) > 200
