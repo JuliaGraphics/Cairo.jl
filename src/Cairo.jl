@@ -345,7 +345,7 @@ end
 function read_from_png{T<:IO}(stream::T)
     callback = get_readstream_callback(T)
     ptr = ccall((:cairo_image_surface_create_from_png_stream, Cairo._jl_libcairo),
-                Ptr{Void}, (Ptr{Void},Ref{T}), callback, stream)
+                Ptr{Void}, (Ptr{Void},Ref{IO}), callback, stream)
     w = ccall((:cairo_image_surface_get_width,Cairo._jl_libcairo),
               Int32, (Ptr{Void},), ptr)
     h = ccall((:cairo_image_surface_get_height,Cairo._jl_libcairo),
