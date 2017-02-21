@@ -1,5 +1,6 @@
 using Cairo
 using Compat, Colors
+import Compat.String
 
 @compat import Base.show
 
