@@ -131,3 +131,10 @@ Example of getting the path to a single character via text_path, copy_path and c
 Example of painting with a Image Surface as source that was created by reading from a stream. The example reads the png data from an inline string [sample_imagestream.jl](sample_imagestream.jl).
 
 ![image .png](sample_imagestream.png "imagestream example")
+
+### mesh pattern
+
+Example of creating and using a mesh pattern [sample_meshpattern.jl](sample_meshpattern.jl). 
+Mesh patterns are tensor-product patch meshes (type 7 shadings in PDF), read more in [http://www.cairographics.org/manual/cairo-cairo-pattern-t.html#cairo-pattern-create-mesh] or [http://www.w3.org/TR/SVG2/pservers.html#MeshGradients].
+
+![mesh pattern .png](sample_meshpattern.png "mesh pattern example")

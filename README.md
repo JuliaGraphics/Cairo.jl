@@ -5,7 +5,9 @@
 [![Cairo](http://pkg.julialang.org/badges/Cairo_0.4.svg)](http://pkg.julialang.org/?pkg=Cairo&ver=0.4)
 [![Cairo](http://pkg.julialang.org/badges/Cairo_0.5.svg)](http://pkg.julialang.org/?pkg=Cairo&ver=0.5)
 
-Bindings to the Cairo graphics library.
+## Bindings to the Cairo graphics library ##
+
+(cairo version > 1.12)
 
 Some of the functions implemented by this wrapper may be documented in [Base.Graphics](http://docs.julialang.org/en/release-0.3/stdlib/graphics/).
 
