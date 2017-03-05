@@ -1180,3 +1180,7 @@ end
 @deprecate text_extents(ctx::CairoContext,value::AbstractString,extents) text_extents!(ctx,value,extents)
 
 end  # module
+
+if VERSION < v"0.3.0-"
+    @osx_only Cairo.__init__()
+end
