@@ -6,7 +6,9 @@ using Compat
 
 # check for cairo version 
 function validate_cairo_version(name,handle)
-    v = ccall((:cairo_version,handle),Int32,())        
+    f = Libdl.dlsym_e(handle, "cairo_version")
+    f == C_NULL && return false
+    v = ccall(f, Int32,())        
     return v > 11200
 end
 
