@@ -30,15 +30,6 @@ end
 
 include("constants.jl")
 
-# check library version, error message if too low
-cairo_version = ccall((:cairo_version,Cairo._jl_libcairo),Int32,())
-
-if cairo_version < 11200
-    error("cairo version " * string(cairo_version) * ", less then 1.12.00")
-end
-
-
-
 export
     # drawing surface and context types
     CairoSurface, CairoContext, CairoPattern,
