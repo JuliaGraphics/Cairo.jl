@@ -3,17 +3,21 @@ matrix:
        - language: julia
          julia: 0.4
          os: linux
-       - language: julia
-         julia: 0.5
-         os: linux
-       - language: julia
-         julia: nightly 
-         os: linux
+         dist: trusty
+         sudo: false         
        - language: julia
          julia: 0.5
          os: linux
          dist: trusty
          sudo: false         
+       - language: julia
+         julia: nightly 
+         os: linux
+         dist: trusty
+         sudo: false         
+       - language: julia
+         julia: 0.5
+         os: linux
        - language: julia
          julia: 0.4
          os: osx
