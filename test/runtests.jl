@@ -43,6 +43,12 @@ test_pattern_get_surface()
 # Run all the samples
 pth = joinpath(dirname(dirname(@__FILE__)), "samples")
 fls = filter(str->endswith(str,".jl"), readdir(pth))
+
+# filter known >= 1.12 -> sample_meshpattern.jl
+if Cairo.libcairo_version < v"1.12.0"
+    fls = filter(str->~isequal(str,"sample_meshpattern.jl"),fls)
+end
+display(fls)
 for fl in fls
     include(joinpath(pth, fl))
 end
