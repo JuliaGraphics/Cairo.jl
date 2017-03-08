@@ -4,6 +4,14 @@ using BinDeps
 
 using Compat
 
+# check for cairo version 
+function validate_cairo_version(name,handle)
+    f = Libdl.dlsym_e(handle, "cairo_version")
+    f == C_NULL && return false
+    v = ccall(f, Int32,())        
+    return v > 11000
+end
+
 group = library_group("cairo")
 
 deps = [
@@ -14,7 +22,7 @@ deps = [
     gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi, gettext], group = group)
     freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false, group = group)
     fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], runtime = false, group = group)
-    cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2", "libcairo2"], depends = [gobject,fontconfig,libpng], group = group)
+    cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2", "libcairo2"], depends = [gobject,fontconfig,libpng], group = group, validate = validate_cairo_version)
     pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], group = group)
     pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group)
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)

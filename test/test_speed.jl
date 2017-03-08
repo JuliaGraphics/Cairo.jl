@@ -2,7 +2,7 @@ using Cairo
 include("shape_functions.jl")
 
 function test_all(;tmax = 2.0, save_flag = false)
-    print("cairo version: ",ccall((:cairo_version,Cairo._jl_libcairo),Int32,()),"\n");
+    print("cairo version: ",Cairo.libcairo_version,"\n");
     size_surface = [512];#,512,1024]; #three sizes of a surface
     paint_width = [0.5,1.0,3.0,5.0];
     shapes = [ddots1, ddots2, ddots3, ddots4, ddots5,

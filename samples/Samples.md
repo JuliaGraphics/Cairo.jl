@@ -132,6 +132,7 @@ Example of painting with a Image Surface as source that was created by reading f
 
 ![image .png](sample_imagestream.png "imagestream example")
 
+
 ## More Samples for Testing
 
 The following examples have been created to have more coverage in testing (all samples_X are executed).
@@ -172,3 +173,11 @@ Example to use the set line type function (input to set_dash) [sample_set_dash.j
 Example of a few (but not all) pango text formating options [sample_pango_text.jl](sample_pango_text.jl).
 
 ![pango text.png](sample_pango_text.png "pango text example")
+
+### mesh pattern
+
+Example of creating and using a mesh pattern [sample_meshpattern.jl](sample_meshpattern.jl). 
+Mesh patterns are tensor-product patch meshes (type 7 shadings in PDF), read more in [http://www.cairographics.org/manual/cairo-cairo-pattern-t.html#cairo-pattern-create-mesh] or [http://www.w3.org/TR/SVG2/pservers.html#MeshGradients].
+
+![mesh pattern .png](sample_meshpattern.png "mesh pattern example")
+
