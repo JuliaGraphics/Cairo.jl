@@ -1,11 +1,32 @@
-language: julia
-os:
-    - linux
-    - osx
-julia:
-    - 0.4
-    - 0.5
-    - nightly
+matrix:
+    include:
+       - language: julia
+         julia: 0.4
+         os: linux
+         dist: trusty
+         sudo: false         
+       - language: julia
+         julia: 0.5
+         os: linux
+         dist: trusty
+         sudo: false         
+       - language: julia
+         julia: nightly 
+         os: linux
+         dist: trusty
+         sudo: false         
+       - language: julia
+         julia: 0.5
+         os: linux
+       - language: julia
+         julia: 0.4
+         os: osx
+       - language: julia
+         julia: 0.5
+         os: osx
+       - language: julia
+         julia: nightly
+         os: osx
 notifications:
     email: false
 after_success:
