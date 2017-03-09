@@ -884,16 +884,16 @@ end
 
 # create mesh pattern
 function CairoPatternMesh()
-    pattern = ccall((:cairo_pattern_create_mesh, _jl_libcairo),
+    ptr = ccall((:cairo_pattern_create_mesh, _jl_libcairo),
                     Ptr{Void}, ())
-    pattern = CairoPattern(pattern)                    
-    status = ccall((:cairo_pattern_status, _jl_libcairo),
-                    Cint, (Ptr{Void},), pattern.ptr)
-    if status != 0
-        error("Error creating Cairo pattern: ", bytestring(
-              ccall((:cairo_status_to_string, _jl_libcairo),
-                    Ptr{Uint8}, (Cint,), status)))
-    end
+    pattern = CairoPattern(ptr)                    
+    #status = ccall((:cairo_pattern_status, _jl_libcairo),
+    #                Cint, (Ptr{Void},), pattern.ptr)
+    #if status != 0
+    #    error("Error creating Cairo pattern: ", bytestring(
+    #          ccall((:cairo_status_to_string, _jl_libcairo),
+    #                Ptr{Uint8}, (Cint,), status)))
+    #end
     finalizer(pattern, destroy)
     pattern
 end
