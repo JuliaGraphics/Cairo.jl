@@ -62,7 +62,7 @@ export
     set_fill_type, set_line_width, set_dash,
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_line_cap, set_line_join,
-    set_operator, set_source,
+    set_operator, get_operator, set_source,
     CairoMatrix,
 
     # coordinate systems
@@ -366,7 +366,7 @@ end
 function read_from_png{T<:IO}(stream::T)
     callback = get_readstream_callback(T)
     ptr = ccall((:cairo_image_surface_create_from_png_stream, Cairo._jl_libcairo),
-                Ptr{Void}, (Ptr{Void},Ref{T}), callback, stream)
+                Ptr{Void}, (Ptr{Void},Ref{IO}), callback, stream)
     w = ccall((:cairo_image_surface_get_width,Cairo._jl_libcairo),
               Int32, (Ptr{Void},), ptr)
     h = ccall((:cairo_image_surface_get_height,Cairo._jl_libcairo),
@@ -489,7 +489,7 @@ end
 function copy(ctx::CairoContext, bb::BoundingBox)
     w = width(bb)
     h = height(bb)
-    surf = surface_create_similar(ctx.surface, iceil(w), iceil(h))
+    surf = surface_create_similar(ctx.surface, ceil(Int,w), ceil(Int,h))
     c = creategc(surf)
     set_source_surface(c, ctx.surface, -bb.xmin, -bb.ymin)
     rectangle(c, 0, 0, w, h)
@@ -884,16 +884,16 @@ end
 
 # create mesh pattern
 function CairoPatternMesh()
-    pattern = ccall((:cairo_pattern_create_mesh, _jl_libcairo),
+    ptr = ccall((:cairo_pattern_create_mesh, _jl_libcairo),
                     Ptr{Void}, ())
-    pattern = CairoPattern(pattern)                    
-    status = ccall((:cairo_pattern_status, _jl_libcairo),
-                    Cint, (Ptr{Void},), pattern.ptr)
-    if status != 0
-        error("Error creating Cairo pattern: ", bytestring(
-              ccall((:cairo_status_to_string, _jl_libcairo),
-                    Ptr{Uint8}, (Cint,), status)))
-    end
+    pattern = CairoPattern(ptr)                    
+    #status = ccall((:cairo_pattern_status, _jl_libcairo),
+    #                Cint, (Ptr{Void},), pattern.ptr)
+    #if status != 0
+    #    error("Error creating Cairo pattern: ", bytestring(
+    #          ccall((:cairo_status_to_string, _jl_libcairo),
+    #                Ptr{Uint8}, (Cint,), status)))
+    #end
     finalizer(pattern, destroy)
     pattern
 end

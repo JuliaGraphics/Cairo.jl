@@ -12,5 +12,10 @@ buf = IOBuffer()
 pipe = Base64EncodePipe(buf)
 write_to_png(c,pipe)
 close(pipe)
+
 # Catch short writes
-@assert length(takebuf_array(buf)) > 200
+
+str = String(take!(buf))
+str_data = Vector{UInt8}(str)
+
+@assert length(str_data) > 200
