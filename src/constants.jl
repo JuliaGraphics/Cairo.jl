@@ -16,7 +16,7 @@ export CAIRO_FORMAT_ARGB32,
     CAIRO_FILTER_BILINEAR,
     CAIRO_FILTER_GAUSSIAN
 
-typealias format_t Int32
+const format_t = Int32
 const FORMAT_INVALID   = @compat Int32(-1)
 const FORMAT_ARGB32    = @compat Int32(0)
 const FORMAT_RGB24     = @compat Int32(1)
@@ -25,7 +25,7 @@ const FORMAT_A1        = @compat Int32(3)
 const FORMAT_RGB16_565 = @compat Int32(4)
 const FORMAT_RGB30     = @compat Int32(5)
 
-typealias status_t Int32
+const status_t = Int32
 const STATUS_SUCCESS                   = @compat Int32(0)
 const STATUS_NO_MEMORY                 = @compat Int32(1)
 const STATUS_INVALID_RESTORE           = @compat Int32(2)
@@ -66,7 +66,7 @@ const STATUS_INVALID_MESH_CONSTRUCTION = @compat Int32(35)
 const STATUS_DEVICE_FINISHED           = @compat Int32(36)
 const STATUS_LAST_STATUS               = @compat Int32(37)
 
-typealias surface_t Int32
+const surface_t = Int32
 const CAIRO_SURFACE_TYPE_IMAGE            = @compat Int32(0)
 const CAIRO_SURFACE_TYPE_PDF,             = @compat Int32(1)
 const CAIRO_SURFACE_TYPE_PS,              = @compat Int32(2)
@@ -94,12 +94,12 @@ const CAIRO_SURFACE_TYPE_SUBSURFACE,      = @compat Int32(23)
 const CAIRO_SURFACE_TYPE_COGL             = @compat Int32(24)
 
 
-typealias font_slant_t Int32
+const font_slant_t = Int32
 const FONT_SLANT_NORMAL  = @compat Int32(0)
 const FONT_SLANT_ITALIC  = @compat Int32(1)
 const FONT_SLANT_OBLIQUE = @compat Int32(2)
 
-typealias font_weight_t Int32
+const font_weight_t = Int32
 const FONT_WEIGHT_NORMAL = @compat Int32(0)
 const FONT_WEIGHT_BOLD = @compat Int32(1)
 
