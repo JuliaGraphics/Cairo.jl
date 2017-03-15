@@ -1,9 +1,10 @@
 [![Build Status](https://travis-ci.org/JuliaGraphics/Cairo.jl.svg)](https://travis-ci.org/JuliaGraphics/Cairo.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/mpuhyoy9ew187f08/branch/master?svg=true)](https://ci.appveyor.com/project/tkelman/cairo-jl/branch/master)
+[![Coverage Status](https://coveralls.io/repos/JuliaGraphics/Cairo.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaGraphics/Cairo.jl?branch=master)
 
-[![Cairo](http://pkg.julialang.org/badges/Cairo_0.3.svg)](http://pkg.julialang.org/?pkg=Cairo&ver=0.3)
-[![Cairo](http://pkg.julialang.org/badges/Cairo_0.4.svg)](http://pkg.julialang.org/?pkg=Cairo&ver=0.4)
-[![Cairo](http://pkg.julialang.org/badges/Cairo_0.5.svg)](http://pkg.julialang.org/?pkg=Cairo&ver=0.5)
+[![Cairo](http://pkg.julialang.org/badges/Cairo_0.4.svg)](http://pkg.julialang.org/?pkg=Cairo)
+[![Cairo](http://pkg.julialang.org/badges/Cairo_0.5.svg)](http://pkg.julialang.org/?pkg=Cairo)
+[![Cairo](http://pkg.julialang.org/badges/Cairo_0.6.svg)](http://pkg.julialang.org/?pkg=Cairo)
 
 ## Bindings to the Cairo graphics library ##
 
