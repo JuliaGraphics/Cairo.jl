@@ -8,7 +8,9 @@
 
 ## Bindings to the Cairo graphics library ##
 
-(cairo version > 1.12)
+Adaptation to [Cairo](https://www.cairographics.org/), a 2D graphics library with support for multiple output devices. 
+
+(version of library assumed to be 1.12 or newer, installation assumes at least 1.8)
 
 Some of the functions implemented by this wrapper may be documented in [Base.Graphics](http://docs.julialang.org/en/release-0.3/stdlib/graphics/).
 

@@ -9,7 +9,7 @@ function validate_cairo_version(name,handle)
     f = Libdl.dlsym_e(handle, "cairo_version")
     f == C_NULL && return false
     v = ccall(f, Int32,())        
-    return v > 11000
+    return v > 10800
 end
 
 group = library_group("cairo")
