@@ -125,35 +125,35 @@ end
 get_readstream_callback(T) = cfunction(read_from_stream_callback, Int32, (Ref{T}, Ptr{UInt8}, UInt32))
 
 
-type CairoSurface{T<:@compat(Union{UInt32,RGB24,ARGB32})} <: GraphicsDevice
+type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     ptr::Ptr{Void}
     width::Float64
     height::Float64
     data::Matrix{T}
 
-    function CairoSurface(ptr::Ptr{Void}, w, h)
-        self = new(ptr, w, h)
+    @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h)
+        self = new{T}(ptr, w, h)
         finalizer(self, destroy)
         self
     end
-    function CairoSurface(ptr::Ptr{Void}, w, h, data)
-        self = new(ptr, w, h, data)
+    @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h, data::Matrix{T})
+        self = new{T}(ptr, w, h, data)
         finalizer(self, destroy)
         self
     end
-    function CairoSurface(ptr::Ptr{Void})
+    @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void})
         ccall(
           (:cairo_surface_reference,_jl_libcairo),
           Ptr{Void}, (Ptr{Void}, ), ptr)
-        self = new(ptr)
+        self = new{T}(ptr)
         finalizer(self, destroy)
         self
     end
 end
 
-CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
-CairoSurface{T}(ptr, w, h, data::Matrix{T}) = CairoSurface{T}(ptr, w, h, data)
-CairoSurface(ptr) = CairoSurface{UInt32}(ptr)
+@compat (::Type{CairoSurface})(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
+@compat (::Type{CairoSurface})(ptr, w, h, data) = CairoSurface{eltype(data)}(ptr, w, h, data)
+@compat (::Type{CairoSurface})(ptr) = CairoSurface{UInt32}(ptr)
 
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
