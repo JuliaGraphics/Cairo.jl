@@ -151,9 +151,9 @@ type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     end
 end
 
-@compat (::Type{CairoSurface{T}})(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
-@compat (::Type{CairoSurface{T}})(ptr, w, h, data) = CairoSurface{eltype(data)}(ptr, w, h, data)
-@compat (::Type{CairoSurface{T}})(ptr) = CairoSurface{UInt32}(ptr)
+@compat (::Type{CairoSurface})(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
+@compat (::Type{CairoSurface})(ptr, w, h, data) = CairoSurface{eltype(data)}(ptr, w, h, data)
+@compat (::Type{CairoSurface})(ptr) = CairoSurface{UInt32}(ptr)
 
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
