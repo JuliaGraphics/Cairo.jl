@@ -132,12 +132,12 @@ type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     data::Matrix{T}
 
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h)
-        self = new(ptr, w, h)
+        self = new{T}(ptr, w, h)
         finalizer(self, destroy)
         self
     end
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h, data::Matrix{T})
-        self = new(ptr, w, h, data)
+        self = new{T}(ptr, w, h, data)
         finalizer(self, destroy)
         self
     end
@@ -145,7 +145,7 @@ type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
         ccall(
           (:cairo_surface_reference,_jl_libcairo),
           Ptr{Void}, (Ptr{Void}, ), ptr)
-        self = new(ptr)
+        self = new{T}(ptr)
         finalizer(self, destroy)
         self
     end
