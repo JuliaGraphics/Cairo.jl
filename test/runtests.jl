@@ -186,6 +186,27 @@ end
     str_data = Vector{UInt8}(str)
     
     @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
+
+    if Cairo.libcairo_version >= v"1.12.0"
+        output_file_name = "a.cs"
+        surf = CairoScriptSurface(output_file_name,512,512)
+        hdraw(surf,64,8,4) 
+        finish(surf)
+
+        @test isfile(output_file_name)
+        rm(output_file_name)
+
+        io = IOBuffer()
+        surf = CairoScriptSurface(io,512,512)
+        hdraw(surf,64,8,4) 
+        finish(surf)
+        
+        str = String(take!(io))
+        str_data = Vector{UInt8}(str)
+        
+        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
+
+    end
 end
 
 # pixel/bitmap surfaces

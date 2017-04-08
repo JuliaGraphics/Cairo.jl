@@ -397,9 +397,18 @@ end
 type CairoScript <: GraphicsDevice
     ptr::Ptr{Void}
 
-    function CairoScript(filename::String)
+    function CairoScript(filename::AbstractString)
         ptr = ccall((:cairo_script_create,_jl_libcairo),
-                    Ptr{Void}, (Ptr{Void},), bytestring(filename))
+                    Ptr{Void}, (Ptr{UInt8},), @compat(String(filename)))
+        self = new(ptr)
+        finalizer(self, destroy)
+        self
+    end
+
+    function CairoScript{T<:IO}(stream::T)
+        callback = get_stream_callback(T)
+        ptr = ccall((:cairo_script_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Any), callback, stream)
         self = new(ptr)
         finalizer(self, destroy)
         self
@@ -415,20 +424,26 @@ function destroy(s::CairoScript)
     nothing
 end
 
-function CairoScriptSurface(filename::String, w::Real, h::Real)
+function CairoScriptSurface(filename::AbstractString, w::Real, h::Real)
     s = CairoScript(filename)
     ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Void},
                 (Ptr{Void},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
 
-function CairoScriptSurface(filename::String,sc::CairoSurface)
+function CairoScriptSurface(filename::AbstractString,sc::CairoSurface)
     s = CairoScript(filename)
     ptr = ccall((:cairo_script_surface_create_for_target,_jl_libcairo), Ptr{Void},
                 (Ptr{Void},Ptr{Void}),s.ptr, sc.ptr)
     CairoSurface(ptr, sc.width, sc.height)
 end
 
+function CairoScriptSurface{T<:IO}(stream::T, w::Real, h::Real)
+    s = CairoScript(stream)
+    ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Void},
+                (Ptr{Void},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
+    CairoSurface(ptr, w, h)
+end
 # -----------------------------------------------------------------------------
 
 type CairoContext <: GraphicsContext
