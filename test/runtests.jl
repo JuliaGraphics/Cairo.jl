@@ -11,6 +11,7 @@ else
     const Test = BaseTestNext
 end
 
+
 # Image Surface
 @testset "Image Surface  " begin
 
@@ -194,6 +195,9 @@ end
         finish(surf)
 
         @test isfile(output_file_name)
+
+        str_data = read(output_file_name)
+        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
         rm(output_file_name)
 
         io = IOBuffer()
