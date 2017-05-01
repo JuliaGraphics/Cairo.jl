@@ -37,7 +37,7 @@ export
     # surface constructors
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
     CairoARGBSurface, CairoSVGSurface, CairoImageSurface, CairoQuartzSurface,
-    CairoWin32Surface, CairoScriptSurface,
+    CairoWin32Surface, CairoScriptSurface, CairoRecordingSurface,
     surface_create_similar,
 
     # surface and context management
@@ -443,6 +443,35 @@ function CairoScriptSurface{T<:IO}(stream::T, w::Real, h::Real)
     ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Void},
                 (Ptr{Void},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
+end
+
+
+type CairoRectangle
+    x0::Float64
+    y0::Float64
+    x1::Float64
+    y1::Float64
+end
+
+CairoRectangle() = CairoRectangle(0.0, 0.0, 0.0, 0.0)
+
+function CairoRecordingSurface(content::Int64,extents::CairoRectangle)
+    ptr = ccall((:cairo_recording_surface_create,_jl_libcairo), Ptr{Void},
+                (Int64,Ptr{Void}),content, Ref(extents))
+    CairoSurface(ptr)
+end
+function CairoRecordingSurface(content::Int64)
+    ptr = ccall((:cairo_recording_surface_create,_jl_libcairo), Ptr{Void},
+                (Int64,Ptr{Void}),content, C_NULL)
+    CairoSurface(ptr)
+end
+
+CairoRecordingSurface() = CairoRecordingSurface(CONTENT_COLOR_ALPHA)
+
+
+function script_from_recording_surface(s::CairoScript,r::CairoSurface)
+    ccall((:cairo_script_from_recording_surface,_jl_libcairo), Int32,
+                (Ptr{Void},Ptr{Void}),s.ptr, r.ptr)
 end
 # -----------------------------------------------------------------------------
 
