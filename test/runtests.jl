@@ -78,7 +78,8 @@ end
     samples_files = filter(str->endswith(str,".jl"), readdir(samples_dir_path))
     # filter known >= 1.12 -> sample_meshpattern.jl
     if Cairo.libcairo_version < v"1.12.0"
-        samples_files = filter(str->~isequal(str,"sample_meshpattern.jl"),samples_files)
+        files_to_exclude = ["sample_meshpattern.jl","sample_record0.jl","sample_record1.jl"]
+        samples_files = setdiff(samples_files, files_to_exclude)
     end
 
     for test_file_name in samples_files
