@@ -111,7 +111,7 @@ xx(t...) = (is_windows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
     @compat Dict(
-        Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*BinDeps.shlib_ext) => pixman,
+        Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*Libdl.dlext) => pixman,
         Autotools(libtarget = xx("objs/.libs/libfreetype.la","libfreetype.la")) => freetype,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
         Autotools(libtarget = "src/libcairo.la", configure_options = append!(append!(
