@@ -27,8 +27,8 @@ end
     io = IOBuffer()
     @compat show(io, MIME("image/png"), surf)
 
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
 
     @test length(str_data) > 8 && str_data[1:8] == [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]
     surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
@@ -148,8 +148,8 @@ end
     hdraw(surf,64,8,4) 
     finish(surf)
     
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
 
     @test length(str_data) > 31000 && str_data[1:13] == [0x3c,0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e]
 
@@ -166,8 +166,8 @@ end
     hdraw(surf,64,8,4) 
     finish(surf)
 
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
 
     @test length(str_data) > 3000 && str_data[1:7] == [0x25,0x50,0x44,0x46,0x2d,0x31,0x2e]
 
@@ -184,8 +184,8 @@ end
     hdraw(surf,64,8,4) 
     finish(surf)
     
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
     
     @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
 
@@ -206,8 +206,8 @@ end
         hdraw(surf,64,8,4) 
         finish(surf)
         
-        str = String(take!(io))
-        str_data = Vector{UInt8}(str)
+        seek(io,0)
+        str_data = Vector{UInt8}(read(io))
         
         @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
 
