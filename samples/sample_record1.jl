@@ -10,9 +10,10 @@ fill(cr);
 restore(cr);
 save(cr);
 
+## paint the following to a Recording Surface
 s1 = CairoRecordingSurface()
 c1 = CairoContext(s1)
-## original example, following here
+
 move_to(c1, 128.0, 25.6);
 line_to(c1, 230.4, 230.4);
 rel_line_to(c1, -102.4, 0.0);
@@ -31,8 +32,9 @@ fill_preserve(c1);
 set_source_rgb(c1, 0, 0, 0);
 stroke(c1);
 
-scale(cr,0.25,0.25)
-set_source(cr, s1, 0.0, 0.0)
+## play back on 
+scale(cr,0.5,0.5)
+set_source(cr, s1, 128.0, 128.0)
 
 paint(cr)
 

@@ -193,7 +193,7 @@ end
         output_file_name = "a.cs"
         surf = CairoScriptSurface(output_file_name,512,512)
         hdraw(surf,64,8,4) 
-        finish(surf)
+        destroy(surf)
 
         @test isfile(output_file_name)
 
@@ -219,7 +219,7 @@ end
         scsurf = CairoScriptSurface(output_file_name,surf)
         hdraw(scsurf,64,8,8) 
         finish(surf)
-        finish(scsurf)
+        destroy(scsurf)
         @test isfile(output_file_name)
 
         str_data = read(output_file_name)

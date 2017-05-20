@@ -12,6 +12,7 @@ save(cr);
 
 s1 = CairoRecordingSurface()
 c1 = CairoContext(s1)
+
 ## original example, following here
 move_to(c1, 128.0, 25.6);
 line_to(c1, 230.4, 230.4);
@@ -31,8 +32,8 @@ fill_preserve(c1);
 set_source_rgb(c1, 0, 0, 0);
 stroke(c1);
 
+## now using the recorded painting 
 set_source(cr, s1, 0.0, 0.0)
-scale(cr,4.0,4.0)
 paint(cr)
 
 

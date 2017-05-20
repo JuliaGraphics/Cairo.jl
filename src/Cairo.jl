@@ -455,14 +455,14 @@ end
 
 CairoRectangle() = CairoRectangle(0.0, 0.0, 0.0, 0.0)
 
-function CairoRecordingSurface(content::Int64,extents::CairoRectangle)
+function CairoRecordingSurface(content::Int32,extents::CairoRectangle)
     ptr = ccall((:cairo_recording_surface_create,_jl_libcairo), Ptr{Void},
-                (Int64,Ptr{Void}),content, Ref(extents))
+                (Int32,Ptr{Void}),content, Ref(extents))
     CairoSurface(ptr)
 end
-function CairoRecordingSurface(content::Int64)
+function CairoRecordingSurface(content::Int32)
     ptr = ccall((:cairo_recording_surface_create,_jl_libcairo), Ptr{Void},
-                (Int64,Ptr{Void}),content, C_NULL)
+                (Int32,Ptr{Void}),content, C_NULL)
     CairoSurface(ptr)
 end
 

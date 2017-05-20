@@ -103,9 +103,9 @@ const font_weight_t = Int32
 const FONT_WEIGHT_NORMAL = @compat Int32(0)
 const FONT_WEIGHT_BOLD = @compat Int32(1)
 
-const CONTENT_COLOR = @compat Int(0x1000)
-const CONTENT_ALPHA = @compat Int(0x2000)
-const CONTENT_COLOR_ALPHA = @compat Int(0x3000)
+const CONTENT_COLOR = @compat Int32(0x1000)
+const CONTENT_ALPHA = @compat Int32(0x2000)
+const CONTENT_COLOR_ALPHA = @compat Int32(0x3000)
 
 const FILTER_FAST = 0
 const FILTER_GOOD = 1
