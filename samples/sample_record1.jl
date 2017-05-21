@@ -32,7 +32,7 @@ fill_preserve(c1);
 set_source_rgb(c1, 0, 0, 0);
 stroke(c1);
 
-## play back on 
+## play back on transform coord
 scale(cr,0.5,0.5)
 set_source(cr, s1, 128.0, 128.0)
 
@@ -47,6 +47,5 @@ show_text(cr,Libc.strftime(time()));
 write_to_png(c,"sample_record1.png");
 
 ## write to script
-
-s2 = Cairo.CairoScript("cairo-record1.cs")
-Cairo.script_from_recording_surface(s2,s1)
+#s2 = Cairo.CairoScript("cairo-record1.cs")
+#Cairo.script_from_recording_surface(s2,s1)
