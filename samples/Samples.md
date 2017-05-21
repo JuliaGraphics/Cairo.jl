@@ -189,3 +189,5 @@ Example of using Recording surface, simple copy, then scaled and offset.
 ![sample record1.png](sample_record1.png "record1 example")
 
 Example of writing to script, put script text into frame.
+
+![sample script0.png](sample_script0.png "scrip0 example")

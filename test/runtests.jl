@@ -216,6 +216,7 @@ end
         
         @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
 
+        if ~is_windows()
         # _create_for_target
         z = zeros(UInt32,512,512);
         surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
@@ -235,6 +236,8 @@ end
 
         @test length(d) == 1 
         @test collect(keys(d))[1] == 0x80000080
+
+        end
     end
 end
 
