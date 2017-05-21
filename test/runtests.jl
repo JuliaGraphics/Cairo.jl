@@ -27,8 +27,8 @@ end
     io = IOBuffer()
     @compat show(io, MIME("image/png"), surf)
 
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
 
     @test length(str_data) > 8 && str_data[1:8] == [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]
     surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
@@ -78,7 +78,8 @@ end
     samples_files = filter(str->endswith(str,".jl"), readdir(samples_dir_path))
     # filter known >= 1.12 -> sample_meshpattern.jl
     if Cairo.libcairo_version < v"1.12.0"
-        samples_files = filter(str->~isequal(str,"sample_meshpattern.jl"),samples_files)
+        files_to_exclude = ["sample_meshpattern.jl","sample_record0.jl","sample_record1.jl","sample_script0.jl"]
+        samples_files = setdiff(samples_files, files_to_exclude)
     end
 
     for test_file_name in samples_files
@@ -147,8 +148,8 @@ end
     hdraw(surf,64,8,4) 
     finish(surf)
     
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
 
     @test length(str_data) > 31000 && str_data[1:13] == [0x3c,0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e]
 
@@ -165,8 +166,8 @@ end
     hdraw(surf,64,8,4) 
     finish(surf)
 
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
 
     @test length(str_data) > 3000 && str_data[1:7] == [0x25,0x50,0x44,0x46,0x2d,0x31,0x2e]
 
@@ -183,34 +184,61 @@ end
     hdraw(surf,64,8,4) 
     finish(surf)
     
-    str = String(take!(io))
-    str_data = Vector{UInt8}(str)
+    seek(io,0)
+    str_data = Vector{UInt8}(read(io))
     
     @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
 
-    # if Cairo.libcairo_version >= v"1.12.0"
-    #     output_file_name = "a.cs"
-    #     surf = CairoScriptSurface(output_file_name,512,512)
-    #     hdraw(surf,64,8,4) 
-    #     finish(surf)
+    if Cairo.libcairo_version >= v"1.12.0"
 
-    #     @test isfile(output_file_name)
-
-    #     str_data = read(output_file_name)
-    #     @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
-    #     rm(output_file_name)
-
-    #     #io = IOBuffer()
-    #     #surf = CairoScriptSurface(io,512,512)
-    #     #hdraw(surf,64,8,4) 
-    #     #finish(surf)
+        if ~is_windows()
         
-    #     #str = String(take!(io))
-    #     #str_data = Vector{UInt8}(str)
-        
-    #     #@test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
+        output_file_name = "a.cs"
+        surf = CairoScriptSurface(output_file_name,512,512)
+        hdraw(surf,64,8,4) 
+        destroy(surf)
 
-    # end
+        @test isfile(output_file_name)
+
+        str_data = read(output_file_name)
+        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
+        rm(output_file_name)
+
+        end
+
+        io = IOBuffer()
+        surf = CairoScriptSurface(io,512,512)
+        hdraw(surf,64,8,4) 
+        finish(surf)
+        
+        seek(io,0)
+        str_data = Vector{UInt8}(read(io))
+        
+        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
+
+        if ~is_windows()
+        # _create_for_target
+        z = zeros(UInt32,512,512);
+        surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+
+        output_file_name = "a.cs"
+        scsurf = CairoScriptSurface(output_file_name,surf)
+        hdraw(scsurf,64,8,8) 
+        finish(surf)
+        destroy(scsurf)
+        @test isfile(output_file_name)
+
+        str_data = read(output_file_name)
+        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
+        rm(output_file_name)
+
+        d = simple_hist(surf.data)
+
+        @test length(d) == 1 
+        @test collect(keys(d))[1] == 0x80000080
+
+        end
+    end
 end
 
 # pixel/bitmap surfaces
