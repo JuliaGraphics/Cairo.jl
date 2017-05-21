@@ -33,13 +33,14 @@ set_source_rgb(c1, 0, 0, 0);
 stroke(c1);
 
 ## write to script
-s2 = Cairo.CairoScript("sample-script0.cs")
+
+io = IOBuffer()
+s2 = Cairo.CairoScript(io)
 Cairo.script_from_recording_surface(s2,s1);
+destroy(s2)
 
-r = String(read("sample-script0.cs"))
-
-rm("sample-script0.cs");
-
+seek(io,0)
+r = String(read(io))
 
 r1 = split(r,"\n")
 
