@@ -98,9 +98,11 @@ export
     # push+pop group
     push_group, pop_group
 
-function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{UInt8}, len::UInt32)
-    n = ccall(:ios_write, UInt, (Ptr{Void}, Ptr{Void}, UInt), s, buf, len)
-    @compat Int32((n == len) ? 0 : 11)
+@static if is_apple()
+    function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{UInt8}, len::UInt32)
+        n = ccall(:ios_write, UInt, (Ptr{Void}, Ptr{Void}, UInt), s, buf, len)
+        @compat Int32((n == len) ? 0 : 11)
+    end
 end
 
 function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
@@ -232,12 +234,15 @@ format{T<:@compat(Union{RGB24,ARGB32})}(surf::CairoSurface{T}) = T
 
 ## PDF ##
 
+@static if is_apple()
 function CairoPDFSurface(stream::IOStream, w::Real, h::Real)
     callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
     ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
 end
+end
+
 
 function CairoPDFSurface{T<:IO}(stream::T, w::Real, h::Real)
     callback = get_stream_callback(T)
@@ -254,6 +259,7 @@ end
 
 ## EPS ##
 
+@static if is_apple()
 function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
     callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
@@ -261,6 +267,7 @@ function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
         (Ptr{Void},Int32), ptr, 1)
     CairoSurface(ptr, w, h)
+end
 end
 
 function CairoEPSSurface{T<:IO}(stream::T, w::Real, h::Real)
@@ -311,11 +318,13 @@ end
 
 ## SVG ##
 
+@static if is_apple()
 function CairoSVGSurface(stream::IOStream, w::Real, h::Real)
     callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h)
+end
 end
 
 function CairoSVGSurface{T<:IO}(stream::T, w::Real, h::Real)
