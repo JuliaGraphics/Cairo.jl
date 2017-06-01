@@ -38,7 +38,7 @@ export
     CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, CairoXlibSurface,
     CairoARGBSurface, CairoSVGSurface, CairoImageSurface, CairoQuartzSurface,
     CairoWin32Surface, CairoScriptSurface, CairoRecordingSurface,
-    surface_create_similar,
+    CairoPSSurface, surface_create_similar,
 
     # surface and context management
     finish, destroy, status, get_source,
@@ -277,6 +277,34 @@ function CairoEPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
                 (Ptr{UInt8},Float64,Float64), @compat(String(filename)), w_pts, h_pts)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
           (Ptr{Void},Int32), ptr, 1)
+    CairoSurface(ptr, w_pts, h_pts)
+end
+
+## PS ##
+
+function CairoPSSurface(stream::IOStream, w::Real, h::Real)
+    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
+    ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
+    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
+        (Ptr{Void},Int32), ptr, 0)
+    CairoSurface(ptr, w, h)
+end
+
+function CairoPSSurface{T<:IO}(stream::T, w::Real, h::Real)
+    callback = get_stream_callback(T)
+    ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
+                (Ptr{Void}, Any, Float64, Float64), callback, stream, w, h)
+    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
+        (Ptr{Void},Int32), ptr, 0)
+    CairoSurface(ptr, w, h)
+end
+
+function CairoPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
+    ptr = ccall((:cairo_ps_surface_create,_jl_libcairo), Ptr{Void},
+                (Ptr{UInt8},Float64,Float64), @compat(String(filename)), w_pts, h_pts)
+    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
+          (Ptr{Void},Int32), ptr, 0)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
