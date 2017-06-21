@@ -98,11 +98,6 @@ export
     # push+pop group
     push_group, pop_group
 
-function write_to_ios_callback(s::Ptr{Void}, buf::Ptr{UInt8}, len::UInt32)
-    n = ccall(:ios_write, UInt, (Ptr{Void}, Ptr{Void}, UInt), s, buf, len)
-    @compat Int32((n == len) ? 0 : 11)
-end
-
 function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     n = VERSION < v"0.5-dev+2301" ? write(s,buf,len) : unsafe_write(s,buf,len)
     @compat Int32((n == len) ? 0 : 11)
@@ -232,13 +227,6 @@ format{T<:@compat(Union{RGB24,ARGB32})}(surf::CairoSurface{T}) = T
 
 ## PDF ##
 
-function CairoPDFSurface(stream::IOStream, w::Real, h::Real)
-    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
-    ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
-                (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h)
-end
-
 function CairoPDFSurface{T<:IO}(stream::T, w::Real, h::Real)
     callback = get_stream_callback(T)
     ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Void},
@@ -253,15 +241,6 @@ function CairoPDFSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
 end
 
 ## EPS ##
-
-function CairoEPSSurface(stream::IOStream, w::Real, h::Real)
-    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
-    ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Void},
-                (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
-    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Void,
-        (Ptr{Void},Int32), ptr, 1)
-    CairoSurface(ptr, w, h)
-end
 
 function CairoEPSSurface{T<:IO}(stream::T, w::Real, h::Real)
     callback = get_stream_callback(T)
@@ -339,13 +318,6 @@ end
 
 ## SVG ##
 
-function CairoSVGSurface(stream::IOStream, w::Real, h::Real)
-    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
-    ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
-                (Ptr{Void}, Ptr{Void}, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h)
-end
-
 function CairoSVGSurface{T<:IO}(stream::T, w::Real, h::Real)
     callback = get_stream_callback(T)
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Void},
@@ -369,12 +341,6 @@ function read_from_png(filename::AbstractString)
     h = ccall((:cairo_image_surface_get_height,_jl_libcairo),
               Int32, (Ptr{Void},), ptr)
     CairoSurface(ptr, w, h)
-end
-
-function write_to_png(surface::CairoSurface, stream::IOStream)
-    callback = cfunction(write_to_ios_callback, Int32, (Ptr{Void},Ptr{UInt8},UInt32))
-    ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Void,
-          (Ptr{UInt8},Ptr{Void},Ptr{Void}), surface.ptr, callback, stream)
 end
 
 function write_to_png{T<:IO}(surface::CairoSurface, stream::T)
