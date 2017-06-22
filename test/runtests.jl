@@ -324,4 +324,30 @@ end
     @test_throws ErrorException Cairo.set_line_type(cr,"nondef")
 end
 
+@testset "reset_transform" begin
+
+    z = zeros(UInt32,512,512);
+    surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+
+    @test Cairo.status(surf) == 0
+
+    pa = surf.ptr
+    surf.ptr = C_NULL
+
+    @test destroy(surf) == nothing
+
+    surf.ptr = pa
+    cr = Cairo.CairoContext(surf)
+
+    m1 = CairoMatrix(1, 0, 0, 1, 0, 0)
+    m2 = CairoMatrix(1.0,2.0,2.0,1.0,0.,0.)
+    m = get_matrix(cr)
+    @test m == m1
+    set_matrix(cr, m2)
+    @test get_matrix(cr) == m2
+    Graphics.reset_transform(cr)
+    @test get_matrix(cr) == m1
+    @test destroy(cr) == nothing
+end
+
 nothing
