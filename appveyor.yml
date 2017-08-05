@@ -38,6 +38,7 @@ build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia --startup-file=yes -e "versioninfo();
+      Pkg.add(\"WinRPM\"); Pkg.checkout(\"WinRPM\", \"tk/gccdll\");
       Pkg.clone(pwd(), \"Cairo\"); Pkg.build(\"Cairo\")"
 
 test_script:
