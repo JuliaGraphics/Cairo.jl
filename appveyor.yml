@@ -39,7 +39,7 @@ build_script:
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia --startup-file=yes -e "versioninfo();
       Pkg.add(\"WinRPM\"); Pkg.checkout(\"WinRPM\", \"tk/gccdll\");
-      Pkg.clone(pwd(), \"Cairo\"); Pkg.build(\"Cairo\")"
+      Pkg.clone(pwd(), \"Cairo\")"
 
 test_script:
-  - C:\projects\julia\bin\julia -e "Pkg.test(\"Cairo\")"
+  - C:\projects\julia\bin\julia -e "Pkg.build(\"Cairo\"); Pkg.test(\"Cairo\")"
