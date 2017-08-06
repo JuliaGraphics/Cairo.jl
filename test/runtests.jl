@@ -1,6 +1,7 @@
 using Cairo
 using Compat, Colors
 import Compat.String
+import Compat.Sys
 
 @compat import Base.show
 
@@ -210,7 +211,7 @@ end
 
     if Cairo.libcairo_version >= v"1.12.0"
 
-        if ~is_windows()
+        if ~Sys.iswindows()
         
         output_file_name = "a.cs"
         surf = CairoScriptSurface(output_file_name,512,512)
@@ -235,7 +236,7 @@ end
         
         @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
 
-        if ~is_windows()
+        if ~Sys.iswindows()
         # _create_for_target
         z = zeros(UInt32,512,512);
         surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)

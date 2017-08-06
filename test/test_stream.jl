@@ -1,8 +1,10 @@
-# So that this test can be run independently
+
 using Cairo
-if !isdefined(:ddots4)
-    include("shape_functions.jl")
-end
+
+# So that this test can be run independently -> ?
+#if !isdefined(:ddots4)
+#    include("shape_functions.jl")
+#end
 
 # Test that writing images to a Julia IO object works
 c = CairoRGBSurface(256,256);
