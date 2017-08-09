@@ -1,11 +1,6 @@
 matrix:
     include:
        - language: julia
-         julia: 0.4
-         os: linux
-         dist: trusty
-         sudo: false         
-       - language: julia
          julia: 0.5
          os: linux
          dist: trusty
@@ -20,16 +15,16 @@ matrix:
          dist: trusty
          sudo: false         
        - language: julia
-         julia: 0.5
+         julia: 0.6
          os: linux
-       - language: julia
-         julia: 0.4
-         os: osx
        - language: julia
          julia: 0.5
          os: osx
        - language: julia
          julia: 0.6 
+         os: osx
+       - language: julia
+         julia: nightly 
          os: osx
 notifications:
     email: false
