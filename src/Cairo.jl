@@ -980,7 +980,7 @@ function mesh_pattern_set_corner_color_rgb(pat::CairoPattern, corner_num::Real, 
 end
 
 function mesh_pattern_set_corner_color_rgba(pat::CairoPattern, corner_num::Real, red::Real, green::Real, blue::Real, alpha::Real)
-    ccall((:cairo_mesh_pattern_set_corner_color_rgb, _jl_libcairo),
+    ccall((:cairo_mesh_pattern_set_corner_color_rgba, _jl_libcairo),
                     Void, (Ptr{Void},Int32,Float64,Float64,Float64,Float64),pat.ptr,corner_num,red,green,blue,alpha)
 end
 
