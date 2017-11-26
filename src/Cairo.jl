@@ -111,8 +111,6 @@ Surfaces, the canvas you are painting on
 
 Context, the handle to coordinate transformation, paint+Color
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     CairoContext, finish, destroy, status, get_source,
     creategc, getgc, save, restore, show_page, width, height
 
@@ -130,31 +128,9 @@ Stroking and painting API
     fill, fill_preserve, paint, paint_with_alpha, stroke,
     stroke_preserve, stroke_transformed, stroke_transformed_preserve
 
-=======
-CairoContext
-=======
     CairoContext, finish, destroy, status, get_source,
     creategc, getgc, save, restore, show_page, width, height
->>>>>>> fc0a67d... some more on the list
 
-Path creation API
-
-    new_path, new_sub_path, close_path,
-    move_to, line_to, rel_line_to, rel_move_to,
-    rectangle, circle, arc, arc_negative,
-    curve_to, rel_curve_to,
-    path_extents,
-
-
-Stroking and painting API
-<<<<<<< HEAD
->>>>>>> 1cef83d... first page
-=======
-
-    fill, fill_preserve, paint, paint_with_alpha, stroke,
-    stroke_preserve, stroke_transformed, stroke_transformed_preserve
-
->>>>>>> fc0a67d... some more on the list
 "
 Cairo
 
