@@ -98,6 +98,66 @@ export
     # push+pop group
     push_group, pop_group
 
+## head docstring following
+
+"
+Surfaces, the canvas you are painting on
+
+    CairoSurface, CairoRGBSurface, CairoPDFSurface, CairoEPSSurface, 
+    CairoXlibSurface, CairoARGBSurface, CairoSVGSurface, 
+    CairoImageSurface, CairoQuartzSurface,
+    CairoWin32Surface, CairoScriptSurface, CairoRecordingSurface,
+    CairoPSSurface, 
+
+Context, the handle to coordinate transformation, paint+Color
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+    CairoContext, finish, destroy, status, get_source,
+    creategc, getgc, save, restore, show_page, width, height
+
+Path creation API
+
+    new_path, new_sub_path, close_path,
+    move_to, line_to, rel_line_to, rel_move_to,
+    rectangle, circle, arc, arc_negative,
+    curve_to, rel_curve_to,
+    path_extents,
+
+
+Stroking and painting API
+
+    fill, fill_preserve, paint, paint_with_alpha, stroke,
+    stroke_preserve, stroke_transformed, stroke_transformed_preserve
+
+=======
+CairoContext
+=======
+    CairoContext, finish, destroy, status, get_source,
+    creategc, getgc, save, restore, show_page, width, height
+>>>>>>> fc0a67d... some more on the list
+
+Path creation API
+
+    new_path, new_sub_path, close_path,
+    move_to, line_to, rel_line_to, rel_move_to,
+    rectangle, circle, arc, arc_negative,
+    curve_to, rel_curve_to,
+    path_extents,
+
+
+Stroking and painting API
+<<<<<<< HEAD
+>>>>>>> 1cef83d... first page
+=======
+
+    fill, fill_preserve, paint, paint_with_alpha, stroke,
+    stroke_preserve, stroke_transformed, stroke_transformed_preserve
+
+>>>>>>> fc0a67d... some more on the list
+"
+Cairo
+
 function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     n = VERSION < v"0.5-dev+2301" ? write(s,buf,len) : unsafe_write(s,buf,len)
     @compat Int32((n == len) ? 0 : 11)
