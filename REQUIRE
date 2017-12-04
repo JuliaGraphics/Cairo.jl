@@ -1,5 +1,5 @@
 julia 0.4
-Compat 0.9.5
+Compat 0.39.0
 Colors
 BinDeps 0.3.21
 Graphics 0.1
