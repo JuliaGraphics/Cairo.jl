@@ -2,7 +2,8 @@ __precompile__()
 
 module Cairo
 
-using Compat; import Compat.String
+using Compat; import Compat: String, textwidth
+
 
 depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
 isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
@@ -20,7 +21,7 @@ libpango_version = VersionNumber(unsafe_string(
 if !is_windows()
     libpangocairo_version = VersionNumber(unsafe_string(
           ccall((:pango_version_string,Cairo._jl_libpangocairo),Cstring,()) ))
-    libgobject_version = VersionNumber( 
+    libgobject_version = VersionNumber(
           unsafe_load(cglobal((:glib_major_version, Cairo._jl_libgobject), Cuint)),
           unsafe_load(cglobal((:glib_minor_version, Cairo._jl_libgobject), Cuint)),
           unsafe_load(cglobal((:glib_micro_version, Cairo._jl_libgobject), Cuint)))
@@ -98,6 +99,42 @@ export
     # push+pop group
     push_group, pop_group
 
+## head docstring following
+
+"
+Surfaces, the canvas you are painting on
+
+    CairoSurface, CairoRGBSurface, CairoPDFSurface, CairoEPSSurface,
+    CairoXlibSurface, CairoARGBSurface, CairoSVGSurface,
+    CairoImageSurface, CairoQuartzSurface,
+    CairoWin32Surface, CairoScriptSurface, CairoRecordingSurface,
+    CairoPSSurface,
+
+Context, the handle to coordinate transformation, paint+Color
+
+    CairoContext, finish, destroy, status, get_source,
+    creategc, getgc, save, restore, show_page, width, height
+
+Path creation API
+
+    new_path, new_sub_path, close_path,
+    move_to, line_to, rel_line_to, rel_move_to,
+    rectangle, circle, arc, arc_negative,
+    curve_to, rel_curve_to,
+    path_extents,
+
+
+Stroking and painting API
+
+    fill, fill_preserve, paint, paint_with_alpha, stroke,
+    stroke_preserve, stroke_transformed, stroke_transformed_preserve
+
+    CairoContext, finish, destroy, status, get_source,
+    creategc, getgc, save, restore, show_page, width, height
+
+"
+Cairo
+
 function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     n = VERSION < v"0.5-dev+2301" ? write(s,buf,len) : unsafe_write(s,buf,len)
     @compat Int32((n == len) ? 0 : 11)
@@ -109,7 +146,7 @@ get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, (Ref{T}, Ptr
 function read_from_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     # wrap the provided buf into a julia Array
     b1 = unsafe_wrap(Array,buf,len)
-    
+
     # read from stream
     nb = readbytes!(s,b1,len)
 
@@ -128,12 +165,12 @@ type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
 
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h)
         self = new{T}(ptr, w, h)
-        finalizer(self, destroy)
+        finalizer(destroy, self)
         self
     end
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h, data::Matrix{T})
         self = new{T}(ptr, w, h, data)
-        finalizer(self, destroy)
+        finalizer(destroy, self)
         self
     end
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void})
@@ -141,7 +178,7 @@ type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
           (:cairo_surface_reference,_jl_libcairo),
           Ptr{Void}, (Ptr{Void}, ), ptr)
         self = new{T}(ptr)
-        finalizer(self, destroy)
+        finalizer(destroy, self)
         self
     end
 end
@@ -924,7 +961,7 @@ end
 function CairoPatternMesh()
     ptr = ccall((:cairo_pattern_create_mesh, _jl_libcairo),
                     Ptr{Void}, ())
-    pattern = CairoPattern(ptr)                    
+    pattern = CairoPattern(ptr)
     #status = ccall((:cairo_pattern_status, _jl_libcairo),
     #                Cint, (Ptr{Void},), pattern.ptr)
     #if status != 0
@@ -980,7 +1017,7 @@ function mesh_pattern_set_corner_color_rgb(pat::CairoPattern, corner_num::Real, 
 end
 
 function mesh_pattern_set_corner_color_rgba(pat::CairoPattern, corner_num::Real, red::Real, green::Real, blue::Real, alpha::Real)
-    ccall((:cairo_mesh_pattern_set_corner_color_rgb, _jl_libcairo),
+    ccall((:cairo_mesh_pattern_set_corner_color_rgba, _jl_libcairo),
                     Void, (Ptr{Void},Int32,Float64,Float64,Float64,Float64),pat.ptr,corner_num,red,green,blue,alpha)
 end
 
