@@ -18,7 +18,7 @@ libcairo_version = VersionNumber(unsafe_string(
       ccall((:cairo_version_string,Cairo._jl_libcairo),Cstring,()) ))
 libpango_version = VersionNumber(unsafe_string(
       ccall((:pango_version_string,Cairo._jl_libpango),Cstring,()) ))
-if !Sys.iswindows()
+if !Compat.Sys.iswindows()
     libpangocairo_version = VersionNumber(unsafe_string(
           ccall((:pango_version_string,Cairo._jl_libpangocairo),Cstring,()) ))
     libgobject_version = VersionNumber(
@@ -969,7 +969,7 @@ function CairoPatternMesh()
     #          ccall((:cairo_status_to_string, _jl_libcairo),
     #                Ptr{Uint8}, (Cint,), status)))
     #end
-    finalizer(pattern, destroy)
+    finalizer(destroy, pattern)
     pattern
 end
 
@@ -1105,7 +1105,7 @@ function set_text(ctx::CairoContext, text::AbstractString, markup::Bool = false)
 end
 
 function get_layout_size(ctx::CairoContext)
-    w = Vector{Int32}(2)
+    w = Vector{Int32}(uninitialized, 2)
     ccall((:pango_layout_get_pixel_size,_jl_libpango), Void,
           (Ptr{Void},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
     w
@@ -1121,7 +1121,7 @@ function show_layout(ctx::CairoContext)
           (Ptr{Void},Ptr{Void}), ctx.ptr, ctx.layout)
 end
 
-text_extents(ctx::CairoContext,value::AbstractString) = text_extents!(ctx,value, Matrix{Float64}(6, 1))
+text_extents(ctx::CairoContext,value::AbstractString) = text_extents!(ctx,value, Matrix{Float64}(uninitialized,6, 1))
 
 function text_extents!(ctx::CairoContext,value::AbstractString,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
