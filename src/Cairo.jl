@@ -165,12 +165,12 @@ type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
 
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h)
         self = new{T}(ptr, w, h)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void}, w, h, data::Matrix{T})
         self = new{T}(ptr, w, h, data)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
     @compat function (::Type{CairoSurface{T}}){T}(ptr::Ptr{Void})
@@ -178,7 +178,7 @@ type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
           (:cairo_surface_reference,_jl_libcairo),
           Ptr{Void}, (Ptr{Void}, ), ptr)
         self = new{T}(ptr)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
 end
@@ -432,7 +432,7 @@ type CairoScript <: GraphicsDevice
         ptr = ccall((:cairo_script_create,_jl_libcairo),
                     Ptr{Void}, (Ptr{UInt8},), @compat(String(filename)))
         self = new(ptr)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
 
@@ -441,7 +441,7 @@ type CairoScript <: GraphicsDevice
         ptr = ccall((:cairo_script_create_for_stream,_jl_libcairo), Ptr{Void},
                 (Ptr{Void}, Any), callback, stream)
         self = new(ptr)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
 end
@@ -517,7 +517,7 @@ type CairoContext <: GraphicsContext
         layout = ccall((:pango_cairo_create_layout,_jl_libpangocairo),
                        Ptr{Void}, (Ptr{Void},), ptr)
         self = new(ptr, surface, layout)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
     function CairoContext(ptr::Ptr{Void})
@@ -529,7 +529,7 @@ type CairoContext <: GraphicsContext
         layout = ccall((:pango_cairo_create_layout,_jl_libpangocairo),
                   Ptr{Void}, (Ptr{Void},), ptr)
         self = new(ptr,surface,layout)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
 
@@ -731,7 +731,7 @@ type CairoPath <: GraphicsDevice
 
     function CairoPath(ptr::Ptr{Void})
         self = new(ptr)
-        finalizer(destroy, self)
+        @compat finalizer(destroy, self)
         self
     end
 end
@@ -756,7 +756,7 @@ function copy_path(ctx::CairoContext)
     ptr = ccall((:cairo_copy_path, _jl_libcairo),
                     Ptr{Void}, (Ptr{Void},),ctx.ptr)
     path = CairoPath(ptr)
-    finalizer(destroy, path)
+    @compat finalizer(destroy, path)
     path
 end
 
@@ -764,7 +764,7 @@ function copy_path_flat(ctx::CairoContext)
     ptr = ccall((:cairo_copy_path_flat, _jl_libcairo),
                     Ptr{Void}, (Ptr{Void},),ctx.ptr)
     path = CairoPath(ptr)
-    finalizer(destroy, path)
+    @compat finalizer(destroy, path)
     path
 end
 
@@ -785,7 +785,7 @@ function convert_cairo_path_data(p::CairoPath)
         element_type = reinterpret(UInt64,c_data[data_index]) & 0xffffffff
 
         # copy points x,y
-        points = Vector{Float64}((element_length - 1) * 2)
+        points = Vector{Float64}(uninitialized, (element_length - 1) * 2)
         for i=1:(element_length-1)*2
             points[i] = c_data[data_index+i+1]
         end
@@ -851,7 +851,7 @@ function pop_group(ctx::CairoContext)
     end
     ptr = ccall((:cairo_pop_group, _jl_libcairo), Ptr{Void}, (Ptr{Void},),ctx.ptr)
     pattern = CairoPattern(ptr)
-    finalizer(destroy, pattern)
+    @compat finalizer(destroy, pattern)
     pattern
 end
 
@@ -874,7 +874,7 @@ function CairoPattern(s::CairoSurface)
 #                     Ptr{UInt8}, (Cint,), status)))
 #     end
     pattern = CairoPattern(ptr)
-    finalizer(destroy, pattern)
+    @compat finalizer(destroy, pattern)
     pattern
 end
 
@@ -901,7 +901,7 @@ function pattern_create_radial(cx0::Real, cy0::Real, radius0::Real, cx1::Real, c
     ptr = ccall((:cairo_pattern_create_radial, _jl_libcairo),
                     Ptr{Void}, (Float64,Float64,Float64,Float64,Float64,Float64),cx0,cy0,radius0,cx1,cy1,radius1)
     pattern = CairoPattern(ptr)
-    finalizer(destroy, pattern)
+    @compat finalizer(destroy, pattern)
     pattern
 end
 
@@ -909,7 +909,7 @@ function pattern_create_linear(x0::Real, y0::Real, x1::Real, y1::Real)
     ptr = ccall((:cairo_pattern_create_linear, _jl_libcairo),
                     Ptr{Void}, (Float64,Float64,Float64,Float64),x0,y0,x1,y1)
     pattern = CairoPattern(ptr)
-    finalizer(destroy, pattern)
+    @compat finalizer(destroy, pattern)
     pattern
 end
 
@@ -969,7 +969,7 @@ function CairoPatternMesh()
     #          ccall((:cairo_status_to_string, _jl_libcairo),
     #                Ptr{Uint8}, (Cint,), status)))
     #end
-    finalizer(destroy, pattern)
+    @compat finalizer(destroy, pattern)
     pattern
 end
 
