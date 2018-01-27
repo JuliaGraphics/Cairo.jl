@@ -2,14 +2,9 @@ using Cairo
 using Compat, Colors
 import Compat.String
 
-@compat import Base.show
+import Base.show
 
-if VERSION >= v"0.5.0-dev+7720"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Base.Test
 
 
 # Image Surface
@@ -25,7 +20,7 @@ end
     surf = CairoImageSurface(fill(RGB24(0), 10, 10))
     @test Cairo.format(surf) == RGB24
     io = IOBuffer()
-    @compat show(io, MIME("image/png"), surf)
+    show(io, MIME("image/png"), surf)
 
     seek(io,0)
     str_data = Vector{UInt8}(read(io))
