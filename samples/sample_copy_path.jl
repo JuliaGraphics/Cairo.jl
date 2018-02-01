@@ -57,7 +57,7 @@ function example_copy_path(cr)
         s1 = repr(x.points)
         move_to(cr,100.0,14.0*l)
         l += 1
-        show_text(cr,s0*s1); # 
+        show_text(cr,s0*s1)
     end
     nothing
 end

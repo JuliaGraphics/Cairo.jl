@@ -1,14 +1,19 @@
 using BinDeps
 
+using Compat
+import Compat.Libdl
+import Compat.Sys
+using Pkg
+
 @BinDeps.setup
 
 using Compat
 
-# check for cairo version 
+# check for cairo version
 function validate_cairo_version(name,handle)
     f = Libdl.dlsym_e(handle, "cairo_version")
     f == C_NULL && return false
-    v = ccall(f, Int32,())        
+    v = ccall(f, Int32,())
     return v > 10800
 end
 
@@ -28,7 +33,7 @@ deps = [
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
 ]
 
-if is_windows()
+if Sys.iswindows()
     using WinRPM
     provides(WinRPM.RPM,"libpango-1_0-0",[pango,pangocairo],os = :Windows)
     provides(WinRPM.RPM,["glib2", "libgobject-2_0-0"],gobject,os = :Windows)
@@ -79,7 +84,7 @@ provides(Yum,
         "libpng" => libpng,
         "gettext-libs" => gettext
     ))
-    
+
 provides(Zypper,
     Dict(
         "libcairo" => cairo,
@@ -107,7 +112,7 @@ provides(Sources,
         URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib
     ))
 
-xx(t...) = (is_windows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
+xx(t...) = (Sys.iswindows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
     Dict(

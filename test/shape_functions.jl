@@ -1,4 +1,4 @@
-using Cairo
+using Cairo, Compat, Random
 
 # shape functions,
 
