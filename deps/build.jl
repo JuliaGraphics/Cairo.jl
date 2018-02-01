@@ -59,7 +59,7 @@ end
 
 # System Package Managers
 provides(AptGet,
-    @compat Dict(
+    Dict(
         "libcairo2" => cairo,
         "libfontconfig1" => fontconfig,
         "libpango1.0-0" => [pango,pangocairo],
@@ -71,7 +71,7 @@ provides(AptGet,
 
 # TODO: check whether these are accurate
 provides(Yum,
-    @compat Dict(
+    Dict(
         "cairo" => cairo,
         "fontconfig" => fontconfig,
         "pango" => [pango,pangocairo],
@@ -81,7 +81,7 @@ provides(Yum,
     ))
     
 provides(Zypper,
-    @compat Dict(
+    Dict(
         "libcairo" => cairo,
         "libfontconfig" => fontconfig,
         "libpango-1.0" => [pango,pangocairo],
@@ -94,7 +94,7 @@ provides(Zypper,
 const png_version = "1.5.14"
 
 provides(Sources,
-    @compat Dict(
+    Dict(
         URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
         URI("http://www.cairographics.org/releases/cairo-1.12.16.tar.xz") => cairo,
         URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
@@ -110,7 +110,7 @@ provides(Sources,
 xx(t...) = (is_windows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
-    @compat Dict(
+    Dict(
         Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*Libdl.dlext) => pixman,
         Autotools(libtarget = xx("objs/.libs/libfreetype.la","libfreetype.la")) => freetype,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
