@@ -77,14 +77,13 @@ end
         samples_files = setdiff(samples_files, files_to_exclude)
     end
 
-    sc = asyncmap(samples_files, ntasks=4) do test_file_name
-        b  = success(`$(Base.julia_cmd()) $(joinpath(samples_dir_path, test_file_name))`)
+    @testset "sample: $test_file_name" for test_file_name in samples_files
+        mod = Module(Symbol(test_file_name))
+        @eval mod include($(joinpath(samples_dir_path, test_file_name)))
         output_png_name = replace(test_file_name,".jl",".png")
-        b &= isfile(output_png_name)
+        @test isfile(output_png_name)
         rm(output_png_name)
-        return b
     end
-    @test all(sc)
 end
 
 # Run some painting, check the colored pixels by counting them
