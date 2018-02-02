@@ -3,6 +3,7 @@ using BinDeps
 @BinDeps.setup
 
 using Compat
+#import Compat.Sys
 
 # check for cairo version 
 function validate_cairo_version(name,handle)
@@ -28,7 +29,7 @@ deps = [
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
 ]
 
-if is_windows()
+if Compat.Sys.iswindows()
     using WinRPM
     provides(WinRPM.RPM,"libpango-1_0-0",[pango,pangocairo],os = :Windows)
     provides(WinRPM.RPM,["glib2", "libgobject-2_0-0"],gobject,os = :Windows)
@@ -36,7 +37,7 @@ if is_windows()
     provides(WinRPM.RPM,["libcairo2","libharfbuzz0"],cairo,os = :Windows)
 end
 
-if is_apple()
+if Compat.Sys.isapple()
     if Pkg.installed("Homebrew") === nothing
         error("Homebrew package not installed, please run Pkg.add(\"Homebrew\")")
     end
@@ -107,7 +108,7 @@ provides(Sources,
         URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib
     ))
 
-xx(t...) = (is_windows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
+xx(t...) = (Compat.Sys.iswindows() ? t[1] : (Compat.Sys.islinux() || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
     @compat Dict(
@@ -116,8 +117,8 @@ provides(BuildProcess,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
         Autotools(libtarget = "src/libcairo.la", configure_options = append!(append!(
                 AbstractString[],
-                !is_linux() ? AbstractString["--without-x","--disable-xlib","--disable-xcb"] : AbstractString[]),
-                is_apple() ? AbstractString["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : AbstractString[])) => cairo,
+                !Compat.Sys.islinux() ? AbstractString["--without-x","--disable-xlib","--disable-xcb"] : AbstractString[]),
+                Compat.Sys.isapple() ? AbstractString["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : AbstractString[])) => cairo,
         Autotools(libtarget = "gettext-tools/gnulib-lib/.libs/libgettextlib.la") => gettext,
         Autotools(libtarget = "libffi.la") => libffi,
         Autotools(libtarget = "gobject/libgobject-2.0.la") => gobject,

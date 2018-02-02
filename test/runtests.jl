@@ -1,6 +1,7 @@
 using Cairo
 using Compat, Colors
 import Compat.String
+#import Graphics: fill
 
 @compat import Base.show
 
@@ -96,7 +97,8 @@ end
     include("test_painting.jl")
 
     # fill all
-    z = zeros(UInt32,512,512);
+
+    global z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
     # fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of 
     # dimension 64 (scaled by 8 -> 512) and a linewidth of 8
@@ -143,13 +145,13 @@ end
     @test isfile(output_file_name)
     rm(output_file_name)
 
-    io = IOBuffer()
+    global io = IOBuffer()
     surf = CairoSVGSurface(io,512,512)
     hdraw(surf,64,8,4) 
     finish(surf)
     
     seek(io,0)
-    str_data = Vector{UInt8}(read(io))
+    global str_data = Vector{UInt8}(read(io))
 
     @test length(str_data) > 31000 && str_data[1:13] == [0x3c,0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e]
 
@@ -210,7 +212,7 @@ end
 
     if Cairo.libcairo_version >= v"1.12.0"
 
-        if ~is_windows()
+        if ~Compat.Sys.iswindows()
         
         output_file_name = "a.cs"
         surf = CairoScriptSurface(output_file_name,512,512)
@@ -235,7 +237,7 @@ end
         
         @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
 
-        if ~is_windows()
+        if ~Compat.Sys.iswindows()
         # _create_for_target
         z = zeros(UInt32,512,512);
         surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
@@ -263,7 +265,7 @@ end
 # pixel/bitmap surfaces
 @testset "Bitmap Surfaces" begin
 
-    z = zeros(UInt32,512,512);
+    global z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
 
     hilbert_colored(surf)
@@ -289,9 +291,9 @@ end
     @test length(d) == 512 # black is included
 end
 
-@testset "Assert/Status " begin
+@testset "Assert/Status  " begin
 
-    z = zeros(UInt32,512,512);
+    global z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
 
     @test Cairo.status(surf) == 0
@@ -302,7 +304,7 @@ end
     @test destroy(surf) == nothing
 
     surf.ptr = pa
-    cr = Cairo.CairoContext(surf)    
+    global cr = Cairo.CairoContext(surf)    
 
     pa = cr.ptr
     cr.ptr = C_NULL
@@ -318,3 +320,4 @@ end
 end
 
 nothing
+
