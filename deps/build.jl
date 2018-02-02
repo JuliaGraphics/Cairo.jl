@@ -3,11 +3,9 @@ using BinDeps
 using Compat
 import Compat.Libdl
 import Compat.Sys
-using Pkg
+import Compat.Pkg
 
 @BinDeps.setup
-
-using Compat
 
 # check for cairo version
 function validate_cairo_version(name,handle)
