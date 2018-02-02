@@ -6,7 +6,7 @@ matrix:
          dist: trusty
          sudo: false
        - language: julia
-         julia: master
+         julia: nightly
          os: linux
          dist: trusty
          sudo: false
@@ -14,14 +14,14 @@ matrix:
          julia: 0.6
          os: linux
        - language: julia
-         julia: master
+         julia: nightly
          os: linux
 
        - language: julia
          julia: 0.6
          os: osx
        - language: julia
-         julia: master
+         julia: nightly
          os: osx
 notifications:
     email: false
