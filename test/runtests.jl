@@ -78,8 +78,11 @@ end
     end
 
     @testset "sample: $test_file_name" for test_file_name in samples_files
-        mod = Module(Symbol(test_file_name))
+        # Run each sample script in a separate module to avoid pollution
+        s   = Symbol(test_file_name)
+        mod = @eval(Main, module $s end)
         @eval mod include($(joinpath(samples_dir_path, test_file_name)))
+
         output_png_name = replace(test_file_name,".jl",".png")
         @test isfile(output_png_name)
         rm(output_png_name)

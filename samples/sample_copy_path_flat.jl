@@ -40,7 +40,7 @@ for x in opath
     end
     s1 = repr(x.points)
     move_to(cr,10.0,16.0+(14.0*l))
-    l += 1
+    global l += 1
     show_text(cr,s0*s1)
 end
 
@@ -59,7 +59,7 @@ for x in fpath
     end
     s1 = repr(x.points)
     move_to(cr,10.0,50.0+(14.0*l))
-    l += 1
+    global l += 1
     show_text(cr,s0*s1)
 end
 
