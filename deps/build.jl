@@ -1,14 +1,17 @@
 using BinDeps
 
+using Compat
+import Compat.Libdl
+import Compat.Sys
+import Compat.Pkg
+
 @BinDeps.setup
 
-using Compat
-
-# check for cairo version 
+# check for cairo version
 function validate_cairo_version(name,handle)
     f = Libdl.dlsym_e(handle, "cairo_version")
     f == C_NULL && return false
-    v = ccall(f, Int32,())        
+    v = ccall(f, Int32,())
     return v > 10800
 end
 
@@ -28,7 +31,7 @@ deps = [
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
 ]
 
-if is_windows()
+if Sys.iswindows()
     using WinRPM
     provides(WinRPM.RPM,"libpango-1_0-0",[pango,pangocairo],os = :Windows)
     provides(WinRPM.RPM,["glib2", "libgobject-2_0-0"],gobject,os = :Windows)
@@ -59,7 +62,7 @@ end
 
 # System Package Managers
 provides(AptGet,
-    @compat Dict(
+    Dict(
         "libcairo2" => cairo,
         "libfontconfig1" => fontconfig,
         "libpango1.0-0" => [pango,pangocairo],
@@ -71,7 +74,7 @@ provides(AptGet,
 
 # TODO: check whether these are accurate
 provides(Yum,
-    @compat Dict(
+    Dict(
         "cairo" => cairo,
         "fontconfig" => fontconfig,
         "pango" => [pango,pangocairo],
@@ -79,9 +82,9 @@ provides(Yum,
         "libpng" => libpng,
         "gettext-libs" => gettext
     ))
-    
+
 provides(Zypper,
-    @compat Dict(
+    Dict(
         "libcairo" => cairo,
         "libfontconfig" => fontconfig,
         "libpango-1.0" => [pango,pangocairo],
@@ -94,7 +97,7 @@ provides(Zypper,
 const png_version = "1.5.14"
 
 provides(Sources,
-    @compat Dict(
+    Dict(
         URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
         URI("http://www.cairographics.org/releases/cairo-1.12.16.tar.xz") => cairo,
         URI("http://download.savannah.gnu.org/releases/freetype/freetype-2.4.11.tar.gz") => freetype,
@@ -107,10 +110,10 @@ provides(Sources,
         URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib
     ))
 
-xx(t...) = (is_windows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
+xx(t...) = (Sys.iswindows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
-    @compat Dict(
+    Dict(
         Autotools(libtarget = "pixman/libpixman-1.la", installed_libname = xx("libpixman-1-0.","libpixman-1.","libpixman-1.0.")*Libdl.dlext) => pixman,
         Autotools(libtarget = xx("objs/.libs/libfreetype.la","libfreetype.la")) => freetype,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,

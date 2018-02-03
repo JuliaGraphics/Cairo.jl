@@ -1,5 +1,7 @@
 ## header to provide surface and context
 using Cairo
+using Compat.Printf
+
 c = CairoRGBSurface(256,256);
 cr = CairoContext(c);
 
@@ -19,7 +21,7 @@ text(cr,16.0,104.0,"Text<b>Bold</b><i>Italic</i><sup>super-2</sup>",markup=true)
 
 text(cr,40.0,224.0,"Es geht <span foreground=\"white\" background=\"blue\">aufwärts</span> !",markup=true,angle=30.0)
 
-#using textwidth and height 
+#using textwidth and height
 
 set_font_face(cr, "Sans 12")
 

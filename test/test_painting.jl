@@ -39,16 +39,16 @@ end
 
 
 function hilbert_colored(surf)
-    
+
     zscale = 8;
     n1 = 8;
     cr = CairoContext(surf)
-    
+
     c = Float64[]
     hilbert_curve(c,0,0,64,0,0)
 
     move_to(cr,0,0)
-    
+
     translate(cr,zscale/2,zscale/2)
     scale(cr,zscale,zscale)
     set_line_width(cr,zscale/2)
@@ -62,13 +62,13 @@ function hilbert_colored(surf)
         set_source_rgb(cr,c1[1]/float(n1-1),c1[2]/float(n1-1),c1[3]/float(n1-1))
         stroke(cr)
 
-    end    
+    end
 end
 
 
 """ function hdraw(s,dim,zscale,linewidth)
 draws a hilbert curve with dimension dim (power of 2) and scales the drawing with
-zscale. 
+zscale.
 """
 function hdraw(s,dim,zscale,linewidth)
 
@@ -79,12 +79,12 @@ function hdraw(s,dim,zscale,linewidth)
     set_line_width(cr,linewidth)
     set_line_cap(cr,Cairo.CAIRO_LINE_CAP_SQUARE)
     translate(cr,zscale/2,zscale/2)
-    
+
     save(cr)
     c = Float64[]
 
     hilbert_curve(c,0,0,dim,0,0)
-    
+
     scale(cr,zscale,zscale)
 
     move_to(cr,0,0)
@@ -93,7 +93,7 @@ function hdraw(s,dim,zscale,linewidth)
     end
 
     stroke(cr)
-    restore(cr)    
+    restore(cr)
 end
 
 """
@@ -118,7 +118,7 @@ end
 """
 function matrix_read(surface)
 	paint the input surface into a matrix image of the same size to access
-	the pixels. 
+	the pixels.
 """
 function matrix_read(surface)
 	w = Int(surface.width)

@@ -48,7 +48,7 @@ t1 = 24.0
 for x in r1
     move_to(cr,0.0,t1)
     show_text(cr,x)
-    t1 += 12.0
+    global t1 += 12.0
 end
 
 

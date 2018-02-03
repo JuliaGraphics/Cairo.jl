@@ -1,5 +1,6 @@
 ## header to provide surface and context
 using Cairo
+
 c = CairoRGBSurface(256,256);
 cr = CairoContext(c);
 
@@ -13,14 +14,14 @@ restore(cr);
 xc = 128.0;
 yc = 128.0;
 radius = 100.0;
-angle1 = 45.0  * (pi/180.0);  # angles are specified 
-angle2 = 180.0 * (pi/180.0);  # in radians           
+angle1 = 45.0  * (pi/180.0);  # angles are specified
+angle2 = 180.0 * (pi/180.0);  # in radians
 
 set_line_width(cr, 10.0);
 arc(cr, xc, yc, radius, angle1, angle2);
 stroke(cr);
 
-# draw helping lines 
+# draw helping lines
 set_source_rgba(cr, 1, 0.2, 0.2, 0.6);
 set_line_width(cr, 6.0);
 

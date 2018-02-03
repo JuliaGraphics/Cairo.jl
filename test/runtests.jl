@@ -1,15 +1,10 @@
 using Cairo
 using Compat, Colors
-import Compat.String
+import Compat.Sys
 
-@compat import Base.show
+import Base.show
 
-if VERSION >= v"0.5.0-dev+7720"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Compat.Test
 
 
 # Image Surface
@@ -25,7 +20,7 @@ end
     surf = CairoImageSurface(fill(RGB24(0), 10, 10))
     @test Cairo.format(surf) == RGB24
     io = IOBuffer()
-    @compat show(io, MIME("image/png"), surf)
+    show(io, MIME("image/png"), surf)
 
     seek(io,0)
     str_data = Vector{UInt8}(read(io))
@@ -60,9 +55,9 @@ end
 
     # Test creating a CairoContext from a cairo_t pointer
     surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
-    ctx_ptr = ccall((:cairo_create, Cairo._jl_libcairo),Ptr{Void}, (Ptr{Void}, ), surf.ptr)
+    ctx_ptr = ccall((:cairo_create, Cairo._jl_libcairo),Ptr{Nothing}, (Ptr{Nothing}, ), surf.ptr)
     ctx = CairoContext(ctx_ptr)
-    ccall((:cairo_destroy,Cairo._jl_libcairo),Void, (Ptr{Void}, ), ctx_ptr)
+    ccall((:cairo_destroy,Cairo._jl_libcairo),Nothing, (Ptr{Nothing}, ), ctx_ptr)
 
     @test isa(ctx, CairoContext)
 end
@@ -82,13 +77,17 @@ end
         samples_files = setdiff(samples_files, files_to_exclude)
     end
 
-    for test_file_name in samples_files
-        include(joinpath(samples_dir_path, test_file_name))
+    @testset "sample: $test_file_name" for test_file_name in samples_files
+        # Run each sample script in a separate module to avoid pollution
+        s   = Symbol(test_file_name)
+        mod = @eval(Main, module $s end)
+        @eval mod include($(joinpath(samples_dir_path, test_file_name)))
+
         output_png_name = replace(test_file_name,".jl",".png")
         @test isfile(output_png_name)
         rm(output_png_name)
     end
-end 
+end
 
 # Run some painting, check the colored pixels by counting them
 @testset "Bitmap Painting" begin
@@ -98,37 +97,37 @@ end
     # fill all
     z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
-    # fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of 
+    # fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of
     # dimension 64 (scaled by 8 -> 512) and a linewidth of 8
-    hdraw(surf,64,8,8) 
+    hdraw(surf,64,8,8)
 
     d = simple_hist(surf.data)
 
-    @test length(d) == 1 
+    @test length(d) == 1
     @test collect(keys(d))[1] == 0x80000080
 
     # fill 1/4 (upper quarter)
     z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
-    # fills a 256x256 pixel area with blue,0.5 by using a hilbert curve of 
+    # fills a 256x256 pixel area with blue,0.5 by using a hilbert curve of
     # dimension 32 (scaled by 8 -> 256) and a linewidth of 8
-    hdraw(surf,32,8,8) 
+    hdraw(surf,32,8,8)
 
     d = simple_hist(surf.data)
 
-    @test length(d) == 2 
+    @test length(d) == 2
     @test d[0x80000080] == 256*256
 
-    # fill ~1/2 full, 
+    # fill ~1/2 full,
     z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
-    # fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of 
+    # fills a 512x512 pixel area with blue,0.5 by using a hilbert curve of
     # dimension 64 (scaled by 8 -> 512) and a linewidth of 4 -> 1/4 of pixels -16
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
 
     d = simple_hist(surf.data)
 
-    @test length(d) == 2 
+    @test length(d) == 2
     @test d[0x80000080] == ((512*256)-16)
 end
 
@@ -137,7 +136,7 @@ end
 
     output_file_name = "a.svg"
     surf = CairoSVGSurface(output_file_name,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
 
     @test isfile(output_file_name)
@@ -145,9 +144,9 @@ end
 
     io = IOBuffer()
     surf = CairoSVGSurface(io,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
-    
+
     seek(io,0)
     str_data = Vector{UInt8}(read(io))
 
@@ -155,7 +154,7 @@ end
 
     output_file_name = "a.pdf"
     surf = CairoPDFSurface(output_file_name,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
 
     @test isfile(output_file_name)
@@ -163,7 +162,7 @@ end
 
     io = IOBuffer()
     surf = CairoPDFSurface(io,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
 
     seek(io,0)
@@ -173,7 +172,7 @@ end
 
     output_file_name = "a.eps"
     surf = CairoEPSSurface(output_file_name,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
 
     @test isfile(output_file_name)
@@ -181,17 +180,17 @@ end
 
     io = IOBuffer()
     surf = CairoEPSSurface(io,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
-    
+
     seek(io,0)
     str_data = Vector{UInt8}(read(io))
-    
+
     @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
 
     output_file_name = "a.ps"
     surf = CairoPSSurface(output_file_name,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
 
     @test isfile(output_file_name)
@@ -199,62 +198,70 @@ end
 
     io = IOBuffer()
     surf = CairoPSSurface(io,512,512)
-    hdraw(surf,64,8,4) 
+    hdraw(surf,64,8,4)
     finish(surf)
-    
+
     seek(io,0)
     str_data = Vector{UInt8}(read(io))
-    
+
     @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f,0x62,0x65]
-    
 
     if Cairo.libcairo_version >= v"1.12.0"
 
-        if ~is_windows()
-        
-        output_file_name = "a.cs"
-        surf = CairoScriptSurface(output_file_name,512,512)
-        hdraw(surf,64,8,4) 
-        destroy(surf)
+        # FixMe! I'm not sure has anything to do with Windows. See comment below.
+        if !Sys.iswindows()
 
-        @test isfile(output_file_name)
+            output_file_name = "a.cs"
+            surf = CairoScriptSurface(output_file_name,512,512)
+            hdraw(surf,64,8,4)
+            # FixMe! The use of gc here is not a real solution but makes the tests pass for now. The issue here is
+            # that Cairo only writes to the file when the CairoScript handle is finalized. Either Cairo.jl should
+            # stop supporting this API or handle should be explicitly closed instead of using finalizers.
+            destroy(surf);GC.gc()
 
-        str_data = read(output_file_name)
-        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
-        rm(output_file_name)
+            @test isfile(output_file_name)
+
+            str_data = read(output_file_name)
+            @test length(str_data) > 3000
+            @test str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
+            rm(output_file_name)
 
         end
 
         io = IOBuffer()
         surf = CairoScriptSurface(io,512,512)
-        hdraw(surf,64,8,4) 
+        hdraw(surf,64,8,4)
         finish(surf)
-        
+
         seek(io,0)
         str_data = Vector{UInt8}(read(io))
-        
+
         @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
 
-        if ~is_windows()
-        # _create_for_target
-        z = zeros(UInt32,512,512);
-        surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+        # FixMe! I'm not sure has anything to do with Windows. See comment below.
+        if !Sys.iswindows()
+            # _create_for_target
+            z = zeros(UInt32,512,512);
+            surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
 
-        output_file_name = "a.cs"
-        scsurf = CairoScriptSurface(output_file_name,surf)
-        hdraw(scsurf,64,8,8) 
-        finish(surf)
-        destroy(scsurf)
-        @test isfile(output_file_name)
+            output_file_name = "a.cs"
+            scsurf = CairoScriptSurface(output_file_name,surf)
+            hdraw(scsurf,64,8,8)
+            finish(surf)
+            # FixMe! The use of gc here is not a real solution but makes the tests pass for now. The issue here is
+            # that Cairo only writes to the file when the CairoScript handle is finalized. Either Cairo.jl should
+            # stop supporting this API or handle should be explicitly closed instead of using finalizers.
+            destroy(scsurf);GC.gc()
+            @test isfile(output_file_name)
 
-        str_data = read(output_file_name)
-        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
-        rm(output_file_name)
+            str_data = read(output_file_name)
+            @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
+            rm(output_file_name)
 
-        d = simple_hist(surf.data)
+            d = simple_hist(surf.data)
 
-        @test length(d) == 1 
-        @test collect(keys(d))[1] == 0x80000080
+            @test length(d) == 1
+            @test collect(keys(d))[1] == 0x80000080
 
         end
     end
@@ -263,7 +270,7 @@ end
 # pixel/bitmap surfaces
 @testset "Bitmap Surfaces" begin
 
-    z = zeros(UInt32,512,512);
+    z = zeros(UInt32,512,512)
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
 
     hilbert_colored(surf)
@@ -298,11 +305,11 @@ end
 
     pa = surf.ptr
     surf.ptr = C_NULL
-    
+
     @test destroy(surf) == nothing
 
     surf.ptr = pa
-    cr = Cairo.CairoContext(surf)    
+    cr = Cairo.CairoContext(surf)
 
     pa = cr.ptr
     cr.ptr = C_NULL
