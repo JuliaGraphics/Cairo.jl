@@ -296,7 +296,7 @@ end
     @test length(d) == 512 # black is included
 end
 
-@testset "Assert/Status " begin
+@testset "Assert/Status  " begin
 
     z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
