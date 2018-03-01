@@ -325,6 +325,7 @@ end
 end
 
 @testset "reset_transform" begin
+    using Graphics
 
     z = zeros(UInt32,512,512);
     surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
