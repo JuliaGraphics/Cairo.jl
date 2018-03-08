@@ -85,10 +85,10 @@ provides(Yum,
 
 provides(Zypper,
     Dict(
-        "libcairo" => cairo,
+        "libcairo2" => cairo,
         "libfontconfig" => fontconfig,
-        "libpango-1.0" => [pango,pangocairo],
-        "libglib-2.0" => gobject,
+        "libpango-1_0" => [pango,pangocairo],
+        "libglib-2_0" => gobject,
         "libpng12" => libpng,
         "libpixman-1" => pixman,
         "gettext" => gettext
