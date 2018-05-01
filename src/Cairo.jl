@@ -1100,6 +1100,10 @@ function set_text(ctx::CairoContext, text::AbstractString, markup::Bool = false)
         ccall((:pango_layout_set_markup,_jl_libpango), Nothing,
             (Ptr{Nothing},Ptr{UInt8},Int32), ctx.layout, String(text), -1)
     else
+        # clear attributes (from previous set markups)
+        ccall((:pango_layout_set_attributes,_jl_libpango), Nothing,
+            (Ptr{Nothing},Ptr{Nothing}), ctx.layout, C_NULL)
+
         ccall((:pango_layout_set_text,_jl_libpango), Nothing,
             (Ptr{Nothing},Ptr{UInt8},Int32), ctx.layout, String(text), -1)
     end
