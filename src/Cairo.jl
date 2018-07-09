@@ -138,7 +138,7 @@ Stroking and painting API
 Cairo
 
 function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
-    n = VERSION < v"0.5-dev+2301" ? write(s,buf,len) : unsafe_write(s,buf,len)
+    n = false ? write(s,buf,len) : unsafe_write(s,buf,len)
     Int32((n == len) ? 0 : 11)
 end
 
@@ -165,17 +165,17 @@ mutable struct CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     height::Float64
     data::Matrix{T}
 
-    function (::Type{CairoSurface{T}})(ptr::Ptr{Nothing}, w, h) where {T}
+    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h) where {T}
         self = new{T}(ptr, w, h)
         @compat finalizer(destroy, self)
         self
     end
-    function (::Type{CairoSurface{T}})(ptr::Ptr{Nothing}, w, h, data::Matrix{T}) where {T}
+    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h, data::Matrix{T}) where {T}
         self = new{T}(ptr, w, h, data)
         @compat finalizer(destroy, self)
         self
     end
-    function (::Type{CairoSurface{T}})(ptr::Ptr{Nothing}) where {T}
+    function CairoSurface{T}(ptr::Ptr{Nothing}) where {T}
         ccall(
           (:cairo_surface_reference,_jl_libcairo),
           Ptr{Nothing}, (Ptr{Nothing}, ), ptr)
@@ -185,9 +185,9 @@ mutable struct CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     end
 end
 
-(::Type{CairoSurface})(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
-(::Type{CairoSurface})(ptr, w, h, data) = CairoSurface{eltype(data)}(ptr, w, h, data)
-(::Type{CairoSurface})(ptr) = CairoSurface{UInt32}(ptr)
+CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
+CairoSurface(ptr, w, h, data) = CairoSurface{eltype(data)}(ptr, w, h, data)
+CairoSurface(ptr) = CairoSurface{UInt32}(ptr)
 
 width(surface::CairoSurface) = surface.width
 height(surface::CairoSurface) = surface.height
