@@ -3,5 +3,4 @@ Compat 0.52.0
 Colors
 BinDeps 0.3.21
 Graphics 0.1
-@osx Homebrew
-@windows WinRPM
+BinaryProvider 0.3.0

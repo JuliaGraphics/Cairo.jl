@@ -55,9 +55,9 @@ end
 
     # Test creating a CairoContext from a cairo_t pointer
     surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
-    ctx_ptr = ccall((:cairo_create, Cairo._jl_libcairo),Ptr{Nothing}, (Ptr{Nothing}, ), surf.ptr)
+    ctx_ptr = ccall((:cairo_create, Cairo.libcairo),Ptr{Nothing}, (Ptr{Nothing}, ), surf.ptr)
     ctx = CairoContext(ctx_ptr)
-    ccall((:cairo_destroy,Cairo._jl_libcairo),Nothing, (Ptr{Nothing}, ), ctx_ptr)
+    ccall((:cairo_destroy,Cairo.libcairo),Nothing, (Ptr{Nothing}, ), ctx_ptr)
 
     @test isa(ctx, CairoContext)
 end
@@ -70,7 +70,7 @@ end
 @testset "Samples        " begin
 
     samples_dir_path = joinpath(dirname(dirname(@__FILE__)), "samples")
-    samples_files = filter(str->endswith(str,".jl"), readdir(samples_dir_path))
+    samples_files = filter(str->endswith(str,".jl") && !contains(str, "pango"), readdir(samples_dir_path))
     # filter known >= 1.12 -> sample_meshpattern.jl
     if Cairo.libcairo_version < v"1.12.0"
         files_to_exclude = ["sample_meshpattern.jl","sample_record0.jl","sample_record1.jl","sample_script0.jl"]
