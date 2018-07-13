@@ -21,7 +21,7 @@ for elem in dependencies
     # it's a bit faster to run the build in an anonymous module instead of
     # starting a new julia process
     m = Module(:__anon__)
-    Core.eval(m, :(Main.include($(joinpath(@__DIR__, elem)))))
+    Core.eval(m, :(Main.include($(joinpath(@__DIR__, basename(elem))))))
 end
 
 # Download binaries from hosted location
