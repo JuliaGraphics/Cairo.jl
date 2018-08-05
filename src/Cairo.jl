@@ -787,7 +787,7 @@ function convert_cairo_path_data(p::CairoPath)
         element_type = reinterpret(UInt64,c_data[data_index]) & 0xffffffff
 
         # copy points x,y
-        points = Vector{Float64}(uninitialized, (element_length - 1) * 2)
+        points = Vector{Float64}(undef, (element_length - 1) * 2)
         for i=1:(element_length-1)*2
             points[i] = c_data[data_index+i+1]
         end
@@ -1111,7 +1111,7 @@ function set_text(ctx::CairoContext, text::AbstractString, markup::Bool = false)
 end
 
 function get_layout_size(ctx::CairoContext)
-    w = Vector{Int32}(uninitialized, 2)
+    w = Vector{Int32}(undef, 2)
     ccall((:pango_layout_get_pixel_size,_jl_libpango), Nothing,
           (Ptr{Nothing},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
     w
@@ -1128,7 +1128,7 @@ function show_layout(ctx::CairoContext)
 end
 
 text_extents(ctx::CairoContext,value::AbstractString) =
-    text_extents!(ctx,value, Matrix{Float64}(uninitialized, 6, 1))
+    text_extents!(ctx,value, Matrix{Float64}(undef, 6, 1))
 
 function text_extents!(ctx::CairoContext,value::AbstractString,extents)
     ccall((:cairo_text_extents, _jl_libcairo),
