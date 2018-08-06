@@ -2,9 +2,7 @@
 using Cairo, Compat
 using Compat.Base64
 
-if !isdefined(:ddots4)
-    include("shape_functions.jl")
-end
+include("shape_functions.jl")
 
 @testset "Test that writing images to a Julia IO object works" begin
     c = CairoRGBSurface(256,256)

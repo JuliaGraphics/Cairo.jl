@@ -83,7 +83,7 @@ end
         mod = @eval(Main, module $s end)
         @eval mod include($(joinpath(samples_dir_path, test_file_name)))
 
-        output_png_name = replace(test_file_name,".jl",".png")
+        output_png_name = replace(test_file_name,".jl" => ".png")
         @test isfile(output_png_name)
         rm(output_png_name)
     end
