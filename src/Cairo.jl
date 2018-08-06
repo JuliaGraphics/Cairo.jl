@@ -1,4 +1,4 @@
-__precompile__()
+VERSION < v"0.7.0-beta2.199" && __precompile__()
 
 module Cairo
 
@@ -142,7 +142,7 @@ function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     Int32((n == len) ? 0 : 11)
 end
 
-get_stream_callback(T) = @cfunction write_to_stream_callback  Int32 (Ref{T}, Ptr{UInt8}, UInt32)
+get_stream_callback(::Type{T}) where T = @cfunction write_to_stream_callback  Int32 (Ref{T}, Ptr{UInt8}, UInt32)
 
 function read_from_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     # wrap the provided buf into a julia Array
@@ -155,7 +155,7 @@ function read_from_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     (nb == len) ? STATUS_SUCCESS : STATUS_READ_ERROR
 end
 
-get_readstream_callback(T) = @cfunction read_from_stream_callback Int32 (Ref{T}, Ptr{UInt8}, UInt32)
+get_readstream_callback(::Type{T}) where T = @cfunction read_from_stream_callback Int32 (Ref{T}, Ptr{UInt8}, UInt32)
 
 mutable struct CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     ptr::Ptr{Nothing}
@@ -299,7 +299,7 @@ end
 ## PS ##
 
 function CairoPSSurface(stream::IOStream, w::Real, h::Real)
-    callback = @cfunction(write_to_ios_callback, Int32, Tuple{Ptr{Nothing},Ptr{UInt8},UInt32})
+    callback = @cfunction(write_to_ios_callback, Int32, (Ptr{Nothing},Ptr{UInt8},UInt32))
     ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Ptr{Nothing}, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Nothing,
