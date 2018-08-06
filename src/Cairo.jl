@@ -1239,7 +1239,7 @@ function get_token(self::TeXLexer)
             token = token[1:end-1]
         end
     else
-        token, self.pos = iterate(self.str, self.pos)
+        token, self.pos = next(self.str, self.pos)
         token = string(token)
     end
 
