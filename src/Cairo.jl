@@ -766,7 +766,7 @@ function convert_cairo_path_data(p::CairoPath)
     # define here by Float64 (most data is) and reinterpret in the header.
 
     path_data = CairoPathEntry[]
-    c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), own=false)
+    c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), false)
 
     data_index = 1
     while data_index <= ((c.num_data)*2)
