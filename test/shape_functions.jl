@@ -5,7 +5,11 @@ using Compat.Random
 
 
 function randpos(n,w::Real,h::Real)
-    srand(141413)
+    @static if VERSION >= v"0.7"
+        Random.seed!(141413)
+    else
+        srand(141413)
+    end
     px = rand(n)*w
     py = rand(n)*h
     return (px,py)

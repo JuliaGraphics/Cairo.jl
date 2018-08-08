@@ -766,7 +766,11 @@ function convert_cairo_path_data(p::CairoPath)
     # define here by Float64 (most data is) and reinterpret in the header.
 
     path_data = CairoPathEntry[]
-    c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), false)
+    @static if VERSION >= v"0.7"
+        c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), own=false)
+    else
+        c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), false)
+    end
 
     data_index = 1
     while data_index <= ((c.num_data)*2)
@@ -1239,7 +1243,11 @@ function get_token(self::TeXLexer)
             token = token[1:end-1]
         end
     else
-        token, self.pos = next(self.str, self.pos)
+        @static if VERSION >= v"0.7"
+            token, self.pos = iterate(self.str, self.pos)
+        else
+            token, self.pos = next(self.str, self.pos)
+        end
         token = string(token)
     end
 
