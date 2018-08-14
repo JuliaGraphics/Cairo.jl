@@ -40,7 +40,6 @@ end
 
 if is_apple()
     using Homebrew
-    Homebrew.brew(`reinstall fontconfig`)
     provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
     provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin, onload =
     """
@@ -163,3 +162,9 @@ provides(BuildProcess,
                        (:cairo, :_jl_libcairo),
                        (:pango, :_jl_libpango),
                        (:pangocairo, :_jl_libpangocairo)])
+
+
+if Sys.isapple()
+    using Homebrew
+    Homebrew.brew(`reinstall fontconfig`)
+end
