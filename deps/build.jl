@@ -170,3 +170,5 @@ if Sys.isapple()
     using Homebrew
     Homebrew.brew(`reinstall fontconfig`; verbose = true)
 end
+
+Pkg.build("Cairo")
