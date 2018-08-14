@@ -158,11 +158,13 @@ provides(BuildProcess,
         end
     end),libpng, os = :Windows)
 
-@BinDeps.install Dict([(:gobject, :_jl_libgobject),
+try
+  @BinDeps.install Dict([(:gobject, :_jl_libgobject),
                        (:cairo, :_jl_libcairo),
                        (:pango, :_jl_libpango),
                        (:pangocairo, :_jl_libpangocairo)])
-
+catch
+end
 
 if Sys.isapple()
     using Homebrew
