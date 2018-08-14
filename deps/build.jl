@@ -166,5 +166,5 @@ provides(BuildProcess,
 
 if Sys.isapple()
     using Homebrew
-    Homebrew.brew(`reinstall fontconfig`)
+    Homebrew.brew(`reinstall fontconfig`; verbose = true)
 end
