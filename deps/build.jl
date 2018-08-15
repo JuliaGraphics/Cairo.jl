@@ -172,5 +172,5 @@ if Sys.isapple() && !isfile(Pkg.dir("Cairo","deps","deps.jl"))
       Homebrew.brew(`reinstall fontconfig`; verbose = true)
     catch
     end
-    Pkg.build("Cairo")
+    Pkg.build("Cairo") 
 end
