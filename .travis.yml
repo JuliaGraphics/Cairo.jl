@@ -1,20 +1,20 @@
 matrix:
     include:
-       - language: julia
-         julia: 0.6
-         os: linux
-         dist: trusty
-         sudo: false
-       - language: julia
-         julia: 0.7
-         os: linux
-         dist: trusty
-         sudo: false
-       - language: julia
-         julia: 1.0
-         os: linux
-         dist: trusty
-         sudo: false
+#       - language: julia
+#         julia: 0.6
+#         os: linux
+#         dist: trusty
+#         sudo: false
+#       - language: julia
+#         julia: 0.7
+#         os: linux
+#         dist: trusty
+#         sudo: false
+#       - language: julia
+#         julia: 1.0
+#         os: linux
+#         dist: trusty
+#         sudo: false
        - language: julia
          julia: 0.6
          os: linux
