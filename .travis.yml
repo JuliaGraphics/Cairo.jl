@@ -11,7 +11,7 @@ matrix:
          dist: trusty
          sudo: false
        - language: julia
-         julia: nightly
+         julia: 1.0
          os: linux
          dist: trusty
          sudo: false
@@ -22,7 +22,7 @@ matrix:
          julia: 0.7
          os: linux
        - language: julia
-         julia: nightly
+         julia: 1.0
          os: linux
 
        - language: julia
@@ -32,9 +32,11 @@ matrix:
          julia: 0.7
          os: osx
        - language: julia
-         julia: nightly
+         julia: 1.0
          os: osx
+    allow_failures:
+       - julia: 1.0
 notifications:
     email: false
 after_success:
-    - julia -e 'cd(Pkg.dir("Cairo")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+    - julia -e 'VERSION>=v"0.7-"&&using Pkg; cd(Pkg.dir("Cairo")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
