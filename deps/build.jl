@@ -16,19 +16,18 @@ end
 
 group = library_group("cairo")
 
-#deps = [
-    libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0","libpng12"], runtime = false, group = group)
-    pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false, group = group)
-    libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false, group = group)
-    gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl", "libgettextpo"], os = :Unix, group = group)
-    gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi, gettext], group = group)
-    freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false, group = group)
-    fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], runtime = false, group = group)
-    cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2", "libcairo2"], depends = [gobject,fontconfig,libpng], group = group, validate = validate_cairo_version)
-    pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], group = group)
-    pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group)
-    zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
-#]
+
+libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0","libpng12"], runtime = false, group = group)
+pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false, group = group)
+libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false, group = group)
+gettext = library_dependency("gettext", aliases = ["libintl", "preloadable_libintl", "libgettextpo"], os = :Unix, group = group)
+gobject = library_dependency("gobject", aliases = ["libgobject-2.0-0", "libgobject-2.0", "libgobject-2_0-0", "libgobject-2.0.so.0"], depends=[libffi, gettext], group = group)
+freetype = library_dependency("freetype", aliases = ["libfreetype"], runtime = false, group = group)
+fontconfig = library_dependency("fontconfig", aliases = ["libfontconfig-1", "libfontconfig", "libfontconfig.so.1"], depends = [freetype], runtime = false, group = group)
+cairo = library_dependency("cairo", aliases = ["libcairo-2", "libcairo","libcairo.so.2", "libcairo2"], depends = [gobject,fontconfig,libpng], group = group, validate = validate_cairo_version)
+pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], group = group)
+pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group)
+zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
 
 if Sys.iswindows()
     using WinRPM
@@ -106,7 +105,7 @@ provides(Sources,
         URI("http://zlib.net/zlib-1.2.7.tar.gz") => zlib
     ))
 
-xx(t...) = (Sys.iswindows() ? t[1] : (is_linux() || length(t) == 2) ? t[2] : t[3])
+xx(t...) = (Sys.iswindows() ? t[1] : (Sys.islinux() || length(t) == 2) ? t[2] : t[3])
 
 provides(BuildProcess,
     Dict(
@@ -115,8 +114,8 @@ provides(BuildProcess,
         Autotools(libtarget = "src/libfontconfig.la") => fontconfig,
         Autotools(libtarget = "src/libcairo.la", configure_options = append!(append!(
                 AbstractString[],
-                !is_linux() ? AbstractString["--without-x","--disable-xlib","--disable-xcb"] : AbstractString[]),
-                is_apple() ? AbstractString["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : AbstractString[])) => cairo,
+                !Sys.islinux() ? AbstractString["--without-x","--disable-xlib","--disable-xcb"] : AbstractString[]),
+                Sys.isapple() ? AbstractString["--enable-quartz","--enable-quartz-font","--enable-quartz-image","--disable-gl"] : AbstractString[])) => cairo,
         Autotools(libtarget = "gettext-tools/gnulib-lib/.libs/libgettextlib.la") => gettext,
         Autotools(libtarget = "libffi.la") => libffi,
         Autotools(libtarget = "gobject/libgobject-2.0.la") => gobject,
