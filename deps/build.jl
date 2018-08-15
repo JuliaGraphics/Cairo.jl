@@ -89,8 +89,6 @@ provides(Zypper,
         "gettext" => gettext
     ))
 
-if VERSION < v"1.0.0"
-
 const png_version = "1.5.14"
 
 provides(Sources,
@@ -126,6 +124,8 @@ provides(BuildProcess,
 
 provides(BuildProcess,Autotools(libtarget = "libpng15.la"),libpng,os = :Unix)
 
+
+if VERSION < v"1.0.0"
 provides(SimpleBuild,
     (@build_steps begin
         GetSources(zlib)
@@ -135,6 +135,7 @@ provides(SimpleBuild,
             #MakeTargets(["-fwin32/Makefile.gcc","DESTDIR=../../usr/","INCLUDE_PATH=include","LIBRARY_PATH=lib","SHARED_MODE=1","install"])
         end
     end),zlib, os = :Windows)
+end
 
 prefix=joinpath(BinDeps.depsdir(libpng),"usr")
 uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
@@ -159,7 +160,6 @@ provides(BuildProcess,
         end
     end),libpng, os = :Windows)
 
-end
 
 @BinDeps.install Dict([(:gobject, :_jl_libgobject),
                        (:cairo, :_jl_libcairo),
