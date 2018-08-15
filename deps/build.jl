@@ -89,9 +89,10 @@ provides(Zypper,
         "gettext" => gettext
     ))
 
+if VERSION < v"1.0.0"
+
 const png_version = "1.5.14"
 
-#=
 provides(Sources,
     Dict(
         URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
@@ -157,7 +158,8 @@ provides(BuildProcess,
             end)
         end
     end),libpng, os = :Windows)
-=#
+
+end
 
 @BinDeps.install Dict([(:gobject, :_jl_libgobject),
                        (:cairo, :_jl_libcairo),
