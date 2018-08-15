@@ -38,7 +38,7 @@ if Sys.iswindows()
     provides(WinRPM.RPM,["libcairo2","libharfbuzz0"],cairo,os = :Windows)
 end
 
-if is_apple()
+if Sys.isapple()
     using Homebrew
     provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
     provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin, onload =
