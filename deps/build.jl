@@ -91,7 +91,6 @@ provides(Zypper,
 
 const png_version = "1.5.14"
 
-#=
 provides(Sources,
     Dict(
         URI("http://www.cairographics.org/releases/pixman-0.28.2.tar.gz") => pixman,
@@ -125,6 +124,8 @@ provides(BuildProcess,
 
 provides(BuildProcess,Autotools(libtarget = "libpng15.la"),libpng,os = :Unix)
 
+
+if VERSION < v"1.0.0"
 provides(SimpleBuild,
     (@build_steps begin
         GetSources(zlib)
@@ -134,9 +135,10 @@ provides(SimpleBuild,
             #MakeTargets(["-fwin32/Makefile.gcc","DESTDIR=../../usr/","INCLUDE_PATH=include","LIBRARY_PATH=lib","SHARED_MODE=1","install"])
         end
     end),zlib, os = :Windows)
+end
 
 prefix=joinpath(BinDeps.depsdir(libpng),"usr")
-uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
+uprefix = replace(replace(prefix,"\\" => "/"),"C:/" => "/c/")
 pngsrcdir = joinpath(BinDeps.depsdir(libpng),"src","libpng-$png_version")
 pngbuilddir = joinpath(BinDeps.depsdir(libpng),"builds","libpng-$png_version")
 provides(BuildProcess,
@@ -157,7 +159,7 @@ provides(BuildProcess,
             end)
         end
     end),libpng, os = :Windows)
-=#
+
 
 @BinDeps.install Dict([(:gobject, :_jl_libgobject),
                        (:cairo, :_jl_libcairo),
