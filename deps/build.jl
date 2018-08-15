@@ -39,6 +39,7 @@ end
 
 if Sys.isapple()
     using Homebrew
+    Homebrew.update()
     provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
     provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin, onload =
     """
