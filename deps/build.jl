@@ -138,7 +138,7 @@ provides(SimpleBuild,
 end
 
 prefix=joinpath(BinDeps.depsdir(libpng),"usr")
-uprefix = replace(replace(prefix,"\\","/"),"C:/","/c/")
+uprefix = replace(replace(prefix,"\\","/"),"C:/" => "/c/")
 pngsrcdir = joinpath(BinDeps.depsdir(libpng),"src","libpng-$png_version")
 pngbuilddir = joinpath(BinDeps.depsdir(libpng),"builds","libpng-$png_version")
 provides(BuildProcess,
