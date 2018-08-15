@@ -16,7 +16,7 @@ end
 
 group = library_group("cairo")
 
-deps = [
+#deps = [
     libpng = library_dependency("png", aliases = ["libpng","libpng-1.5.14","libpng15","libpng12.so.0","libpng12"], runtime = false, group = group)
     pixman = library_dependency("pixman", aliases = ["libpixman","libpixman-1","libpixman-1-0","libpixman-1.0"], depends = [libpng], runtime = false, group = group)
     libffi = library_dependency("ffi", aliases = ["libffi"], runtime = false, group = group)
@@ -28,7 +28,7 @@ deps = [
     pango = library_dependency("pango", aliases = ["libpango-1.0-0", "libpango-1.0","libpango-1.0.so.0", "libpango-1_0-0"], group = group)
     pangocairo = library_dependency("pangocairo", aliases = ["libpangocairo-1.0-0", "libpangocairo-1.0", "libpangocairo-1.0.so.0"], depends = [cairo], group = group)
     zlib = library_dependency("zlib", aliases = ["libzlib","zlib1"], os = :Windows, group = group)
-]
+#]
 
 if Sys.iswindows()
     using WinRPM
