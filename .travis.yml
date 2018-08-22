@@ -34,8 +34,6 @@ matrix:
        - language: julia
          julia: 1.0
          os: osx
-    allow_failures:
-       - julia: 1.0
 notifications:
     email: false
 after_success:
