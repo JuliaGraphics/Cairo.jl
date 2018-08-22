@@ -157,19 +157,15 @@ end
 
 get_readstream_callback(::Type{T}) where T = @cfunction read_from_stream_callback Int32 (Ref{T}, Ptr{UInt8}, UInt32)
 
-mutable struct CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
+abstract type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice end
+
+mutable struct CairoSurfaceBase{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T}
     ptr::Ptr{Nothing}
     width::Float64
     height::Float64
-    data::Matrix{T}
 
     function CairoSurface{T}(ptr::Ptr{Nothing}, w, h) where {T}
         self = new{T}(ptr, w, h)
-        @compat finalizer(destroy, self)
-        self
-    end
-    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h, data::Matrix{T}) where {T}
-        self = new{T}(ptr, w, h, data)
         @compat finalizer(destroy, self)
         self
     end
@@ -183,8 +179,37 @@ mutable struct CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     end
 end
 
+
+mutable struct CairoSurfaceImage{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T}
+    ptr::Ptr{Nothing}
+    width::Float64
+    height::Float64
+    data::Matrix{T}
+
+    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h, data::Matrix{T}) where {T}
+        self = new{T}(ptr, w, h, data)
+        @compat finalizer(destroy, self)
+        self
+    end
+end
+
+mutable struct CairoSurfaceIOStream{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T}
+    ptr::Ptr{Nothing}
+    width::Float64
+    height::Float64
+    stream::IO
+
+    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h, stream::IO) where {T}
+        self = new{T}(ptr, w, h, stream)
+        @compat finalizer(destroy, self)
+        self
+    end
+end
+
+
 CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
 CairoSurface(ptr, w, h, data) = CairoSurface{eltype(data)}(ptr, w, h, data)
+CairoSurface(ptr, w, h, stream::IO) = CairoSurface{UInt32}(ptr, w, h, stream)
 CairoSurface(ptr) = CairoSurface{UInt32}(ptr)
 
 width(surface::CairoSurface) = surface.width
@@ -268,7 +293,7 @@ function CairoPDFSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
     ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoPDFSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -285,7 +310,7 @@ function CairoEPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Nothing,
         (Ptr{Nothing},Int32), ptr, 1)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoEPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -304,7 +329,7 @@ function CairoPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Nothing,
         (Ptr{Nothing},Int32), ptr, 0)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -350,7 +375,7 @@ function CairoSVGSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
     ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoSVGSurface(filename::AbstractString, w::Real, h::Real)
@@ -464,7 +489,7 @@ function CairoScriptSurface(stream::IO, w::Real, h::Real)
     s = CairoScript(stream)
     ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Nothing},
                 (Ptr{Nothing},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 

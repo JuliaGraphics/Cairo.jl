@@ -6,6 +6,12 @@ import Base.show
 
 using Compat.Test
 
+# Test that an the CairoSurface holds a reference to the passed IOBuffer
+@testset "IOBuffer Rooting " begin
+  CairoSVGSurface(IOBuffer(), 200, 110)
+  GC.gc()
+  GC.gc()
+end
 
 # Image Surface
 @testset "Image Surface  " begin
