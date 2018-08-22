@@ -160,8 +160,19 @@ provides(BuildProcess,
         end
     end),libpng, os = :Windows)
 
-
+#try
 @BinDeps.install Dict([(:gobject, :_jl_libgobject),
                        (:cairo, :_jl_libcairo),
                        (:pango, :_jl_libpango),
                        (:pangocairo, :_jl_libpangocairo)])
+#catch
+#end
+
+#=if Sys.isapple() && !isfile(Pkg.dir("Cairo","deps","deps.jl"))
+    using Homebrew
+    try
+      Homebrew.brew(`reinstall fontconfig`; verbose = true)
+    catch
+    end
+    Pkg.build("Cairo") 
+end=#
