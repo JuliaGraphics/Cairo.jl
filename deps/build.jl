@@ -47,6 +47,7 @@ if is_apple()
         ENV["PANGO_SYSCONFDIR"] = joinpath("$(Homebrew.prefix())", "etc")
     end
     """ )
+    provides( Homebrew.HB, "graphite2", graphite2, os = :Darwin )
     provides( Homebrew.HB, "fontconfig", fontconfig, os = :Darwin )
     provides( Homebrew.HB, "glib", gobject, os = :Darwin )
     provides( Homebrew.HB, "libpng", libpng, os = :Darwin )
