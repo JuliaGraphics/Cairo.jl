@@ -439,24 +439,17 @@ function format_stride_for_width(format::Integer, width::Integer)
 end
 
 
-## Scripting
+## Scripting (only target IO stream)
 
 mutable struct CairoScript <: GraphicsDevice
     ptr::Ptr{Nothing}
-
-    function CairoScript(filename::AbstractString)
-        ptr = ccall((:cairo_script_create,_jl_libcairo),
-                    Ptr{Nothing}, (Ptr{UInt8},), String(filename))
-        self = new(ptr)
-        @compat finalizer(destroy, self)
-        self
-    end
+    stream::IO
 
     function CairoScript(stream::T) where {T<:IO}
         callback = get_stream_callback(T)
         ptr = ccall((:cairo_script_create_for_stream,_jl_libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any), callback, stream)
-        self = new(ptr)
+        self = new(ptr,stream)
         @compat finalizer(destroy, self)
         self
     end
@@ -471,26 +464,20 @@ function destroy(s::CairoScript)
     nothing
 end
 
-function CairoScriptSurface(filename::AbstractString, w::Real, h::Real)
-    s = CairoScript(filename)
-    ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Nothing},
-                (Ptr{Nothing},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
-    CairoSurface(ptr, w, h)
-end
-
-function CairoScriptSurface(filename::AbstractString,sc::CairoSurface)
-    s = CairoScript(filename)
-    ptr = ccall((:cairo_script_surface_create_for_target,_jl_libcairo), Ptr{Nothing},
-                (Ptr{Nothing},Ptr{Nothing}),s.ptr, sc.ptr)
-    CairoSurface(ptr, sc.width, sc.height)
-end
-
 function CairoScriptSurface(stream::IO, w::Real, h::Real)
     s = CairoScript(stream)
     ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Nothing},
                 (Ptr{Nothing},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h, stream)
 end
+
+function CairoScriptSurface(stream::IO, sc::CairoSurface)
+    s = CairoScript(stream)
+    ptr = ccall((:cairo_script_surface_create_for_target,_jl_libcairo), Ptr{Nothing},
+                (Ptr{Nothing},Ptr{Nothing}),s.ptr, sc.ptr)
+    CairoSurface(ptr, sc.width, sc.height)
+end
+
 
 
 mutable struct CairoRectangle
