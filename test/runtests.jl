@@ -214,26 +214,7 @@ end
 
     if Cairo.libcairo_version >= v"1.12.0"
 
-        # FixMe! I'm not sure has anything to do with Windows. See comment below.
-        if !Sys.iswindows()
-
-            output_file_name = "a.cs"
-            surf = CairoScriptSurface(output_file_name,512,512)
-            hdraw(surf,64,8,4)
-            # FixMe! The use of gc here is not a real solution but makes the tests pass for now. The issue here is
-            # that Cairo only writes to the file when the CairoScript handle is finalized. Either Cairo.jl should
-            # stop supporting this API or handle should be explicitly closed instead of using finalizers.
-            destroy(surf);GC.gc()
-
-            @test isfile(output_file_name)
-
-            str_data = read(output_file_name)
-            @test length(str_data) > 3000
-            @test str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
-            rm(output_file_name)
-
-        end
-
+        # just write to surface and test for content
         io = IOBuffer()
         surf = CairoScriptSurface(io,512,512)
         hdraw(surf,64,8,4)
@@ -244,32 +225,27 @@ end
 
         @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
 
-        # FixMe! I'm not sure has anything to do with Windows. See comment below.
-        if !Sys.iswindows()
-            # _create_for_target
-            z = zeros(UInt32,512,512);
-            surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+        # create_for_target
+        z = zeros(UInt32,512,512);
+        surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
 
-            output_file_name = "a.cs"
-            scsurf = CairoScriptSurface(output_file_name,surf)
-            hdraw(scsurf,64,8,8)
-            finish(surf)
-            # FixMe! The use of gc here is not a real solution but makes the tests pass for now. The issue here is
-            # that Cairo only writes to the file when the CairoScript handle is finalized. Either Cairo.jl should
-            # stop supporting this API or handle should be explicitly closed instead of using finalizers.
-            destroy(scsurf);GC.gc()
-            @test isfile(output_file_name)
+        io = IOBuffer()
+        scsurf = CairoScriptSurface(io,surf)
+        hdraw(scsurf,64,8,8)
+        finish(surf)
+        destroy(scsurf)
 
-            str_data = read(output_file_name)
-            @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
-            rm(output_file_name)
+        seek(io,0)
+        str_data = Vector{UInt8}(read(io))
 
-            d = simple_hist(surf.data)
+        @test length(str_data) > 3000 && str_data[1:10] == [0x25,0x21,0x43,0x61,0x69,0x72,0x6f,0x53,0x63,0x72]
 
-            @test length(d) == 1
-            @test collect(keys(d))[1] == 0x80000080
+        d = simple_hist(surf.data)
 
-        end
+        @test length(d) == 1
+        @test collect(keys(d))[1] == 0x80000080
+
+        
     end
 end
 
