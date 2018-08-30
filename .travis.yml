@@ -24,6 +24,9 @@ matrix:
        - language: julia
          julia: 1.0
          os: linux
+       - language: julia
+         julia: nightly
+         os: linux
 
        - language: julia
          julia: 0.6
