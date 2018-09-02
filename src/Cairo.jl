@@ -13,7 +13,7 @@ using Colors
 
 import Graphics
 using Graphics: BoundingBox, GraphicsContext, GraphicsDevice
-import Graphics: arc, clip, close_path, creategc, fill_preserve, height, line_to, move_to, new_path, new_sub_path, paint, rectangle, rel_line_to, reset_clip, restore, rotate, save, scale, set_dash, set_line_width, set_source, set_source_rgb, set_source_rgba, stroke, stroke_preserve, textwidth, translate, width, circle, reset_transform
+import Graphics: arc, clip, clip_preserve, close_path, creategc, device_to_user!, device_to_user_distance!, fill_preserve, height, line_to, move_to, new_path, new_sub_path, paint, rectangle, rel_line_to, rel_move_to, reset_clip, restore, rotate, save, scale, set_dash, set_line_width, set_source, set_source_rgb, set_source_rgba, stroke, stroke_preserve, stroke_transformed, stroke_transformed_preserve, textwidth, translate, user_to_device!, user_to_device_distance!, width, circle, reset_transform
 import Base: copy, fill
 
 libcairo_version = VersionNumber(unsafe_string(
