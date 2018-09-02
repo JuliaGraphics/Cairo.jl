@@ -39,7 +39,6 @@ end
 
 if Sys.isapple()
     using Homebrew
-    Homebrew.add("graphite2")
     provides( Homebrew.HB, "cairo", cairo, os = :Darwin )
     provides( Homebrew.HB, "pango", [pango, pangocairo], os = :Darwin, onload =
     """
