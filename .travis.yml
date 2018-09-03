@@ -1,45 +1,21 @@
-matrix:
-    include:
-#       - language: julia
-#         julia: 0.6
-#         os: linux
-#         dist: trusty
-#         sudo: false
-#       - language: julia
-#         julia: 0.7
-#         os: linux
-#         dist: trusty
-#         sudo: false
-#       - language: julia
-#         julia: 1.0
-#         os: linux
-#         dist: trusty
-#         sudo: false
-       - language: julia
-         julia: 0.6
-         os: linux
-       - language: julia
-         julia: 0.7
-         os: linux
-       - language: julia
-         julia: 1.0
-         os: linux
-       - language: julia
-         julia: nightly
-         os: linux
-
-       - language: julia
-         julia: 0.6
-         os: osx
-       - language: julia
-         julia: 0.7
-         os: osx
-       - language: julia
-         julia: 1.0
-         os: osx
-    allow_failures:
-       - julia: 1.0
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 0.6
+  - 0.7
+  - 1.0
+  - nightly
 notifications:
-    email: false
+  email: false
+branches:
+  only:
+  - master
+  - /release-.*/
+  - /v(\d+)\.(\d+)\.(\d+)/   
+matrix:
+  allow_failures:
+  - julia: nightly
 after_success:
-    - julia -e 'VERSION>=v"0.7-"&&using Pkg; cd(Pkg.dir("Cairo")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'VERSION>=v"0.7-"&&using Pkg; VERSION>=v"0.7-"&&cd(Pkg.dir("Cairo")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
