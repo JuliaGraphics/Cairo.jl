@@ -4,6 +4,17 @@ using Compat
 import Compat.Libdl
 import Compat.Sys
 
+if Sys.isapple()
+    deps_file_str = open(joinpath(dirname(pathof(BinDeps)), "dependencies.jl")) do file
+        read(file, String)
+    end
+    if occursin("ZEval",pathof(BinDeps))
+        patched_dlclose = replace(deps_file_str, "Libdl.dlclose(h)" => "println(\"ignored: dlclose()\")")
+        include_string(BinDeps,patched_dlclose)
+    end
+end
+
+
 @BinDeps.setup
 
 # check for cairo version
@@ -166,3 +177,9 @@ provides(BuildProcess,
                        (:cairo, :_jl_libcairo),
                        (:pango, :_jl_libpango),
                        (:pangocairo, :_jl_libpangocairo)])
+
+
+if Sys.isapple()
+    import Pkg.Types.printpkgstyle
+    printpkgstyle(stdout, :Installed, "Patched install script, restarting Julia is recommended.")
+end
