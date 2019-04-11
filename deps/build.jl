@@ -5,10 +5,11 @@ import Compat.Libdl
 import Compat.Sys
 
 if Sys.isapple()
-    deps_file_str = open(joinpath(dirname(pathof(BinDeps)), "dependencies.jl")) do file
+    bindeps_path = VERSION >= v"0.7" ? joinpath(dirname(pathof(BinDeps)), "dependencies.jl") : joinpath(Pkg.dir("BinDeps"),"src/dependencies.jl")
+    deps_file_str = open(bindeps_path) do file
         read(file, String)
     end
-    if occursin("ZEval",pathof(BinDeps))
+    if occursin("ZEval",bindeps_path) || VERSION < v"0.7"
         patched_dlclose = replace(deps_file_str, "Libdl.dlclose(h)" => "println(\"ignored: dlclose()\")")
         include_string(BinDeps,patched_dlclose)
     end
