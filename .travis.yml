@@ -14,6 +14,9 @@ matrix:
          os: linux
 
        - language: julia
+         julia: 0.6
+         os: osx
+       - language: julia
          julia: 0.7
          os: osx
        - language: julia
