@@ -1,29 +1,22 @@
-matrix:
-    include:
-       - language: julia
-         julia: 0.6
-         os: linux
-       - language: julia
-         julia: 0.7
-         os: linux
-       - language: julia
-         julia: 1.0
-         os: linux
-       - language: julia
-         julia: nightly
-         os: linux
-
-       - language: julia
-         julia: 0.7
-         os: osx
-       - language: julia
-         julia: 1.0
-         os: osx
-       - language: julia
-         julia: 1.1
-         os: osx
-         
+## Documentation: http://docs.travis-ci.com/user/languages/julia/
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 0.7
+  - 1.1
+  - nightly
 notifications:
-    email: false
+  email: false
+git:
+  depth: 99999999
+
+## uncomment the following lines to allow failures on nightly julia
+## (tests will run but not make your overall status red)
+matrix:
+  allow_failures:
+  - julia: nightly
+
 after_success:
-    - julia -e 'VERSION>=v"0.7-"&&using Pkg; cd(Pkg.dir("Cairo")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder()); Coveralls.submit(Coveralls.process_folder())'
