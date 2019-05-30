@@ -181,7 +181,7 @@ Mesh patterns are tensor-product patch meshes (type 7 shadings in PDF), read mor
 
 ![mesh pattern .png](sample_meshpattern.png "mesh pattern example")
 
-## Recording and Scripting Surfaces
+### Recording and Scripting Surfaces
 
 Example of using Recording surface, simple copy, then scaled and offset.
 
@@ -191,3 +191,9 @@ Example of using Recording surface, simple copy, then scaled and offset.
 Example of writing to script, put script text into frame.
 
 ![sample script0.png](sample_script0.png "scrip0 example")
+
+### current point 
+
+Example of using current point
+
+![sample current point.png](sample_current_point.png "current point example")
