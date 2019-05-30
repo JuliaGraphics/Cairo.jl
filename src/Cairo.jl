@@ -87,6 +87,9 @@ export
     # path copy
     copy_path, copy_path_flat, convert_cairo_path_data,
 
+    # other path operations
+    get_current_point, has_current_point,
+
     # text
     text,
     update_layout, show_layout, get_layout_size, layout_text,
@@ -807,6 +810,22 @@ function convert_cairo_path_data(p::CairoPath)
     path_data
 end
 
+# other path operations
+
+function get_current_point(ctx::CairoContext)
+
+    x = Ref{Cdouble}(0)
+    y = Ref{Cdouble}(0)
+    ccall((:cairo_get_current_point, _jl_libcairo),
+            Nothing, (Ptr{Nothing},Ref{Cdouble},Ref{Cdouble}),ctx.ptr,x,y)
+
+    x[],y[]
+end
+
+function has_current_point(ctx::CairoContext)
+    Bool(ccall((:cairo_has_current_point, _jl_libcairo),
+            Cint, (Ptr{Nothing},),ctx.ptr))
+end
 
 # user<->device coordinate translation
 
