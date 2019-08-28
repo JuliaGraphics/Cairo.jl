@@ -76,7 +76,7 @@ end
 @testset "Samples        " begin
 
     samples_dir_path = joinpath(dirname(dirname(@__FILE__)), "samples")
-    samples_files = filter(str->endswith(str,".jl") && !contains(str, "pango"), readdir(samples_dir_path))
+    samples_files = filter(str->endswith(str,".jl") && (!occursin("pango",str)), readdir(samples_dir_path))
     # filter known >= 1.12 -> sample_meshpattern.jl
     if Cairo.libcairo_version < v"1.12.0"
         files_to_exclude = ["sample_meshpattern.jl","sample_record0.jl","sample_record1.jl","sample_script0.jl"]

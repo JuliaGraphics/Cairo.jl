@@ -459,7 +459,7 @@ end
 
 mutable struct CairoScript <: GraphicsDevice
     ptr::Ptr{Nothing}
-
+    stream::IO
     function CairoScript(filename::AbstractString)
         ptr = ccall((:cairo_script_create,libcairo),
                     Ptr{Nothing}, (Ptr{UInt8},), String(filename))
@@ -507,6 +507,16 @@ function CairoScriptSurface(stream::IO, w::Real, h::Real)
                 (Ptr{Nothing},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
+
+function CairoScriptSurface(stream::IO, sc::CairoSurface)
+    s = CairoScript(stream)
+    ptr = ccall((:cairo_script_surface_create_for_target,libcairo), Ptr{Nothing},
+                (Ptr{Nothing},Ptr{Nothing}),s.ptr, sc.ptr)
+    CairoSurface(ptr, sc.width, sc.height)
+end
+
+
+
 
 mutable struct CairoRectangle
     x0::Float64
@@ -841,14 +851,14 @@ function get_current_point(ctx::CairoContext)
 
     x = Ref{Cdouble}(0)
     y = Ref{Cdouble}(0)
-    ccall((:cairo_get_current_point, _jl_libcairo),
+    ccall((:cairo_get_current_point, libcairo),
             Nothing, (Ptr{Nothing},Ref{Cdouble},Ref{Cdouble}),ctx.ptr,x,y)
 
     x[],y[]
 end
 
 function has_current_point(ctx::CairoContext)
-    Bool(ccall((:cairo_has_current_point, _jl_libcairo),
+    Bool(ccall((:cairo_has_current_point, libcairo),
             Cint, (Ptr{Nothing},),ctx.ptr))
 end
 
