@@ -1,4 +1,4 @@
-__precompile__()
+VERSION < v"0.7.0-beta2.199" && __precompile__()
 
 module Cairo
 
@@ -17,7 +17,7 @@ using Colors
 
 import Graphics
 using Graphics: BoundingBox, GraphicsContext, GraphicsDevice
-import Graphics: arc, clip, close_path, creategc, fill_preserve, height, line_to, move_to, new_path, new_sub_path, paint, rectangle, rel_line_to, reset_clip, restore, rotate, save, scale, set_dash, set_line_width, set_source, set_source_rgb, set_source_rgba, stroke, stroke_preserve, textwidth, translate, width, circle, reset_transform
+import Graphics: arc, clip, clip_preserve, close_path, creategc, device_to_user!, device_to_user_distance!, fill_preserve, height, line_to, move_to, new_path, new_sub_path, paint, rectangle, rel_line_to, rel_move_to, reset_clip, restore, rotate, save, scale, set_dash, set_line_width, set_source, set_source_rgb, set_source_rgba, stroke, stroke_preserve, stroke_transformed, stroke_transformed_preserve, textwidth, translate, user_to_device!, user_to_device_distance!, width, circle, reset_transform
 import Base: copy, fill
 
 libcairo_version = VersionNumber(unsafe_string(
@@ -91,6 +91,9 @@ export
     # path copy
     copy_path, copy_path_flat, convert_cairo_path_data,
 
+    # other path operations
+    get_current_point, has_current_point,
+
     # text
     text,
     update_layout, show_layout, get_layout_size, layout_text,
@@ -146,8 +149,7 @@ function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     Int32((n == len) ? 0 : 11)
 end
 
-get_stream_callback(T) = cfunction(write_to_stream_callback, Int32, Tuple{Ref{T}, Ptr{UInt8}, UInt32})
-
+get_stream_callback(::Type{T}) where T = @cfunction write_to_stream_callback  Int32 (Ref{T}, Ptr{UInt8}, UInt32)
 
 function read_from_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     # wrap the provided buf into a julia Array
@@ -160,22 +162,17 @@ function read_from_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
     (nb == len) ? STATUS_SUCCESS : STATUS_READ_ERROR
 end
 
-get_readstream_callback(T) = cfunction(read_from_stream_callback, Int32, Tuple{Ref{T}, Ptr{UInt8}, UInt32})
+get_readstream_callback(::Type{T}) where T = @cfunction read_from_stream_callback Int32 (Ref{T}, Ptr{UInt8}, UInt32)
 
+abstract type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice end
 
-mutable struct CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
+mutable struct CairoSurfaceBase{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T}
     ptr::Ptr{Nothing}
     width::Float64
     height::Float64
-    data::Matrix{T}
 
     function CairoSurface{T}(ptr::Ptr{Nothing}, w, h) where {T}
         self = new{T}(ptr, w, h)
-        @compat finalizer(destroy, self)
-        self
-    end
-    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h, data::Matrix{T}) where {T}
-        self = new{T}(ptr, w, h, data)
         @compat finalizer(destroy, self)
         self
     end
@@ -189,8 +186,37 @@ mutable struct CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice
     end
 end
 
+
+mutable struct CairoSurfaceImage{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T}
+    ptr::Ptr{Nothing}
+    width::Float64
+    height::Float64
+    data::Matrix{T}
+
+    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h, data::Matrix{T}) where {T}
+        self = new{T}(ptr, w, h, data)
+        @compat finalizer(destroy, self)
+        self
+    end
+end
+
+mutable struct CairoSurfaceIOStream{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T}
+    ptr::Ptr{Nothing}
+    width::Float64
+    height::Float64
+    stream::IO
+
+    function CairoSurface{T}(ptr::Ptr{Nothing}, w, h, stream::IO) where {T}
+        self = new{T}(ptr, w, h, stream)
+        @compat finalizer(destroy, self)
+        self
+    end
+end
+
+
 CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
 CairoSurface(ptr, w, h, data) = CairoSurface{eltype(data)}(ptr, w, h, data)
+CairoSurface(ptr, w, h, stream::IO) = CairoSurface{UInt32}(ptr, w, h, stream)
 CairoSurface(ptr) = CairoSurface{UInt32}(ptr)
 
 width(surface::CairoSurface) = surface.width
@@ -274,7 +300,7 @@ function CairoPDFSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
     ptr = ccall((:cairo_pdf_surface_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoPDFSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -291,7 +317,7 @@ function CairoEPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
         (Ptr{Nothing},Int32), ptr, 1)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoEPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -319,7 +345,7 @@ function CairoPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
     ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
         (Ptr{Nothing},Int32), ptr, 0)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -365,7 +391,7 @@ function CairoSVGSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
     ptr = ccall((:cairo_svg_surface_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoSVGSurface(filename::AbstractString, w::Real, h::Real)
@@ -429,7 +455,7 @@ function format_stride_for_width(format::Integer, width::Integer)
 end
 
 
-## Scripting
+## Scripting (only target IO stream)
 
 mutable struct CairoScript <: GraphicsDevice
     ptr::Ptr{Nothing}
@@ -446,7 +472,7 @@ mutable struct CairoScript <: GraphicsDevice
         callback = get_stream_callback(T)
         ptr = ccall((:cairo_script_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any), callback, stream)
-        self = new(ptr)
+        self = new(ptr,stream)
         @compat finalizer(destroy, self)
         self
     end
@@ -465,7 +491,7 @@ function CairoScriptSurface(filename::AbstractString, w::Real, h::Real)
     s = CairoScript(filename)
     ptr = ccall((:cairo_script_surface_create,libcairo), Ptr{Nothing},
                 (Ptr{Nothing},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
-    CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h, stream)
 end
 
 function CairoScriptSurface(filename::AbstractString,sc::CairoSurface)
@@ -481,7 +507,6 @@ function CairoScriptSurface(stream::IO, w::Real, h::Real)
                 (Ptr{Nothing},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
 end
-
 
 mutable struct CairoRectangle
     x0::Float64
@@ -781,7 +806,11 @@ function convert_cairo_path_data(p::CairoPath)
     # define here by Float64 (most data is) and reinterpret in the header.
 
     path_data = CairoPathEntry[]
-    c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), false)
+    @static if VERSION >= v"0.7"
+        c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), own=false)
+    else
+        c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), false)
+    end
 
     data_index = 1
     while data_index <= ((c.num_data)*2)
@@ -791,7 +820,7 @@ function convert_cairo_path_data(p::CairoPath)
         element_type = reinterpret(UInt64,c_data[data_index]) & 0xffffffff
 
         # copy points x,y
-        points = Vector{Float64}(uninitialized, (element_length - 1) * 2)
+        points = Vector{Float64}(undef, (element_length - 1) * 2)
         for i=1:(element_length-1)*2
             points[i] = c_data[data_index+i+1]
         end
@@ -806,6 +835,22 @@ function convert_cairo_path_data(p::CairoPath)
     path_data
 end
 
+# other path operations
+
+function get_current_point(ctx::CairoContext)
+
+    x = Ref{Cdouble}(0)
+    y = Ref{Cdouble}(0)
+    ccall((:cairo_get_current_point, _jl_libcairo),
+            Nothing, (Ptr{Nothing},Ref{Cdouble},Ref{Cdouble}),ctx.ptr,x,y)
+
+    x[],y[]
+end
+
+function has_current_point(ctx::CairoContext)
+    Bool(ccall((:cairo_has_current_point, _jl_libcairo),
+            Cint, (Ptr{Nothing},),ctx.ptr))
+end
 
 # user<->device coordinate translation
 
@@ -1115,7 +1160,7 @@ function set_text(ctx::CairoContext, text::AbstractString, markup::Bool = false)
 end
 
 function get_layout_size(ctx::CairoContext)
-    w = Vector{Int32}(uninitialized, 2)
+    w = Vector{Int32}(undef, 2)
     ccall((:pango_layout_get_pixel_size,_jl_libpango), Nothing,
           (Ptr{Nothing},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
     w
@@ -1132,7 +1177,7 @@ function show_layout(ctx::CairoContext)
 end
 
 text_extents(ctx::CairoContext,value::AbstractString) =
-    text_extents!(ctx,value, Matrix{Float64}(uninitialized, 6, 1))
+    text_extents!(ctx,value, Matrix{Float64}(undef, 6, 1))
 
 function text_extents!(ctx::CairoContext,value::AbstractString,extents)
     ccall((:cairo_text_extents, libcairo),
@@ -1254,7 +1299,11 @@ function get_token(self::TeXLexer)
             token = token[1:end-1]
         end
     else
-        token, self.pos = next(self.str, self.pos)
+        @static if VERSION >= v"0.7"
+            token, self.pos = iterate(self.str, self.pos)
+        else
+            token, self.pos = next(self.str, self.pos)
+        end
         token = string(token)
     end
 

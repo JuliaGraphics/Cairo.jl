@@ -1,0 +1,19 @@
+name = "Cairo"
+uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
+version = "0.6.0"
+
+[deps]
+BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+Graphics = "a2bd30eb-e257-5431-a919-1863eab51364"
+Homebrew = "d9be37ee-ecc9-5288-90f1-b9ca67657a75"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+WinRPM = "c17dfb99-b4f7-5aad-8812-456da1ad7187"
+
+[compat]
+BinDeps = "≥ 0.3.21"
+Compat = "≥ 0.52.0"
+Graphics = "≥ 0.1.0"
+julia = "≥ 0.7.0"

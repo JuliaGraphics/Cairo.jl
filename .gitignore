@@ -6,3 +6,4 @@ deps/deps.jl
 test/test_results
 .DS_Store
 *~
+deps/build.log
