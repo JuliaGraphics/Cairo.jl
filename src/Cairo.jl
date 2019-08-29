@@ -10,7 +10,7 @@ isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
     "installed. Please run\nPkg.build(\"Cairo\")")
 
 function __init__()
-
+    check_deps()
 end
 
 using Colors
