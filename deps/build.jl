@@ -1,8 +1,7 @@
 using BinDeps
 
-using Compat
-import Compat.Libdl
-import Compat.Sys
+using Libdl
+using Base.Sys
 
 if Sys.isapple()
     deps_file_str = open(joinpath(dirname(pathof(BinDeps)), "dependencies.jl")) do file

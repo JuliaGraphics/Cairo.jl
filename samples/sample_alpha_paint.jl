@@ -1,7 +1,6 @@
 ## header to provide surface and context
 using Cairo
 using Colors
-using Compat
 
 c = CairoRGBSurface(256,256)
 cr = CairoContext(c)

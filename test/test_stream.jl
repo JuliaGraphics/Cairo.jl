@@ -1,6 +1,6 @@
 # So that this test can be run independently
-using Cairo, Compat
-using Compat.Base64
+using Cairo
+using Base64
 
 include("shape_functions.jl")
 
