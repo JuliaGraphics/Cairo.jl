@@ -21,9 +21,9 @@ download_info = Dict(
     Windows(:i686) => ("$bin_prefix/Cairo.v1.14.12.i686-w64-mingw32.tar.gz", "1f39115d7c99d102e05edc7eb19db88b4456a4940d3a46ee2151092a6fe862ee"),
     Linux(:powerpc64le, libc=:glibc) => ("$bin_prefix/Cairo.v1.14.12.powerpc64le-linux-gnu.tar.gz", "28517b9460af7cdf25c7fd20d88a9277e00261b6c451179fb6db9edb01c7b8bf"),
     MacOS(:x86_64) => ("$bin_prefix/Cairo.v1.14.12.x86_64-apple-darwin14.tar.gz", "aa1b2a45191ad3b24745f4a5c9eea18c3ef125d67746a29e677f531c806d9cf9"),
-    Linux(:x86_64, libc=:glibc) => ("$bin_prefix/Cairo.v1.14.12.x86_64-linux-gnu.tar.gz", "2b5758e5a827af82202df4ddf37e7ec4e09579632041d5b8706174f9423bb074"),
+    Linux(:x86_64, libc=:glibc) => ("$bin_prefix/Cairo.v1.14.12.x86_64-linux-gnu.tar.gz", "c24b27be757123e795ace83b44d4d1110951e6662d7489817bb36ca98f7d3923"),
     Linux(:x86_64, libc=:musl) => ("$bin_prefix/Cairo.v1.14.12.x86_64-linux-musl.tar.gz", "6c286983562052ac5fc6dbc47d30155d97258257c027215f4a1a34ef59ec7e5a"),
-    FreeBSD(:x86_64) => ("$bin_prefix/Cairo.v1.14.12.x86_64-unknown-freebsd11.1.tar.gz", "b50734b6078fe6db4524067b68ce8ccb101b314796da97f46e9256ab44eb8fa3"),
+    FreeBSD(:x86_64) => ("$bin_prefix/Cairo.v1.14.12.x86_64-unknown-freebsd11.1.tar.gz", "6ea14fcf72852c421f81b3acd6b7bb657071a10f484311205862381b746e2135"),
     Windows(:x86_64) => ("$bin_prefix/Cairo.v1.14.12.x86_64-w64-mingw32.tar.gz", "4cdfc0c08af8bcce3529ae13ecee6826acc9a25585151c84a7f6bdfb93200281"),
 )
 
