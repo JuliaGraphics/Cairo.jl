@@ -61,9 +61,9 @@ end
 
     # Test creating a CairoContext from a cairo_t pointer
     surf = CairoImageSurface(fill(ARGB32(0), 10, 10))
-    ctx_ptr = ccall((:cairo_create, Cairo._jl_libcairo),Ptr{Nothing}, (Ptr{Nothing}, ), surf.ptr)
+    ctx_ptr = ccall((:cairo_create, Cairo.libcairo),Ptr{Nothing}, (Ptr{Nothing}, ), surf.ptr)
     ctx = CairoContext(ctx_ptr)
-    ccall((:cairo_destroy,Cairo._jl_libcairo),Nothing, (Ptr{Nothing}, ), ctx_ptr)
+    ccall((:cairo_destroy,Cairo.libcairo),Nothing, (Ptr{Nothing}, ), ctx_ptr)
 
     @test isa(ctx, CairoContext)
 end
