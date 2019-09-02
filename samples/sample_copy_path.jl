@@ -1,4 +1,3 @@
-using Compat
 using Cairo
 
 function common_header()

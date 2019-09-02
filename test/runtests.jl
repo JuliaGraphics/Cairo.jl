@@ -1,10 +1,10 @@
 using Cairo
-using Compat, Colors
-import Compat.Sys
+using Colors
+import Base.Sys
 
 import Base.show
 
-using Compat.Test
+using Test
 
 # Test that an the CairoSurface holds a reference to the passed IOBuffer
 @testset "IOBuffer Rooting " begin

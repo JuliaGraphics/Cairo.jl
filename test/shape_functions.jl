@@ -1,5 +1,5 @@
 using Cairo
-using Compat.Random
+using Random
 
 # shape functions,
 

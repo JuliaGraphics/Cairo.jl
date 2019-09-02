@@ -1,6 +1,6 @@
 ## header to provide surface and context
 using Cairo
-using Compat.Printf
+using Printf
 
 c = CairoRGBSurface(256,256);
 cr = CairoContext(c);
