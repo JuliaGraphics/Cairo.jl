@@ -8,11 +8,10 @@ isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
 
 function __init__()
     check_deps()
-    # On Linux and FreeBSD we use FontConfig. Set FONTCONFIG_PATH only if none
-    # of FONTCONFIG_PATH or FONTCONFIG_FILE is set.
-    if !(Sys.isapple() || Sys.iswindows()) && get(ENV, "FONTCONFIG_PATH", "") == "" &&
-        get(ENV, "FONTCONFIG_FILE", "") == ""
-        ENV["FONTCONFIG_PATH"] = joinpath(dirname(libcairo), "..", "etc", "fonts")
+    # On Linux, FreeBSD and macOS we use FontConfig. Set FONTCONFIG_FILE to the
+    # config file we provide.
+    if !Sys.iswindows()
+        ENV["FONTCONFIG_FILE"] = joinpath(dirname(libcairo), "..", "etc", "fonts", "fonts.conf")
     end
 end
 
