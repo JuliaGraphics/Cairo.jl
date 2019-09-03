@@ -2,9 +2,12 @@ module Cairo
 
 import Base.Sys
 
-depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
-isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
-    "installed. Please run\nPkg.build(\"Cairo\")")
+# For libcairo
+using Cairo_jll
+# For libpangocairo
+using Pango_jll
+# For libgobject
+using Glib_jll
 
 # Deprecate old library variables
 Base.@deprecate_binding _jl_libcairo      Cairo.libcairo   false
@@ -13,11 +16,11 @@ Base.@deprecate_binding _jl_libpango      Cairo.libpango   false
 Base.@deprecate_binding _jl_libpangocairo Cairo.libpango   false
 
 function __init__()
-    check_deps()
-    # On Linux, FreeBSD and macOS we use FontConfig. Set FONTCONFIG_FILE to the
-    # config file we provide.
-    if !Sys.iswindows()
-        ENV["FONTCONFIG_FILE"] = joinpath(dirname(libcairo), "..", "etc", "fonts", "fonts.conf")
+    # On Linux and FreeBSD we use FontConfig. Set FONTCONFIG_PATH only if none
+    # of FONTCONFIG_PATH or FONTCONFIG_FILE is set.
+    if !(Sys.isapple() || Sys.iswindows()) && get(ENV, "FONTCONFIG_PATH", "") == "" &&
+        get(ENV, "FONTCONFIG_FILE", "") == ""
+        ENV["FONTCONFIG_PATH"] = joinpath(dirname(libcairo), "..", "etc", "fonts")
     end
 end
 
