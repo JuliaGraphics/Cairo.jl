@@ -1,5 +1,3 @@
-VERSION < v"0.7.0-beta2.199" && __precompile__()
-
 module Cairo
 
 import Base.Sys
@@ -7,6 +5,21 @@ import Base.Sys
 depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
 isfile(depsjl) ? include(depsjl) : error("Cairo not properly ",
     "installed. Please run\nPkg.build(\"Cairo\")")
+
+# Deprecate old library variables
+Base.@deprecate_binding _jl_libcairo      Cairo.libcairo   false
+Base.@deprecate_binding _jl_libgobject    Cairo.libgobject false
+Base.@deprecate_binding _jl_libpango      Cairo.libpango   false
+Base.@deprecate_binding _jl_libpangocairo Cairo.libpango   false
+
+function __init__()
+    check_deps()
+    # On Linux, FreeBSD and macOS we use FontConfig. Set FONTCONFIG_FILE to the
+    # config file we provide.
+    if !Sys.iswindows()
+        ENV["FONTCONFIG_FILE"] = joinpath(dirname(libcairo), "..", "etc", "fonts", "fonts.conf")
+    end
+end
 
 using Colors
 
@@ -16,16 +29,16 @@ import Graphics: arc, clip, clip_preserve, close_path, creategc, device_to_user!
 import Base: copy, fill
 
 libcairo_version = VersionNumber(unsafe_string(
-      ccall((:cairo_version_string,Cairo._jl_libcairo),Cstring,()) ))
+      ccall((:cairo_version_string,Cairo.libcairo),Cstring,()) ))
 libpango_version = VersionNumber(unsafe_string(
-      ccall((:pango_version_string,Cairo._jl_libpango),Cstring,()) ))
+      ccall((:pango_version_string,Cairo.libpango),Cstring,()) ))
 if !Sys.iswindows()
     libpangocairo_version = VersionNumber(unsafe_string(
-          ccall((:pango_version_string,Cairo._jl_libpangocairo),Cstring,()) ))
+          ccall((:pango_version_string,Cairo.libpangocairo),Cstring,()) ))
     libgobject_version = VersionNumber(
-          unsafe_load(cglobal((:glib_major_version, Cairo._jl_libgobject), Cuint)),
-          unsafe_load(cglobal((:glib_minor_version, Cairo._jl_libgobject), Cuint)),
-          unsafe_load(cglobal((:glib_micro_version, Cairo._jl_libgobject), Cuint)))
+          unsafe_load(cglobal((:glib_major_version, Cairo.libgobject), Cuint)),
+          unsafe_load(cglobal((:glib_minor_version, Cairo.libgobject), Cuint)),
+          unsafe_load(cglobal((:glib_micro_version, Cairo.libgobject), Cuint)))
 end
 
 import Base.show
@@ -173,7 +186,7 @@ mutable struct CairoSurfaceBase{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T
     end
     function CairoSurface{T}(ptr::Ptr{Nothing}) where {T}
         ccall(
-          (:cairo_surface_reference,_jl_libcairo),
+          (:cairo_surface_reference,libcairo),
           Ptr{Nothing}, (Ptr{Nothing}, ), ptr)
         self = new{T}(ptr)
         finalizer(destroy, self)
@@ -221,7 +234,7 @@ function destroy(surface::CairoSurface)
     if surface.ptr == C_NULL
         return
     end
-    ccall((:cairo_surface_destroy,_jl_libcairo), Nothing, (Ptr{Nothing},), surface.ptr)
+    ccall((:cairo_surface_destroy,libcairo), Nothing, (Ptr{Nothing},), surface.ptr)
     surface.ptr = C_NULL
     nothing
 end
@@ -241,18 +254,18 @@ end
 for name in (:finish,:flush,:mark_dirty)
     @eval begin
         $name(surface::CairoSurface) =
-            ccall(($(string("cairo_surface_",name)),_jl_libcairo),
+            ccall(($(string("cairo_surface_",name)),libcairo),
                   Nothing, (Ptr{Nothing},), surface.ptr)
     end
 end
 
 function status(surface::CairoSurface)
-    ccall((:cairo_surface_status,_jl_libcairo),
+    ccall((:cairo_surface_status,libcairo),
           Int32, (Ptr{Nothing},), surface.ptr)
 end
 
 function CairoImageSurface(w::Real, h::Real, format::Integer)
-    ptr = ccall((:cairo_image_surface_create,_jl_libcairo),
+    ptr = ccall((:cairo_image_surface_create,libcairo),
                 Ptr{Nothing}, (Int32,Int32,Int32), format, w, h)
     CairoSurface(ptr, w, h)
 end
@@ -269,7 +282,7 @@ function CairoImageSurface(img::Array{UInt32,2}, format::Integer; flipxy::Bool =
     w,h = size(img)
     stride = format_stride_for_width(format, w)
     @assert stride == 4w
-    ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
+    ptr = ccall((:cairo_image_surface_create_for_data,libcairo),
                 Ptr{Nothing}, (Ptr{Nothing},Int32,Int32,Int32,Int32),
                 img, format, w, h, stride)
     CairoSurface(ptr, w, h, img)
@@ -279,7 +292,7 @@ function CairoImageSurface(img::Matrix{T}) where {T<:Union{RGB24,ARGB32}}
     w,h = size(img)
     stride = format_stride_for_width(format(T), w)
     @assert stride == 4w
-    ptr = ccall((:cairo_image_surface_create_for_data,_jl_libcairo),
+    ptr = ccall((:cairo_image_surface_create_for_data,libcairo),
                 Ptr{Nothing}, (Ptr{Nothing},Int32,Int32,Int32,Int32),
                 img, format(T), w, h, stride)
     CairoSurface(ptr, w, h, img)
@@ -293,13 +306,13 @@ format(surf::CairoSurface{T}) where {T<:Union{RGB24,ARGB32}} = T
 
 function CairoPDFSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_pdf_surface_create_for_stream,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_pdf_surface_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h, stream)
 end
 
 function CairoPDFSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
-    ptr = ccall((:cairo_pdf_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_pdf_surface_create,libcairo), Ptr{Nothing},
                 (Ptr{UInt8},Float64,Float64), String(filename), w_pts, h_pts)
     CairoSurface(ptr, w_pts, h_pts)
 end
@@ -308,17 +321,17 @@ end
 
 function CairoEPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_ps_surface_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Nothing,
+    ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
         (Ptr{Nothing},Int32), ptr, 1)
     CairoSurface(ptr, w, h, stream)
 end
 
 function CairoEPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
-    ptr = ccall((:cairo_ps_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_ps_surface_create,libcairo), Ptr{Nothing},
                 (Ptr{UInt8},Float64,Float64), String(filename), w_pts, h_pts)
-    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Nothing,
+    ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
           (Ptr{Nothing},Int32), ptr, 1)
     CairoSurface(ptr, w_pts, h_pts)
 end
@@ -327,17 +340,17 @@ end
 
 function CairoPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_ps_surface_create_for_stream,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_ps_surface_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Nothing,
+    ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
         (Ptr{Nothing},Int32), ptr, 0)
     CairoSurface(ptr, w, h, stream)
 end
 
 function CairoPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
-    ptr = ccall((:cairo_ps_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_ps_surface_create,libcairo), Ptr{Nothing},
                 (Ptr{UInt8},Float64,Float64), String(filename), w_pts, h_pts)
-    ccall((:cairo_ps_surface_set_eps,_jl_libcairo), Nothing,
+    ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
           (Ptr{Nothing},Int32), ptr, 0)
     CairoSurface(ptr, w_pts, h_pts)
 end
@@ -345,20 +358,20 @@ end
 ## Xlib ##
 
 function CairoXlibSurface(display, drawable, visual, w, h)
-    ptr = ccall((:cairo_xlib_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_xlib_surface_create,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Int, Ptr{Nothing}, Int32, Int32),
                 display, drawable, visual, w, h)
     CairoSurface(ptr, w, h)
 end
 
 CairoXlibSurfaceSetSize(surface, w, h) =
-    ccall((:cairo_xlib_surface_set_size,_jl_libcairo), Nothing,
+    ccall((:cairo_xlib_surface_set_size,libcairo), Nothing,
           (Ptr{Nothing}, Int32, Int32),
           surface, w, h)
 
 ## Quartz ##
 function CairoQuartzSurface(context, w, h)
-    ptr = ccall((:cairo_quartz_surface_create_for_cg_context,_jl_libcairo),
+    ptr = ccall((:cairo_quartz_surface_create_for_cg_context,libcairo),
           Ptr{Nothing}, (Ptr{Nothing}, UInt32, UInt32), context, w, h)
     CairoSurface(ptr, w, h)
 end
@@ -366,7 +379,7 @@ end
 ## Win32 ##
 
 function CairoWin32Surface(hdc,w,h)
-    ptr = ccall((:cairo_win32_surface_create, _jl_libcairo),
+    ptr = ccall((:cairo_win32_surface_create, libcairo),
                 Ptr{Nothing}, (Ptr{Nothing},), hdc)
     CairoSurface(ptr,w,h)
 end
@@ -375,13 +388,13 @@ end
 
 function CairoSVGSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_svg_surface_create_for_stream,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_svg_surface_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
     CairoSurface(ptr, w, h, stream)
 end
 
 function CairoSVGSurface(filename::AbstractString, w::Real, h::Real)
-    ptr = ccall((:cairo_svg_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_svg_surface_create,libcairo), Ptr{Nothing},
                 (Ptr{UInt8},Float64,Float64), String(filename), w, h)
     CairoSurface(ptr, w, h)
 end
@@ -389,23 +402,23 @@ end
 ## PNG ##
 
 function read_from_png(filename::AbstractString)
-    ptr = ccall((:cairo_image_surface_create_from_png,_jl_libcairo),
+    ptr = ccall((:cairo_image_surface_create_from_png,libcairo),
                 Ptr{Nothing}, (Ptr{UInt8},), String(filename))
-    w = ccall((:cairo_image_surface_get_width,_jl_libcairo),
+    w = ccall((:cairo_image_surface_get_width,libcairo),
               Int32, (Ptr{Nothing},), ptr)
-    h = ccall((:cairo_image_surface_get_height,_jl_libcairo),
+    h = ccall((:cairo_image_surface_get_height,libcairo),
               Int32, (Ptr{Nothing},), ptr)
     CairoSurface(ptr, w, h)
 end
 
 function write_to_png(surface::CairoSurface, stream::T) where {T<:IO}
     callback = get_stream_callback(T)
-    ccall((:cairo_surface_write_to_png_stream,_jl_libcairo), Nothing,
+    ccall((:cairo_surface_write_to_png_stream,libcairo), Nothing,
           (Ptr{UInt8},Ptr{Nothing},Any), surface.ptr, callback, stream)
 end
 
 function write_to_png(surface::CairoSurface, filename::AbstractString)
-    ccall((:cairo_surface_write_to_png,_jl_libcairo), Nothing,
+    ccall((:cairo_surface_write_to_png,libcairo), Nothing,
           (Ptr{UInt8},Ptr{UInt8}), surface.ptr, String(filename))
 end
 
@@ -414,11 +427,11 @@ show(io::IO, ::MIME"image/png", surface::CairoSurface) =
 
 function read_from_png(stream::T) where {T<:IO}
     callback = get_readstream_callback(T)
-    ptr = ccall((:cairo_image_surface_create_from_png_stream, Cairo._jl_libcairo),
+    ptr = ccall((:cairo_image_surface_create_from_png_stream, Cairo.libcairo),
                 Ptr{Nothing}, (Ptr{Nothing},Ref{IO}), callback, stream)
-    w = ccall((:cairo_image_surface_get_width,Cairo._jl_libcairo),
+    w = ccall((:cairo_image_surface_get_width,Cairo.libcairo),
               Int32, (Ptr{Nothing},), ptr)
-    h = ccall((:cairo_image_surface_get_height,Cairo._jl_libcairo),
+    h = ccall((:cairo_image_surface_get_height,Cairo.libcairo),
               Int32, (Ptr{Nothing},), ptr)
     Cairo.CairoSurface(ptr, w, h)
 end
@@ -427,7 +440,7 @@ end
 ## Generic ##
 
 function surface_create_similar(s::CairoSurface, w = width(s), h = height(s))
-    ptr = ccall((:cairo_surface_create_similar,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_surface_create_similar,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Int32, Int32, Int32),
                 s.ptr, CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h)
@@ -436,7 +449,7 @@ end
 # Utilities
 
 function format_stride_for_width(format::Integer, width::Integer)
-    ccall((:cairo_format_stride_for_width,_jl_libcairo), Int32,
+    ccall((:cairo_format_stride_for_width,libcairo), Int32,
           (Int32,Int32), format, width)
 end
 
@@ -449,7 +462,7 @@ mutable struct CairoScript <: GraphicsDevice
 
     function CairoScript(stream::T) where {T<:IO}
         callback = get_stream_callback(T)
-        ptr = ccall((:cairo_script_create_for_stream,_jl_libcairo), Ptr{Nothing},
+        ptr = ccall((:cairo_script_create_for_stream,libcairo), Ptr{Nothing},
                 (Ptr{Nothing}, Any), callback, stream)
         self = new(ptr,stream)
         finalizer(destroy, self)
@@ -461,21 +474,21 @@ function destroy(s::CairoScript)
     if s.ptr == C_NULL
         return
     end
-    ccall((:cairo_device_destroy,_jl_libcairo), Nothing, (Ptr{Nothing},), s.ptr)
+    ccall((:cairo_device_destroy,libcairo), Nothing, (Ptr{Nothing},), s.ptr)
     s.ptr = C_NULL
     nothing
 end
 
 function CairoScriptSurface(stream::IO, w::Real, h::Real)
     s = CairoScript(stream)
-    ptr = ccall((:cairo_script_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_script_surface_create,libcairo), Ptr{Nothing},
                 (Ptr{Nothing},Int32,Float64,Float64),s.ptr ,CONTENT_COLOR_ALPHA, w, h)
     CairoSurface(ptr, w, h, stream)
 end
 
 function CairoScriptSurface(stream::IO, sc::CairoSurface)
     s = CairoScript(stream)
-    ptr = ccall((:cairo_script_surface_create_for_target,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_script_surface_create_for_target,libcairo), Ptr{Nothing},
                 (Ptr{Nothing},Ptr{Nothing}),s.ptr, sc.ptr)
     CairoSurface(ptr, sc.width, sc.height)
 end
@@ -492,12 +505,12 @@ end
 CairoRectangle() = CairoRectangle(0.0, 0.0, 0.0, 0.0)
 
 function CairoRecordingSurface(content::Int32,extents::CairoRectangle)
-    ptr = ccall((:cairo_recording_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_recording_surface_create,libcairo), Ptr{Nothing},
                 (Int32,Ptr{Nothing}),content, Ref(extents))
     CairoSurface(ptr)
 end
 function CairoRecordingSurface(content::Int32)
-    ptr = ccall((:cairo_recording_surface_create,_jl_libcairo), Ptr{Nothing},
+    ptr = ccall((:cairo_recording_surface_create,libcairo), Ptr{Nothing},
                 (Int32,Ptr{Nothing}),content, C_NULL)
     CairoSurface(ptr)
 end
@@ -506,7 +519,7 @@ CairoRecordingSurface() = CairoRecordingSurface(CONTENT_COLOR_ALPHA)
 
 
 function script_from_recording_surface(s::CairoScript,r::CairoSurface)
-    ccall((:cairo_script_from_recording_surface,_jl_libcairo), Int32,
+    ccall((:cairo_script_from_recording_surface,libcairo), Int32,
                 (Ptr{Nothing},Ptr{Nothing}),s.ptr, r.ptr)
 end
 # -----------------------------------------------------------------------------
@@ -517,21 +530,21 @@ mutable struct CairoContext <: GraphicsContext
     layout::Ptr{Nothing} # cache PangoLayout
 
     function CairoContext(surface::CairoSurface)
-        ptr = ccall((:cairo_create,_jl_libcairo),
+        ptr = ccall((:cairo_create,libcairo),
                     Ptr{Nothing}, (Ptr{Nothing},), surface.ptr)
-        layout = ccall((:pango_cairo_create_layout,_jl_libpangocairo),
+        layout = ccall((:pango_cairo_create_layout,libpangocairo),
                        Ptr{Nothing}, (Ptr{Nothing},), ptr)
         self = new(ptr, surface, layout)
         finalizer(destroy, self)
         self
     end
     function CairoContext(ptr::Ptr{Nothing})
-        ccall((:cairo_reference,_jl_libcairo),
+        ccall((:cairo_reference,libcairo),
                    Ptr{Nothing}, (Ptr{Nothing},), ptr)
-        surface_p = ccall((:cairo_get_target,_jl_libcairo),
+        surface_p = ccall((:cairo_get_target,libcairo),
                    Ptr{Nothing}, (Ptr{Nothing},), ptr)
         surface = CairoSurface(surface_p)
-        layout = ccall((:pango_cairo_create_layout,_jl_libpangocairo),
+        layout = ccall((:pango_cairo_create_layout,libpangocairo),
                   Ptr{Nothing}, (Ptr{Nothing},), ptr)
         self = new(ptr,surface,layout)
         finalizer(destroy, self)
@@ -547,7 +560,7 @@ function destroy(ctx::CairoContext)
     if ctx.ptr == C_NULL
         return
     end
-    ccall((:g_object_unref,_jl_libgobject), Nothing, (Ptr{Nothing},), ctx.layout)
+    ccall((:g_object_unref,libgobject), Nothing, (Ptr{Nothing},), ctx.layout)
     _destroy(ctx)
     ctx.ptr = C_NULL
     nothing
@@ -596,7 +609,7 @@ for (NAME, FUNCTION) in Any[(:_destroy, :cairo_destroy),
                          (:stroke_transformed_preserve, :cairo_stroke_preserve)]
     @eval begin
         $NAME(ctx::CairoContext) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},), ctx.ptr)
     end
 end
@@ -605,24 +618,24 @@ function stroke(ctx::CairoContext)
     save(ctx)
     # use uniform scale for stroking
     reset_transform(ctx)
-    ccall((:cairo_stroke, _jl_libcairo), Nothing, (Ptr{Nothing},), ctx.ptr)
+    ccall((:cairo_stroke, libcairo), Nothing, (Ptr{Nothing},), ctx.ptr)
     restore(ctx)
 end
 
 function stroke_preserve(ctx::CairoContext)
     save(ctx)
     reset_transform(ctx)
-    ccall((:cairo_stroke_preserve, _jl_libcairo), Nothing, (Ptr{Nothing},), ctx.ptr)
+    ccall((:cairo_stroke_preserve, libcairo), Nothing, (Ptr{Nothing},), ctx.ptr)
     restore(ctx)
 end
 
 function paint_with_alpha(ctx::CairoContext, a)
-    ccall((:cairo_paint_with_alpha, _jl_libcairo),
+    ccall((:cairo_paint_with_alpha, libcairo),
           Nothing, (Ptr{Nothing}, Float64), ctx.ptr, a)
 end
 
 function get_operator(ctx::CairoContext)
-    Int(ccall((:cairo_get_operator,_jl_libcairo), Int32, (Ptr{Nothing},), ctx.ptr))
+    Int(ccall((:cairo_get_operator,libcairo), Int32, (Ptr{Nothing},), ctx.ptr))
 end
 
 
@@ -632,7 +645,7 @@ for (NAME, FUNCTION) in Any[(:set_fill_type, :cairo_set_fill_rule),
                          (:set_line_join, :cairo_set_line_join)]
     @eval begin
         $NAME(ctx::CairoContext, i0::Integer) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},Int32), ctx.ptr, i0)
     end
 end
@@ -642,7 +655,7 @@ for (NAME, FUNCTION) in Any[(:set_line_width, :cairo_set_line_width),
                          (:set_font_size, :cairo_set_font_size)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},Float64), ctx.ptr, d0)
     end
 end
@@ -655,7 +668,7 @@ for (NAME, FUNCTION) in Any[(:line_to, :cairo_line_to),
                          (:translate, :cairo_translate)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real, d1::Real) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},Float64,Float64), ctx.ptr, d0, d1)
     end
 end
@@ -664,7 +677,7 @@ for (NAME, FUNCTION) in Any[(:curve_to, :cairo_curve_to),
                          (:rel_curve_to, :cairo_rel_curve_to)]
     @eval begin
         $NAME(ctx::CairoContext, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real, d5::Real) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},Float64,Float64,Float64,Float64,Float64,Float64), ctx.ptr, d0, d1, d2, d3, d4, d5)
     end
 end
@@ -673,7 +686,7 @@ for (NAME, FUNCTION) in Any[(:arc, :cairo_arc),
                          (:arc_negative, :cairo_arc_negative)]
     @eval begin
         $NAME(ctx::CairoContext, xc::Real, yc::Real, radius::Real, angle1::Real, angle2::Real) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},Float64,Float64,Float64,Float64,Float64),
                   ctx.ptr, xc, yc, radius, angle1, angle2)
     end
@@ -681,11 +694,11 @@ end
 
 
 set_source_rgb(ctx::CairoContext, r::Real, g::Real, b::Real) =
-    ccall((:cairo_set_source_rgb,_jl_libcairo),
+    ccall((:cairo_set_source_rgb,libcairo),
           Nothing, (Ptr{Nothing},Float64,Float64,Float64), ctx.ptr, r, g, b)
 
 set_source_rgba(ctx::CairoContext, r::Real, g::Real, b::Real, a::Real) =
-    ccall((:cairo_set_source_rgba,_jl_libcairo), Nothing,
+    ccall((:cairo_set_source_rgba,libcairo), Nothing,
           (Ptr{Nothing},Float64,Float64,Float64,Float64),
           ctx.ptr, r, g, b, a)
 
@@ -704,17 +717,17 @@ set_source(dest::CairoContext, src::CairoContext) = set_source_surface(dest, src
 set_source(dest::CairoContext, src::CairoSurface) = set_source_surface(dest, src)
 
 rectangle(ctx::CairoContext, x::Real, y::Real, w::Real, h::Real) =
-    ccall((:cairo_rectangle,_jl_libcairo), Nothing,
+    ccall((:cairo_rectangle,libcairo), Nothing,
           (Ptr{Nothing},Float64,Float64,Float64,Float64),
           ctx.ptr, x, y, w, h)
 
 function set_dash(ctx::CairoContext, dashes::Vector{Float64}, offset::Real = 0.0)
-    ccall((:cairo_set_dash,_jl_libcairo), Nothing,
+    ccall((:cairo_set_dash,libcairo), Nothing,
           (Ptr{Nothing},Ptr{Float64},Int32,Float64), ctx.ptr, dashes, length(dashes), offset)
 end
 
 function set_source_surface(ctx::CairoContext, s::CairoSurface, x::Real = 0.0, y::Real = 0.0)
-    ccall((:cairo_set_source_surface,_jl_libcairo), Nothing,
+    ccall((:cairo_set_source_surface,libcairo), Nothing,
           (Ptr{Nothing},Ptr{Nothing},Float64,Float64), ctx.ptr, s.ptr, x, y)
 end
 
@@ -752,13 +765,13 @@ function destroy(path::CairoPath)
     if path.ptr == C_NULL
         return
     end
-    ccall((:cairo_path_destroy,_jl_libcairo), Nothing, (Ptr{Nothing},), path.ptr)
+    ccall((:cairo_path_destroy,libcairo), Nothing, (Ptr{Nothing},), path.ptr)
     path.ptr = C_NULL
     nothing
 end
 
 function copy_path(ctx::CairoContext)
-    ptr = ccall((:cairo_copy_path, _jl_libcairo),
+    ptr = ccall((:cairo_copy_path, libcairo),
                     Ptr{Nothing}, (Ptr{Nothing},),ctx.ptr)
     path = CairoPath(ptr)
     finalizer(destroy, path)
@@ -766,7 +779,7 @@ function copy_path(ctx::CairoContext)
 end
 
 function copy_path_flat(ctx::CairoContext)
-    ptr = ccall((:cairo_copy_path_flat, _jl_libcairo),
+    ptr = ccall((:cairo_copy_path_flat, libcairo),
                     Ptr{Nothing}, (Ptr{Nothing},),ctx.ptr)
     path = CairoPath(ptr)
     finalizer(destroy, path)
@@ -815,14 +828,14 @@ function get_current_point(ctx::CairoContext)
 
     x = Ref{Cdouble}(0)
     y = Ref{Cdouble}(0)
-    ccall((:cairo_get_current_point, _jl_libcairo),
+    ccall((:cairo_get_current_point, libcairo),
             Nothing, (Ptr{Nothing},Ref{Cdouble},Ref{Cdouble}),ctx.ptr,x,y)
 
     x[],y[]
 end
 
 function has_current_point(ctx::CairoContext)
-    Bool(ccall((:cairo_has_current_point, _jl_libcairo),
+    Bool(ccall((:cairo_has_current_point, libcairo),
             Cint, (Ptr{Nothing},),ctx.ptr))
 end
 
@@ -834,7 +847,7 @@ for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
                       (:device_to_user_distance!,:cairo_device_to_user_distance))
     @eval begin
         function ($fname)(ctx::CairoContext, p::Vector{Float64})
-            ccall(($(Expr(:quote,cname)),_jl_libcairo),
+            ccall(($(Expr(:quote,cname)),libcairo),
                   Nothing, (Ptr{Nothing}, Ptr{Float64}, Ptr{Float64}),
                   ctx.ptr, pointer(p,1), pointer(p,2))
             p
@@ -866,7 +879,7 @@ function push_group(ctx::CairoContext)
     if ctx.ptr == C_NULL
         return
     end
-    ccall((:cairo_push_group, _jl_libcairo), Nothing, (Ptr{Nothing},),ctx.ptr)
+    ccall((:cairo_push_group, libcairo), Nothing, (Ptr{Nothing},),ctx.ptr)
     nothing
 end
 
@@ -874,7 +887,7 @@ function pop_group(ctx::CairoContext)
     if ctx.ptr == C_NULL
         return
     end
-    ptr = ccall((:cairo_pop_group, _jl_libcairo), Ptr{Nothing}, (Ptr{Nothing},),ctx.ptr)
+    ptr = ccall((:cairo_pop_group, libcairo), Ptr{Nothing}, (Ptr{Nothing},),ctx.ptr)
     pattern = CairoPattern(ptr)
     finalizer(destroy, pattern)
     pattern
@@ -887,15 +900,15 @@ mutable struct CairoPattern
 end
 
 function CairoPattern(s::CairoSurface)
-    ptr = ccall((:cairo_pattern_create_for_surface, _jl_libcairo),
+    ptr = ccall((:cairo_pattern_create_for_surface, libcairo),
                     Ptr{Nothing}, (Ptr{Nothing},), s.ptr)
     # Ideally we'd check the status, but at least for certain releases of the library
     # the return value seems not to be set properly (random values are returned)
-#     status = ccall((:cairo_pattern_status, _jl_libcairo),
+#     status = ccall((:cairo_pattern_status, libcairo),
 #                     Cint, (Ptr{Nothing},), s.ptr)
 #     if status != 0
 #         error("Error creating Cairo pattern: ", bytestring(
-#               ccall((:cairo_status_to_string, _jl_libcairo),
+#               ccall((:cairo_status_to_string, libcairo),
 #                     Ptr{UInt8}, (Cint,), status)))
 #     end
     pattern = CairoPattern(ptr)
@@ -904,26 +917,26 @@ function CairoPattern(s::CairoSurface)
 end
 
 set_source(dest::CairoContext, src::CairoPattern) =
-    ccall((:cairo_set_source, _jl_libcairo),
+    ccall((:cairo_set_source, libcairo),
           Nothing, (Ptr{Nothing}, Ptr{Nothing}), dest.ptr, src.ptr)
 
 function get_source(ctx::CairoContext)
-    CairoPattern(ccall((:cairo_get_source,_jl_libcairo),
+    CairoPattern(ccall((:cairo_get_source,libcairo),
                        Ptr{Nothing}, (Ptr{Nothing},), ctx.ptr))
 end
 
 function pattern_set_filter(p::CairoPattern, f)
-    ccall((:cairo_pattern_set_filter,_jl_libcairo), Nothing,
+    ccall((:cairo_pattern_set_filter,libcairo), Nothing,
           (Ptr{Nothing},Int32), p.ptr, f)
 end
 
 function pattern_set_extend(p::CairoPattern, val)
-    ccall((:cairo_pattern_set_extend,_jl_libcairo), Nothing,
+    ccall((:cairo_pattern_set_extend,libcairo), Nothing,
           (Ptr{Nothing},Int32), p.ptr, val)
 end
 
 function pattern_create_radial(cx0::Real, cy0::Real, radius0::Real, cx1::Real, cy1::Real, radius1::Real)
-    ptr = ccall((:cairo_pattern_create_radial, _jl_libcairo),
+    ptr = ccall((:cairo_pattern_create_radial, libcairo),
                     Ptr{Nothing}, (Float64,Float64,Float64,Float64,Float64,Float64),cx0,cy0,radius0,cx1,cy1,radius1)
     pattern = CairoPattern(ptr)
     finalizer(destroy, pattern)
@@ -931,7 +944,7 @@ function pattern_create_radial(cx0::Real, cy0::Real, radius0::Real, cx1::Real, c
 end
 
 function pattern_create_linear(x0::Real, y0::Real, x1::Real, y1::Real)
-    ptr = ccall((:cairo_pattern_create_linear, _jl_libcairo),
+    ptr = ccall((:cairo_pattern_create_linear, libcairo),
                     Ptr{Nothing}, (Float64,Float64,Float64,Float64),x0,y0,x1,y1)
     pattern = CairoPattern(ptr)
     finalizer(destroy, pattern)
@@ -939,33 +952,33 @@ function pattern_create_linear(x0::Real, y0::Real, x1::Real, y1::Real)
 end
 
 function pattern_add_color_stop_rgb(pat::CairoPattern, offset::Real, red::Real, green::Real, blue::Real)
-    ccall((:cairo_pattern_add_color_stop_rgb, _jl_libcairo),
+    ccall((:cairo_pattern_add_color_stop_rgb, libcairo),
                     Nothing, (Ptr{Nothing},Float64,Float64,Float64,Float64),pat.ptr,offset,red,green,blue)
 end
 
 function pattern_add_color_stop_rgba(pat::CairoPattern, offset::Real, red::Real, green::Real, blue::Real, alpha::Real)
-    ccall((:cairo_pattern_add_color_stop_rgba, _jl_libcairo),
+    ccall((:cairo_pattern_add_color_stop_rgba, libcairo),
                     Nothing, (Ptr{Nothing},Float64,Float64,Float64,Float64,Float64),pat.ptr,offset,red,green,blue,alpha)
 end
 
 function pattern_get_surface(pat::CairoPattern)
     ptrref = Ref{Ptr{Nothing}}()
-    status = ccall((:cairo_pattern_get_surface, _jl_libcairo), Cint,
+    status = ccall((:cairo_pattern_get_surface, libcairo), Cint,
                    (Ptr{Nothing}, Ref{Ptr{Nothing}}), pat.ptr, ptrref)
     if status == STATUS_PATTERN_TYPE_MISMATCH
         error("Cannot get surface from a non-surface pattern.")
     end
     ptr = ptrref.x
 
-    ccall((:cairo_surface_reference, _jl_libcairo), Ptr{Nothing}, (Ptr{Nothing},), ptr)
-    typ = ccall((:cairo_surface_get_type, _jl_libcairo), Cint, (Ptr{Nothing},), ptr)
+    ccall((:cairo_surface_reference, libcairo), Ptr{Nothing}, (Ptr{Nothing},), ptr)
+    typ = ccall((:cairo_surface_get_type, libcairo), Cint, (Ptr{Nothing},), ptr)
 
     w = 0.0
     h = 0.0
     if typ == CAIRO_SURFACE_TYPE_IMAGE
-        w = ccall((:cairo_image_surface_get_width, _jl_libcairo),
+        w = ccall((:cairo_image_surface_get_width, libcairo),
                   Int32, (Ptr{Nothing},), ptr)
-        h = ccall((:cairo_image_surface_get_height, _jl_libcairo),
+        h = ccall((:cairo_image_surface_get_height, libcairo),
                   Int32, (Ptr{Nothing},), ptr)
     end
     return CairoSurface(ptr, w, h)
@@ -975,7 +988,7 @@ function destroy(pat::CairoPattern)
     if pat.ptr == C_NULL
         return
     end
-    ccall((:cairo_pattern_destroy,_jl_libcairo), Nothing, (Ptr{Nothing},), pat.ptr)
+    ccall((:cairo_pattern_destroy,libcairo), Nothing, (Ptr{Nothing},), pat.ptr)
     pat.ptr = C_NULL
     nothing
 end
@@ -984,14 +997,14 @@ end
 
 # create mesh pattern
 function CairoPatternMesh()
-    ptr = ccall((:cairo_pattern_create_mesh, _jl_libcairo),
+    ptr = ccall((:cairo_pattern_create_mesh, libcairo),
                     Ptr{Nothing}, ())
     pattern = CairoPattern(ptr)
-    #status = ccall((:cairo_pattern_status, _jl_libcairo),
+    #status = ccall((:cairo_pattern_status, libcairo),
     #                Cint, (Ptr{Nothing},), pattern.ptr)
     #if status != 0
     #    error("Error creating Cairo pattern: ", bytestring(
-    #          ccall((:cairo_status_to_string, _jl_libcairo),
+    #          ccall((:cairo_status_to_string, libcairo),
     #                Ptr{Uint8}, (Cint,), status)))
     #end
     finalizer(destroy, pattern)
@@ -1003,7 +1016,7 @@ end
 #                         (:set_font_size, :cairo_set_font_size)]
 #    @eval begin
 #        $NAME(ctx::CairoContext, d0::Real) =
-#            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+#            ccall(($(Expr(:quote,FUNCTION)),libcairo),
 #                  Nothing, (Ptr{Nothing},Float64), ctx.ptr, d0)
 #    end
 #end
@@ -1012,7 +1025,7 @@ for (NAME, FUNCTION) in Any[(:mesh_pattern_begin_patch, :cairo_mesh_pattern_begi
                          (:mesh_pattern_end_patch, :cairo_mesh_pattern_end_patch)]
     @eval begin
         $NAME(pattern::CairoPattern) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},), pattern.ptr)
     end
 end
@@ -1021,7 +1034,7 @@ for (NAME, FUNCTION) in Any[(:mesh_pattern_line_to, :cairo_mesh_pattern_line_to)
                          (:mesh_pattern_move_to, :cairo_mesh_pattern_move_to)]
     @eval begin
         $NAME(pattern::CairoPattern, d0::Real, d1::Real) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},Float64,Float64), pattern.ptr, d0, d1)
     end
 end
@@ -1030,30 +1043,30 @@ for (NAME, FUNCTION) in Any[(:mesh_pattern_curve_to, :cairo_mesh_pattern_curve_t
 
     @eval begin
         $NAME(pattern::CairoPattern, d0::Real, d1::Real, d2::Real, d3::Real, d4::Real, d5::Real) =
-            ccall(($(Expr(:quote,FUNCTION)),_jl_libcairo),
+            ccall(($(Expr(:quote,FUNCTION)),libcairo),
                   Nothing, (Ptr{Nothing},Float64,Float64,Float64,Float64,Float64,Float64), pattern.ptr, d0, d1, d2, d3, d4, d5)
     end
 end
 
 
 function mesh_pattern_set_corner_color_rgb(pat::CairoPattern, corner_num::Real, red::Real, green::Real, blue::Real)
-    ccall((:cairo_mesh_pattern_set_corner_color_rgb, _jl_libcairo),
+    ccall((:cairo_mesh_pattern_set_corner_color_rgb, libcairo),
                     Nothing, (Ptr{Nothing},Int32,Float64,Float64,Float64),pat.ptr,corner_num,red,green,blue)
 end
 
 function mesh_pattern_set_corner_color_rgba(pat::CairoPattern, corner_num::Real, red::Real, green::Real, blue::Real, alpha::Real)
-    ccall((:cairo_mesh_pattern_set_corner_color_rgba, _jl_libcairo),
+    ccall((:cairo_mesh_pattern_set_corner_color_rgba, libcairo),
                     Nothing, (Ptr{Nothing},Int32,Float64,Float64,Float64,Float64),pat.ptr,corner_num,red,green,blue,alpha)
 end
 
 # ----
 
 set_antialias(ctx::CairoContext, a) =
-    ccall((:cairo_set_antialias,_jl_libcairo), Nothing,
+    ccall((:cairo_set_antialias,libcairo), Nothing,
           (Ptr{Nothing},Cint), ctx.ptr, a)
 
 get_antialias(ctx::CairoContext) =
-    ccall((:cairo_get_antialias,_jl_libcairo), Cint,
+    ccall((:cairo_get_antialias,libcairo), Cint,
           (Ptr{Nothing},), ctx.ptr)
 
 # -----------------------------------------------------------------------------
@@ -1071,16 +1084,16 @@ CairoMatrix() = CairoMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 function get_matrix(ctx::CairoContext)
     m = [CairoMatrix()]
-    ccall((:cairo_get_matrix, _jl_libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), ctx.ptr, m)
+    ccall((:cairo_get_matrix, libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), ctx.ptr, m)
     m[1]
 end
 
 function set_matrix(ctx::CairoContext, m::CairoMatrix)
-    ccall((:cairo_set_matrix, _jl_libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), ctx.ptr, [m])
+    ccall((:cairo_set_matrix, libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), ctx.ptr, [m])
 end
 
 function set_matrix(p::CairoPattern, m::CairoMatrix)
-    ccall((:cairo_pattern_set_matrix, _jl_libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), p.ptr, [m])
+    ccall((:cairo_pattern_set_matrix, libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), p.ptr, [m])
 end
 
 
@@ -1110,24 +1123,24 @@ end
 # text commands
 
 function set_font_face(ctx::CairoContext, str::AbstractString)
-    fontdesc = ccall((:pango_font_description_from_string,_jl_libpango),
+    fontdesc = ccall((:pango_font_description_from_string,libpango),
                      Ptr{Nothing}, (Ptr{UInt8},), String(str))
-    ccall((:pango_layout_set_font_description,_jl_libpango), Nothing,
+    ccall((:pango_layout_set_font_description,libpango), Nothing,
           (Ptr{Nothing},Ptr{Nothing}), ctx.layout, fontdesc)
-    ccall((:pango_font_description_free,_jl_libpango), Nothing,
+    ccall((:pango_font_description_free,libpango), Nothing,
           (Ptr{Nothing},), fontdesc)
 end
 
 function set_text(ctx::CairoContext, text::AbstractString, markup::Bool = false)
     if markup
-        ccall((:pango_layout_set_markup,_jl_libpango), Nothing,
+        ccall((:pango_layout_set_markup,libpango), Nothing,
             (Ptr{Nothing},Ptr{UInt8},Int32), ctx.layout, String(text), -1)
     else
         # clear attributes (from previous set markups)
-        ccall((:pango_layout_set_attributes,_jl_libpango), Nothing,
+        ccall((:pango_layout_set_attributes,libpango), Nothing,
             (Ptr{Nothing},Ptr{Nothing}), ctx.layout, C_NULL)
 
-        ccall((:pango_layout_set_text,_jl_libpango), Nothing,
+        ccall((:pango_layout_set_text,libpango), Nothing,
             (Ptr{Nothing},Ptr{UInt8},Int32), ctx.layout, String(text), -1)
     end
     text
@@ -1135,18 +1148,18 @@ end
 
 function get_layout_size(ctx::CairoContext)
     w = Vector{Int32}(undef, 2)
-    ccall((:pango_layout_get_pixel_size,_jl_libpango), Nothing,
+    ccall((:pango_layout_get_pixel_size,libpango), Nothing,
           (Ptr{Nothing},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
     w
 end
 
 function update_layout(ctx::CairoContext)
-    ccall((:pango_cairo_update_layout,_jl_libpangocairo), Nothing,
+    ccall((:pango_cairo_update_layout,libpangocairo), Nothing,
           (Ptr{Nothing},Ptr{Nothing}), ctx.ptr, ctx.layout)
 end
 
 function show_layout(ctx::CairoContext)
-    ccall((:pango_cairo_show_layout,_jl_libpangocairo), Nothing,
+    ccall((:pango_cairo_show_layout,libpangocairo), Nothing,
           (Ptr{Nothing},Ptr{Nothing}), ctx.ptr, ctx.layout)
 end
 
@@ -1154,7 +1167,7 @@ text_extents(ctx::CairoContext,value::AbstractString) =
     text_extents!(ctx,value, Matrix{Float64}(undef, 6, 1))
 
 function text_extents!(ctx::CairoContext,value::AbstractString,extents)
-    ccall((:cairo_text_extents, _jl_libcairo),
+    ccall((:cairo_text_extents, libcairo),
           Nothing, (Ptr{Nothing}, Ptr{UInt8}, Ptr{Float64}),
           ctx.ptr, String(value), extents)
     extents
@@ -1166,7 +1179,7 @@ function path_extents(ctx::CairoContext)
     dy1 = Cdouble[0]
     dy2 = Cdouble[0]
 
-    ccall((:cairo_path_extents, _jl_libcairo),
+    ccall((:cairo_path_extents, libcairo),
           Nothing, (Ptr{Nothing}, Ptr{Cdouble}, Ptr{Cdouble},
           Ptr{Cdouble}, Ptr{Cdouble}),
           ctx.ptr, dx1, dy1, dx2, dy2)
@@ -1176,20 +1189,20 @@ end
 
 
 function show_text(ctx::CairoContext,value::AbstractString)
-    ccall((:cairo_show_text, _jl_libcairo),
+    ccall((:cairo_show_text, libcairo),
           Nothing, (Ptr{Nothing}, Ptr{UInt8}),
           ctx.ptr, String(value))
 end
 
 function text_path(ctx::CairoContext,value::AbstractString)
-    ccall((:cairo_text_path, _jl_libcairo),
+    ccall((:cairo_text_path, libcairo),
           Nothing, (Ptr{Nothing}, Ptr{UInt8}),
           ctx.ptr, String(value))
 end
 
 
 function select_font_face(ctx::CairoContext,family::AbstractString,slant,weight)
-    ccall((:cairo_select_font_face, _jl_libcairo),
+    ccall((:cairo_select_font_face, libcairo),
           Nothing, (Ptr{Nothing}, Ptr{UInt8},
                  font_slant_t, font_weight_t),
           ctx.ptr, String(family),
