@@ -1,6 +1,6 @@
 name = "Cairo"
 uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "0.6.0"
+version = "0.7.0"
 
 [deps]
 BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
@@ -11,7 +11,7 @@ Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 [compat]
 BinaryProvider = "≥ 0.3.0"
 Graphics = "≥ 0.1.0"
-julia = "≥ 0.7.0"
+julia = "0.7, 1"
 
 [extras]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
