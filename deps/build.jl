@@ -35,7 +35,7 @@ dependencies = [
     "build_LZO.v2.10.0.jl",
     "build_Pixman.v0.38.4.jl",
     "build_libpng.v1.6.37.jl",
-    "build_Cairo.v1.14.12.jl",
+    "build_Cairo.v1.16.0.jl",
     # Pango-only dependencies
     "build_FriBidi.v1.0.5.jl",
     # And finally...Pango!
