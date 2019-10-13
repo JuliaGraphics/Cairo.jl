@@ -35,7 +35,7 @@ dependencies = [
     "build_LZO.v2.10.0.jl",
     "build_Pixman.v0.38.4.jl",
     "build_libpng.v1.6.37.jl",
-    "build_Cairo.v1.14.12.jl",
+    "build_Cairo.v1.16.0.jl",
     # Pango-only dependencies
     "build_FriBidi.v1.0.5.jl",
     # And finally...Pango!
@@ -43,13 +43,9 @@ dependencies = [
 ]
 
 for dependency in dependencies
-    # These libraries are necessary on Linux, FreeBSD and macOS...
-    platform_key_abi() isa Windows &&
-        occursin(r"^build_(Expat|Fontconfig)", dependency) &&
-        continue
     # ...these only on Linux and FreeBSD
     platform_key_abi() isa Union{MacOS,Windows} &&
-        occursin(r"^build_(Libuuid|Graphite2|HarfBuzz|X11)", dependency) &&
+        occursin(r"^build_(Libuuid|X11)", dependency) &&
         continue
 
     # it's a bit faster to run the build in an anonymous module instead of

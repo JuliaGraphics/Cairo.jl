@@ -7,3 +7,4 @@ test/test_results
 .DS_Store
 *~
 deps/build.log
+.vscode

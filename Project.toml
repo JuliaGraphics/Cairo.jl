@@ -1,6 +1,6 @@
 name = "Cairo"
 uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "0.7.0"
+version = "0.8.0"
 
 [deps]
 BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
