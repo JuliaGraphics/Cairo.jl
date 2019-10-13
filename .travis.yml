@@ -3,20 +3,26 @@ language: julia
 os:
   - linux
   - osx
+  - windows
+arch:
+  - x64
+  - x86
 julia:
   - 0.7
   - 1.0
+  - 1.1
   - 1.2
   - 1.3
   - nightly
 notifications:
   email: false
-git:
-  depth: 99999999
-
-## uncomment the following lines to allow failures on nightly julia
-## (tests will run but not make your overall status red)
 matrix:
+  exclude:
+    - os: osx
+      arch: x86
+    - os: windows
+      arch: x86
+      julia: 0.7
   allow_failures:
   - julia: nightly
 
