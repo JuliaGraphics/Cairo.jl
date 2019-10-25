@@ -3,7 +3,6 @@ uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
 version = "0.8.0"
 
 [deps]
-BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 Cairo_jll = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Fontconfig_jll = "a3f928ae-7b40-5064-980b-68af3947d34b"
@@ -13,7 +12,6 @@ Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Pango_jll = "36c8627f-9965-5494-a995-c6b170f724f3"
 
 [compat]
-BinaryProvider = "≥ 0.3.0"
 Graphics = "≥ 0.1.0"
 julia = "≥ 1.3.0"
 
