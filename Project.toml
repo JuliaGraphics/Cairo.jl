@@ -1,6 +1,6 @@
 name = "Cairo"
 uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 Cairo_jll = "83423d85-b0ee-5818-9007-b63ccbeb887a"
@@ -17,7 +17,7 @@ Cairo_jll = "1.16.0"
 Colors = "0.9"
 Fontconfig_jll = "2.13.1"
 Glib_jll = "2.59.0"
-Graphics = "0.4"
+Graphics = "0.4, 1"
 Pango_jll = "1.42.4"
 
 [extras]
