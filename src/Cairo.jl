@@ -415,12 +415,12 @@ end
 
 function write_to_png(surface::CairoSurface, stream::T) where {T<:IO}
     callback = get_stream_callback(T)
-    ccall((:cairo_surface_write_to_png_stream,libcairo), Nothing,
+    ccall((:cairo_surface_write_to_png_stream,libcairo), status_t,
           (Ptr{UInt8},Ptr{Nothing},Any), surface.ptr, callback, stream)
 end
 
 function write_to_png(surface::CairoSurface, filename::AbstractString)
-    ccall((:cairo_surface_write_to_png,libcairo), Nothing,
+    ccall((:cairo_surface_write_to_png,libcairo), status_t,
           (Ptr{UInt8},Ptr{UInt8}), surface.ptr, String(filename))
 end
 
