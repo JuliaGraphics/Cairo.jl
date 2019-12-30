@@ -1,6 +1,6 @@
 name = "Cairo"
 uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "1.0.1"
+version = "1.0.2"
 
 [deps]
 Cairo_jll = "83423d85-b0ee-5818-9007-b63ccbeb887a"
