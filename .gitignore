@@ -1,10 +1,4 @@
-deps/builds
-deps/downloads
-deps/usr
-deps/src
-deps/deps.jl
 test/test_results
 .DS_Store
 *~
-deps/build.log
 .vscode
