@@ -155,7 +155,7 @@ Stroking and painting API
 Cairo
 
 function write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)
-    n = false ? write(s,buf,len) : unsafe_write(s,buf,len)
+    n = unsafe_write(s,buf,len)
     Int32((n == len) ? 0 : 11)
 end
 
