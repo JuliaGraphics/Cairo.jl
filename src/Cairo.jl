@@ -8,20 +8,12 @@ using Cairo_jll
 using Pango_jll
 # For libgobject
 using Glib_jll
-# We only need the path of libfontconfig
-using Fontconfig_jll
 
 # Deprecate old library variables
 Base.@deprecate_binding _jl_libcairo      Cairo.libcairo   false
 Base.@deprecate_binding _jl_libgobject    Cairo.libgobject false
 Base.@deprecate_binding _jl_libpango      Cairo.libpango   false
 Base.@deprecate_binding _jl_libpangocairo Cairo.libpango   false
-
-function __init__()
-    # Set FONTCONFIG_FILE to the config file we provide.
-    ENV["FONTCONFIG_FILE"] = joinpath(dirname(Fontconfig_jll.libfontconfig_path),
-                                      "..", "etc", "fonts", "fonts.conf")
-end
 
 using Colors
 
