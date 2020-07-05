@@ -222,6 +222,11 @@ mutable struct CairoSurfaceIOStream{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurfa
         self
     end
 end
+function get_stream_ptr(surf::T) where {T<:CairoSurfaceIOStream}
+    GC.@preserve surf begin
+        return unsafe_load(Ptr{Ptr{Nothing}}(pointer_from_objref(surf) + fieldoffset(T, 4)))
+    end
+end
 
 
 CairoSurface(ptr, w, h) = CairoSurface{UInt32}(ptr, w, h)
@@ -308,9 +313,13 @@ format(surf::CairoSurface{T}) where {T<:Union{RGB24,ARGB32}} = T
 
 function CairoPDFSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_pdf_surface_create_for_stream,libcairo), Ptr{Nothing},
-                (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h, stream)
+    surf = CairoSurface(C_NULL, w, h, stream)
+    GC.@preserve surf begin
+        surf.ptr = ccall((:cairo_pdf_surface_create_for_stream,libcairo), Ptr{Nothing},
+                         (Ptr{Nothing}, Ptr{Nothing}, Float64, Float64), callback,
+                         get_stream_ptr(surf), w, h)
+    end
+    return surf
 end
 
 function CairoPDFSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -323,11 +332,15 @@ end
 
 function CairoEPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_ps_surface_create_for_stream,libcairo), Ptr{Nothing},
-                (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
-        (Ptr{Nothing},Int32), ptr, 1)
-    CairoSurface(ptr, w, h, stream)
+    surf = CairoSurface(C_NULL, w, h, stream)
+    GC.@preserve surf begin
+        surf.ptr = ccall((:cairo_ps_surface_create_for_stream,libcairo), Ptr{Nothing},
+                         (Ptr{Nothing}, Ptr{Nothing}, Float64, Float64),
+                         callback, get_stream_ptr(surf), w, h)
+        ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
+              (Ptr{Nothing},Int32), surf.ptr, 1)
+    end
+    return surf
 end
 
 function CairoEPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -342,11 +355,15 @@ end
 
 function CairoPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_ps_surface_create_for_stream,libcairo), Ptr{Nothing},
-                (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
-        (Ptr{Nothing},Int32), ptr, 0)
-    CairoSurface(ptr, w, h, stream)
+    surf = CairoSurface(C_NULL, w, h, stream)
+    GC.@preserve surf begin
+        surf.ptr = ccall((:cairo_ps_surface_create_for_stream,libcairo), Ptr{Nothing},
+                         (Ptr{Nothing}, Ptr{Nothing}, Float64, Float64),
+                         callback, get_stream_ptr(surf), w, h)
+        ccall((:cairo_ps_surface_set_eps,libcairo), Nothing,
+              (Ptr{Nothing},Int32), surf.ptr, 0)
+    end
+    return surf
 end
 
 function CairoPSSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
@@ -390,9 +407,13 @@ end
 
 function CairoSVGSurface(stream::T, w::Real, h::Real) where {T<:IO}
     callback = get_stream_callback(T)
-    ptr = ccall((:cairo_svg_surface_create_for_stream,libcairo), Ptr{Nothing},
-                (Ptr{Nothing}, Any, Float64, Float64), callback, stream, w, h)
-    CairoSurface(ptr, w, h, stream)
+    surf = CairoSurface(C_NULL, w, h, stream)
+    GC.@preserve surf begin
+        surf.ptr = ccall((:cairo_svg_surface_create_for_stream,libcairo), Ptr{Nothing},
+                         (Ptr{Nothing}, Ptr{Nothing}, Float64, Float64), callback,
+                         get_stream_ptr(surf), w, h)
+    end
+    return surf
 end
 
 function CairoSVGSurface(filename::AbstractString, w::Real, h::Real)
@@ -464,11 +485,18 @@ mutable struct CairoScript <: GraphicsDevice
 
     function CairoScript(stream::T) where {T<:IO}
         callback = get_stream_callback(T)
-        ptr = ccall((:cairo_script_create_for_stream,libcairo), Ptr{Nothing},
-                (Ptr{Nothing}, Any), callback, stream)
-        self = new(ptr,stream)
+        self = new(C_NULL, stream)
+        GC.@preserve self begin
+            self.ptr = ccall((:cairo_script_create_for_stream,libcairo), Ptr{Nothing},
+                             (Ptr{Nothing}, Ptr{Nothing}), callback, get_stream_ptr(self))
+        end
         finalizer(destroy, self)
         self
+    end
+end
+function get_stream_ptr(s::T) where {T<:CairoScript}
+    GC.@preserve s begin
+        return unsafe_load(Ptr{Ptr{Nothing}}(pointer_from_objref(s) + fieldoffset(T, 2)))
     end
 end
 
