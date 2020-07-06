@@ -2,6 +2,7 @@
 language: julia
 os:
   - linux
+  - freebsd
   - osx
 julia:
   - 1.3
@@ -16,6 +17,17 @@ git:
 matrix:
   allow_failures:
   - julia: nightly
+
+branches:
+  only:
+  - master
+  - gh-pages # For building documentation
+  - /^testing-.*$/ # testing branches
+  - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags
+
+cache:
+  directories:
+  - $HOME/.julia/artifacts
 
 after_success:
   - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder()); Coveralls.submit(Coveralls.process_folder())'
