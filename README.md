@@ -6,6 +6,6 @@
 
 Adaptation to [Cairo](https://www.cairographics.org/), a 2D graphics library with support for multiple output devices. 
 
-Some of the functions implemented by this wrapper may be documented in [Base.Graphics](http://docs.julialang.org/en/release-0.3/stdlib/graphics/).
+Some of the functions implemented by this wrapper may be documented in [Graphics.jl](https://juliagraphics.github.io/Graphics.jl/stable/).
 
 There is an extensive set of [examples](samples/Samples.md).
