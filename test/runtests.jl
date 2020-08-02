@@ -333,4 +333,20 @@ end
     @test destroy(cr) == nothing
 end
 
+@testset "font_matrix" begin
+    z = zeros(UInt32,512,512);
+    surf = CairoImageSurface(z, Cairo.FORMAT_ARGB32)
+
+    pa = surf.ptr
+    surf.ptr = C_NULL
+
+    surf.ptr = pa
+    cr = Cairo.CairoContext(surf)
+
+    m = CairoMatrix(1.0,2.0,2.0,1.0,0.,0.)
+    set_font_matrix(cr, m)
+    @test m == get_font_matrix(cr)
+    @test destroy(cr) == nothing
+end
+
 nothing
