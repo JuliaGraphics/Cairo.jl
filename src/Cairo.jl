@@ -103,6 +103,7 @@ export
     set_font_face, set_font_size, select_font_face,
     textwidth, textheight, text_extents,
     TeXLexer, tex2pango, show_text, text_path,
+    set_font_matrix, get_font_matrix,
 
     # images
     write_to_png, image, read_from_png,
@@ -1118,6 +1119,16 @@ function set_matrix(p::CairoPattern, m::CairoMatrix)
     ccall((:cairo_pattern_set_matrix, libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), p.ptr, [m])
 end
 
+# -----------------------------------------------------------------------------
+function get_font_matrix(ctx::CairoContext)
+    m = [CairoMatrix()]
+    ccall((:cairo_get_font_matrix, libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), ctx.ptr, m)
+    m[1]
+end
+
+function set_font_matrix(ctx::CairoContext, m::CairoMatrix)
+    ccall((:cairo_set_font_matrix, libcairo), Nothing, (Ptr{Nothing}, Ptr{Nothing}), ctx.ptr, [m])
+end
 
 # -----------------------------------------------------------------------------
 function set_line_type(ctx::CairoContext, nick::AbstractString)
