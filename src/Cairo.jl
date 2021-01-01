@@ -169,6 +169,18 @@ get_readstream_callback(::Type{T}) where T = @cfunction read_from_stream_callbac
 
 abstract type CairoSurface{T<:Union{UInt32,RGB24,ARGB32}} <: GraphicsDevice end
 
+# All CairoSurfaces have to implement at least the fields and types of CairoSurfaceBase
+function Base.getproperty(surface::CairoSurface, fieldname::Symbol)
+    if fieldname === :ptr
+        return getfield(surface, :ptr)::Ptr{Nothing}
+    elseif fieldname === :width
+        return getfield(surface, :width)::Float64
+    elseif fieldname === :height
+        return getfield(surface, :height)::Float64
+    end
+    return getfield(surface, fieldname)
+end
+
 mutable struct CairoSurfaceBase{T<:Union{UInt32,RGB24,ARGB32}} <: CairoSurface{T}
     ptr::Ptr{Nothing}
     width::Float64

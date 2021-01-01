@@ -17,11 +17,14 @@ end
 @testset "Image Surface  " begin
 
     surf = CairoImageSurface(100, 200, Cairo.FORMAT_ARGB32)
-    @test width(surf) == 100
-    @test height(surf) == 200
+    @test @inferred(width(surf)) == 100
+    @test @inferred(height(surf)) == 200
+    abstractsurf = Ref{CairoSurface}(surf)
+    @test @inferred(width(abstractsurf[])) == 100
+    @test @inferred(height(abstractsurf[])) == 200
     ctx = CairoContext(surf)
-    @test width(ctx) == 100
-    @test height(ctx) == 200
+    @test @inferred(width(ctx)) == 100
+    @test @inferred(height(ctx)) == 200
 
     surf = CairoImageSurface(fill(RGB24(0), 10, 10))
     @test Cairo.format(surf) == RGB24
@@ -245,7 +248,7 @@ end
         @test length(d) == 1
         @test collect(keys(d))[1] == 0x80000080
 
-        
+
     end
 end
 
