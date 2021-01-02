@@ -20,8 +20,10 @@ end
     @test @inferred(width(surf)) == 100
     @test @inferred(height(surf)) == 200
     abstractsurf = Ref{CairoSurface}(surf)
-    @test @inferred(width(abstractsurf[])) == 100
-    @test @inferred(height(abstractsurf[])) == 200
+    getwidth(r) = width(r[])
+    getheight(r) = height(r[])
+    @test @inferred(getwidth(abstractsurf)) == 100
+    @test @inferred(getheight(abstractsurf)) == 200
     ctx = CairoContext(surf)
     @test @inferred(width(ctx)) == 100
     @test @inferred(height(ctx)) == 200
