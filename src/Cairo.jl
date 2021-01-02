@@ -1459,4 +1459,18 @@ end
 @deprecate cairo_write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)       write_to_stream_callback(s, buf, len)
 @deprecate text_extents(ctx::CairoContext,value::AbstractString,extents) text_extents!(ctx,value,extents)
 
+if Base.VERSION >= v"1.4.2"
+    ccall(:jl_generating_output, Cint, ()) == 1 || return nothing
+    @assert precompile(Tuple{typeof(CairoImageSurface),Matrix{UInt32},Int32})   # time: 0.03191977
+    @assert precompile(Tuple{typeof(copy),CairoContext})   # time: 0.02283907
+    @assert precompile(Tuple{typeof(image),CairoContext,CairoSurfaceImage{UInt32},Int,Int,Float64,Float64})   # time: 0.002372729
+    @assert precompile(Tuple{typeof(image),CairoContext,CairoSurfaceImage{UInt32},Float64,Float64,Float64,Float64})
+    @assert precompile(Tuple{typeof(surface_create_similar),CairoSurfaceBase{UInt32}})   # time: 0.001453267
+    @assert precompile(Tuple{typeof(user_to_device!),CairoContext,Vector{Float64}})   # time: 0.001948533
+    @assert precompile(Tuple{typeof(device_to_user!),CairoContext,Vector{Float64}})   # time: 0.001546066
+    @assert precompile(Tuple{typeof(destroy),CairoSurfaceImage{UInt32}})   # time: 0.001699678
+    @assert precompile(Tuple{typeof(destroy),CairoContext})   # time: 0.001185085
+    @assert precompile(Tuple{Type{CairoContext},CairoSurfaceBase{UInt32}})   # time: 0.001118005
+end
+
 end  # module
