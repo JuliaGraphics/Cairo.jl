@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/JuliaGraphics/Cairo.jl.svg)](https://travis-ci.org/JuliaGraphics/Cairo.jl)
+[![Build Status](https://github.com/JuliaGraphics/Cairo.jl/workflows/CI/badge.svg)](https://github.com/JuliaGraphics/Cairo.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/JuliaGraphics/Cairo.jl/branch/master/graph/badge.svg?token=3StavIHX8q)](https://codecov.io/gh/JuliaGraphics/Cairo.jl)
 
 ## Bindings to the Cairo graphics library ##
