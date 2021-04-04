@@ -271,6 +271,12 @@ for name in (:finish,:flush,:mark_dirty)
     end
 end
 
+function image_surface_get_data(surface::CairoSurface{T}) where {T}
+    return ccall(
+        (:cairo_image_surface_get_data, libcairo),
+        Ptr{T}, (Ptr{Nothing},), surface.ptr)
+end
+
 function status(surface::CairoSurface)
     ccall((:cairo_surface_status,libcairo),
           Int32, (Ptr{Nothing},), surface.ptr)
