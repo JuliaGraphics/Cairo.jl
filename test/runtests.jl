@@ -281,6 +281,16 @@ end
     d = simple_hist(d1)
 
     @test length(d) == 512 # black is included
+
+    # width: 5, height: 3; Test-Image
+    mat = [ 0x80800000  0x00000000  0x00000000
+            0x80800000  0x00000000  0x00000000
+            0x80800000  0x33000033  0x33000033
+            0x80800000  0x33000033  0x33000033
+            0xff00ff00  0xff00ff00  0x00000000 ]
+    surf = CairoImageSurface(mat, Cairo.FORMAT_ARGB32; flipxy=false)
+    data_arr = unsafe_wrap(Array, Cairo.image_surface_get_data(surf), (5, 3))
+    @test (mat == data_arr) && (mat == surf.data)
 end
 
 @testset "Assert/Status  " begin
