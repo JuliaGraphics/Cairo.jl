@@ -51,7 +51,7 @@ export
 
     # surface and context management
     finish, destroy, status, get_source,
-    creategc, save, restore, show_page, width, height,
+    creategc, save, restore, show_page, copy_page, width, height,
 
     # pattern
     pattern_create_radial, pattern_create_linear,
@@ -125,7 +125,7 @@ Surfaces, the canvas you are painting on
 Context, the handle to coordinate transformation, paint+Color
 
     CairoContext, finish, destroy, status, get_source,
-    creategc, save, restore, show_page, width, height
+    creategc, save, restore, show_page, copy_page, width, height
 
 Path creation API
 
@@ -142,7 +142,7 @@ Stroking and painting API
     stroke_preserve, stroke_transformed, stroke_transformed_preserve
 
     CairoContext, finish, destroy, status, get_source,
-    creategc, save, restore, show_page, width, height
+    creategc, save, restore, show_page, copy_page, width, height
 
 "
 Cairo
@@ -636,6 +636,7 @@ for (NAME, FUNCTION) in Any[(:_destroy, :cairo_destroy),
                          (:save, :cairo_save),
                          (:restore, :cairo_restore),
                          (:show_page, :cairo_show_page),
+                         (:copy_page, :cairo_copy_page),
                          (:clip, :cairo_clip),
                          (:clip_preserve, :cairo_clip_preserve),
                          (:reset_clip, :cairo_reset_clip),
