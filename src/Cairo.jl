@@ -72,7 +72,7 @@ export
     set_source_rgb, set_source_rgba, set_source_surface, set_line_type,
     set_line_cap, set_line_join,
     set_operator, get_operator, set_source,
-    CairoMatrix,
+    CairoMatrix, recording_surface_ink_extents,
 
     # coordinate systems
     reset_transform, rotate, scale, translate, user_to_device!,
@@ -562,6 +562,16 @@ CairoRecordingSurface() = CairoRecordingSurface(CONTENT_COLOR_ALPHA)
 function script_from_recording_surface(s::CairoScript,r::CairoSurface)
     ccall((:cairo_script_from_recording_surface,libcairo), Int32,
                 (Ptr{Nothing},Ptr{Nothing}),s.ptr, r.ptr)
+end
+function recording_surface_ink_extents(r::CairoSurface)
+    x0 = Ref{Cdouble}(0)
+    y0 = Ref{Cdouble}(0)
+    width = Ref{Cdouble}(0)
+    height = Ref{Cdouble}(0)
+    ccall((:cairo_recording_surface_ink_extents,libcairo), Nothing,
+          (Ptr{Nothing}, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}), 
+          r.ptr, x0, y0, width, height)
+    x0[], y0[], width[], height[]
 end
 # -----------------------------------------------------------------------------
 

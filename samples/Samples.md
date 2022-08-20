@@ -188,6 +188,11 @@ Example of using Recording surface, simple copy, then scaled and offset.
 ![sample record0.png](sample_record0.png "record0 example")
 ![sample record1.png](sample_record1.png "record1 example")
 
+Example of using Recording surface, find the `ink_extents` of drawing operations, 
+draw an encompassing rectangle, scale and offset.
+
+![sample record inkextents.png](sample_record_inkextents.png "record inkextents example")
+
 Example of writing to script, put script text into frame.
 
 ![sample script0.png](sample_script0.png "scrip0 example")
