@@ -16,6 +16,7 @@ Cairo_jll = "1.16.0"
 Colors = "0.9, 0.10, 0.11, 0.12"
 Glib_jll = "2.59.0"
 Graphics = "0.4, 1"
+FreeTypeAbstraction = "0.10"
 Pango_jll = "1.42.4"
 julia = "1.3"
 
