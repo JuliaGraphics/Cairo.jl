@@ -890,7 +890,7 @@ for (fname,cname) in ((:user_to_device!,:cairo_user_to_device),
         function ($fname)(ctx::CairoContext, p::Vector{Float64})
             ccall(($(Expr(:quote,cname)),libcairo),
                   Nothing, (Ptr{Nothing}, Ptr{Float64}, Ptr{Float64}),
-                  ctx.ptr, pointer(p,1), pointer(p,2))
+                  ctx.ptr, Ref(p,1), Ref(p,2))
             p
         end
     end
@@ -1200,7 +1200,7 @@ end
 function get_layout_size(ctx::CairoContext)
     w = Vector{Int32}(undef, 2)
     ccall((:pango_layout_get_pixel_size,libpango), Nothing,
-          (Ptr{Nothing},Ptr{Int32},Ptr{Int32}), ctx.layout, pointer(w,1), pointer(w,2))
+          (Ptr{Nothing},Ptr{Int32},Ptr{Int32}), ctx.layout, Ref(w,1), Ref(w,2))
     w
 end
 
