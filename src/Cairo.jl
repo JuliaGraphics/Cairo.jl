@@ -16,7 +16,7 @@ Base.@deprecate_binding _jl_libpango      Cairo.libpango   false
 Base.@deprecate_binding _jl_libpangocairo Cairo.libpango   false
 
 using Colors
-
+using FreeTypeAbstraction
 import Graphics
 using Graphics: BoundingBox, GraphicsContext, GraphicsDevice
 import Graphics: arc, clip, clip_preserve, close_path, creategc, device_to_user!, device_to_user_distance!, fill_preserve, height, line_to, move_to, new_path, new_sub_path, paint, rectangle, rel_line_to, rel_move_to, reset_clip, restore, rotate, save, scale, set_dash, set_line_width, set_source, set_source_rgb, set_source_rgba, stroke, stroke_preserve, stroke_transformed, stroke_transformed_preserve, textwidth, translate, user_to_device!, user_to_device_distance!, width, circle, reset_transform
@@ -1183,6 +1183,16 @@ function set_font_face(ctx::CairoContext, str::AbstractString)
           (Ptr{Nothing},), fontdesc)
 end
 
+function set_font_face(ctx::CairoContext, font::FreeTypeAbstraction.FTFont)
+    font_face = ccall(
+        (:cairo_ft_font_face_create_for_ft_face, libcairo),
+        Ptr{Nothing}, (FreeTypeAbstraction.FT_Face, Cint),
+        font, 0)
+    ccall((:cairo_set_font_face, libcairo), Nothing,
+          (Ptr{Nothing}, Ptr{Nothing}), ctx.ptr, font_face)
+    return font_face
+end
+
 function set_text(ctx::CairoContext, text::AbstractString, markup::Bool = false)
     if markup
         ccall((:pango_layout_set_markup,libpango), Nothing,
@@ -1252,6 +1262,25 @@ function text_path(ctx::CairoContext,value::AbstractString)
           ctx.ptr, String(value))
 end
 
+struct CairoGlyph
+    index::Culong
+    x::Cdouble
+    y::Cdouble
+end
+
+function show_glyph(ctx::CairoContext, glyph::CairoGlyph)
+    cg = Ref(glyph)
+    ccall((:cairo_show_glyphs, Cairo.libcairo),
+            Nothing, (Ptr{Nothing}, Ptr{CairoGlyph}, Cint),
+            ctx.ptr, cg, 1)
+end
+
+function glyph_path(ctx::CairoContext, glyph::CairoGlyph)
+    cg = Ref(glyph)
+    ccall((:cairo_glyph_path, Cairo.libcairo),
+            Nothing, (Ptr{Nothing}, Ptr{CairoGlyph}, Cint),
+            ctx.ptr, cg, 1)
+end
 
 function select_font_face(ctx::CairoContext,family::AbstractString,slant,weight)
     ccall((:cairo_select_font_face, libcairo),
