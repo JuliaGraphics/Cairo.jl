@@ -74,7 +74,7 @@ Example of painting with a Image Surface as source [sample_image.jl](sample_imag
 
 ### image pattern #
 
-Example of painting with a Image Surface as pattern [sample_imagepattern.jl] (sample_imagepattern.jl).
+Example of painting with a Image Surface as pattern [sample_imagepattern.jl](sample_imagepattern.jl).
 
 ![imagepattern .png](sample_imagepattern.png "imagepattern example")
 
@@ -188,12 +188,12 @@ Example of using Recording surface, simple copy, then scaled and offset.
 ![sample record0.png](sample_record0.png "record0 example")
 ![sample record1.png](sample_record1.png "record1 example")
 
-Example of writing to script, put script text into frame.
+Example of writing to script, put script text into frame. [sample_record0.jl](sample_record0.jl), [sample_record1.jl](sample_record1.jl)
 
 ![sample script0.png](sample_script0.png "scrip0 example")
 
 ### current point 
 
-Example of using current point
+Example of using current point [sample_current_point.jl](sample_current_point.jl)
 
 ![sample current point.png](sample_current_point.png "current point example")
