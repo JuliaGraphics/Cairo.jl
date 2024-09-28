@@ -102,6 +102,7 @@ export
     set_text, set_latex,
     set_font_face, set_font_size, select_font_face,
     textwidth, textheight, text_extents,
+    font_extents,
     TeXLexer, tex2pango, show_text, text_path,
     set_font_matrix, get_font_matrix,
 
@@ -1213,6 +1214,16 @@ end
 function show_layout(ctx::CairoContext)
     ccall((:pango_cairo_show_layout,libpangocairo), Nothing,
           (Ptr{Nothing},Ptr{Nothing}), ctx.ptr, ctx.layout)
+end
+
+font_extents(ctx::CairoContext) =
+    font_extents!(ctx, Matrix{Float64}(undef, 5, 1))
+
+function font_extents!(ctx::CairoContext,extents)
+    ccall((:cairo_font_extents, libcairo),
+          Nothing, (Ptr{Nothing}, Ptr{Float64}),
+          ctx.ptr, extents)
+    extents
 end
 
 text_extents(ctx::CairoContext,value::AbstractString) =
