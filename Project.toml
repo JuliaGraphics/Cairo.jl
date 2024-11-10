@@ -1,6 +1,6 @@
 name = "Cairo"
 uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "1.1"
+version = "1.1.1"
 
 [deps]
 Cairo_jll = "83423d85-b0ee-5818-9007-b63ccbeb887a"
@@ -13,7 +13,7 @@ Pango_jll = "36c8627f-9965-5494-a995-c6b170f724f3"
 [compat]
 julia = "1.6"
 Cairo_jll = "1.16"
-Colors = "0.12"
+Colors = "0.12, 0.13"
 Glib_jll = "2.59.0"
 Graphics = "1"
 Pango_jll = "1.42.4"
