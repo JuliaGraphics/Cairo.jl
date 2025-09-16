@@ -23,16 +23,15 @@ import Graphics: arc, clip, clip_preserve, close_path, creategc, device_to_user!
 import Base: copy, fill
 
 libcairo_version = VersionNumber(unsafe_string(
-      ccall((:cairo_version_string,Cairo.libcairo),Cstring,()) ))
+      ccall((:cairo_version_string,libcairo),Cstring,()) ))
 libpango_version = VersionNumber(unsafe_string(
-      ccall((:pango_version_string,Cairo.libpango),Cstring,()) ))
+      ccall((:pango_version_string,libpango),Cstring,()) ))
 if !Sys.iswindows()
-    libpangocairo_version = VersionNumber(unsafe_string(
-          ccall((:pango_version_string,Cairo.libpangocairo),Cstring,()) ))
+    libpangocairo_version = libpango_version
     libgobject_version = VersionNumber(
-          unsafe_load(cglobal((:glib_major_version, Cairo.libgobject), Cuint)),
-          unsafe_load(cglobal((:glib_minor_version, Cairo.libgobject), Cuint)),
-          unsafe_load(cglobal((:glib_micro_version, Cairo.libgobject), Cuint)))
+          unsafe_load(cglobal((:glib_major_version, libgobject), Cuint)),
+          unsafe_load(cglobal((:glib_minor_version, libgobject), Cuint)),
+          unsafe_load(cglobal((:glib_micro_version, libgobject), Cuint)))
 end
 
 import Base.show
@@ -461,13 +460,13 @@ show(io::IO, ::MIME"image/png", surface::CairoSurface) =
 
 function read_from_png(stream::T) where {T<:IO}
     callback = get_readstream_callback(T)
-    ptr = ccall((:cairo_image_surface_create_from_png_stream, Cairo.libcairo),
+    ptr = ccall((:cairo_image_surface_create_from_png_stream, libcairo),
                 Ptr{Nothing}, (Ptr{Nothing},Ref{IO}), callback, stream)
-    w = ccall((:cairo_image_surface_get_width,Cairo.libcairo),
+    w = ccall((:cairo_image_surface_get_width,libcairo),
               Int32, (Ptr{Nothing},), ptr)
-    h = ccall((:cairo_image_surface_get_height,Cairo.libcairo),
+    h = ccall((:cairo_image_surface_get_height,libcairo),
               Int32, (Ptr{Nothing},), ptr)
-    Cairo.CairoSurface(ptr, w, h)
+    CairoSurface(ptr, w, h)
 end
 
 
@@ -781,7 +780,7 @@ end
 # cairo_path data and functions
 
 mutable struct CairoPath_t
-    status::Cairo.status_t
+    status::status_t
     data::Ptr{Float64}
     num_data::UInt32
 end
