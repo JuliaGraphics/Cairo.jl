@@ -64,7 +64,14 @@ const STATUS_DEVICE_TYPE_MISMATCH      = Int32(33)
 const STATUS_DEVICE_ERROR              = Int32(34)
 const STATUS_INVALID_MESH_CONSTRUCTION = Int32(35)
 const STATUS_DEVICE_FINISHED           = Int32(36)
-const STATUS_LAST_STATUS               = Int32(37)
+const STATUS_JBIG2_GLOBAL_MISSING      = Int32(37)
+const STATUS_PNG_ERROR                 = Int32(38)
+const STATUS_FREETYPE_ERROR            = Int32(39)
+const STATUS_WIN32_GDI_ERROR           = Int32(40)
+const STATUS_TAG_ERROR                 = Int32(41)
+const STATUS_DWRITE_ERROR              = Int32(42)
+const STATUS_SVG_FONT_ERROR            = Int32(43)
+const STATUS_LAST_STATUS               = Int32(44)
 
 const surface_t = Int32
 const CAIRO_SURFACE_TYPE_IMAGE            = Int32(0)
@@ -148,6 +155,13 @@ const OPERATOR_OVERLAY = 16
 const OPERATOR_DARKEN = 17
 const OPERATOR_LIGHTEN = 18
 
+const PDF_METADATA_TITLE = 0
+const PDF_METADATA_AUTHOR = 1
+const PDF_METADATA_SUBJECT = 2
+const PDF_METADATA_KEYWORDS = 3
+const PDF_METADATA_CREATOR = 4
+const PDF_METADATA_CREATE_DATE = 5
+const PDF_METADATA_MOD_DATE = 6
 
 ## LaTex Token Dicts ##
 const _common_token_dict = Dict(

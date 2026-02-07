@@ -166,6 +166,8 @@ end
     output_file_name = "a.pdf"
     surf = CairoPDFSurface(output_file_name,512,512)
     hdraw(surf,64,8,4)
+    Cairo.set_metadata(surf, Cairo.PDF_METADATA_CREATOR, "Cairo.jl")
+    Cairo.set_custom_metadata(surf, "id", "42")
     finish(surf)
 
     @test isfile(output_file_name)

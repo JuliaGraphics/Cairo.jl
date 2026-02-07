@@ -339,6 +339,16 @@ function CairoPDFSurface(filename::AbstractString, w_pts::Real, h_pts::Real)
     CairoSurface(ptr, w_pts, h_pts)
 end
 
+function set_metadata(surf, metadata_type, str)
+    ccall((:cairo_pdf_surface_set_metadata,libcairo), Cvoid,
+          (Ptr{Nothing}, Cint, Cstring), surf.ptr, metadata_type, str)
+end
+
+function set_custom_metadata(surf, name, value)
+    ccall((:cairo_pdf_surface_set_custom_metadata,libcairo), Cvoid,
+          (Ptr{Nothing}, Cstring, Cstring), surf.ptr, name, value)
+end
+
 ## EPS ##
 
 function CairoEPSSurface(stream::T, w::Real, h::Real) where {T<:IO}
