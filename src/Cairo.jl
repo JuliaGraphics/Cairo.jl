@@ -835,11 +835,7 @@ function convert_cairo_path_data(p::CairoPath)
     # define here by Float64 (most data is) and reinterpret in the header.
 
     path_data = CairoPathEntry[]
-    @static if VERSION >= v"0.7"
-        c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), own=false)
-    else
-        c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), false)
-    end
+    c_data = unsafe_wrap(Array, c.data, (Int(c.num_data*2), 1), own=false)
 
     data_index = 1
     while data_index <= ((c.num_data)*2)
@@ -1338,11 +1334,7 @@ function get_token(self::TeXLexer)
             token = token[1:end-1]
         end
     else
-        @static if VERSION >= v"0.7"
-            token, self.pos = iterate(self.str, self.pos)
-        else
-            token, self.pos = next(self.str, self.pos)
-        end
+        token, self.pos = iterate(self.str, self.pos)
         token = string(token)
     end
 
@@ -1466,7 +1458,7 @@ end
 @deprecate cairo_write_to_stream_callback(s::IO, buf::Ptr{UInt8}, len::UInt32)       write_to_stream_callback(s, buf, len)
 @deprecate text_extents(ctx::CairoContext,value::AbstractString,extents) text_extents!(ctx,value,extents)
 
-if Base.VERSION >= v"1.4.2"
+function _precompile_()
     ccall(:jl_generating_output, Cint, ()) == 1 || return nothing
     @assert precompile(Tuple{typeof(CairoImageSurface),Matrix{UInt32},Int32})   # time: 0.03191977
     @assert precompile(Tuple{typeof(copy),CairoContext})   # time: 0.02283907
@@ -1479,5 +1471,6 @@ if Base.VERSION >= v"1.4.2"
     @assert precompile(Tuple{typeof(destroy),CairoContext})   # time: 0.001185085
     @assert precompile(Tuple{Type{CairoContext},CairoSurfaceBase{UInt32}})   # time: 0.001118005
 end
+_precompile_()
 
 end  # module
