@@ -23,16 +23,16 @@ import Graphics: arc, clip, clip_preserve, close_path, creategc, device_to_user!
 import Base: copy, fill
 
 libcairo_version = VersionNumber(unsafe_string(
-      ccall((:cairo_version_string,Cairo.libcairo),Cstring,()) ))
+      ccall((:cairo_version_string,libcairo),Cstring,()) ))
 libpango_version = VersionNumber(unsafe_string(
-      ccall((:pango_version_string,Cairo.libpango),Cstring,()) ))
+      ccall((:pango_version_string,Pango_jll.libpango),Cstring,()) ))
 if !Sys.iswindows()
     libpangocairo_version = VersionNumber(unsafe_string(
-          ccall((:pango_version_string,Cairo.libpangocairo),Cstring,()) ))
+          ccall((:pango_version_string,Pango_jll.libpango),Cstring,()) ))
     libgobject_version = VersionNumber(
-          unsafe_load(cglobal((:glib_major_version, Cairo.libgobject), Cuint)),
-          unsafe_load(cglobal((:glib_minor_version, Cairo.libgobject), Cuint)),
-          unsafe_load(cglobal((:glib_micro_version, Cairo.libgobject), Cuint)))
+          unsafe_load(cglobal((:glib_major_version, Glib_jll.libglib), Cuint)),
+          unsafe_load(cglobal((:glib_minor_version, Glib_jll.libglib), Cuint)),
+          unsafe_load(cglobal((:glib_micro_version, Glib_jll.libglib), Cuint)))
 end
 
 import Base.show
