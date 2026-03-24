@@ -3,7 +3,7 @@ module Cairo
 import Base.Sys
 
 # For libcairo
-using Cairo_jll
+using Cairo_NoGPL_jll
 # For libpangocairo
 using Pango_jll
 # For libgobject
